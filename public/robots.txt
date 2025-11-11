@@ -1,0 +1,9 @@
+# robots.txt for Trope.ai
+User-agent: *
+Allow: /
+
+# Disallow admin or internal pages if any
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://trope.ai/sitemap.xml

@@ -13,7 +13,7 @@ export default function Hero() {
         {/* Illustration */}
         <div className="absolute inset-0 -z-10 -mx-28 rounded-b-[3rem] pointer-events-none overflow-hidden" aria-hidden="true">
           <div className="absolute left-1/2 -translate-x-1/2 bottom-0 -z-10">
-            <Image src={Illustration} className="max-w-none" width={2146} priority alt="Hero Illustration" />
+            <Image src={Illustration} className="max-w-none" width={2146} priority alt="Trope workflow automation platform - Record workflows once, guide your team forever" />
           </div>
         </div>
 
