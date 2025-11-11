@@ -46,12 +46,14 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 
 ## Deploying To Production
 
-| Command                           | Action                                       |
-| :-------------------------------- | :------------------------------------------- |
-| `npm run build`                   | Build your production site                   |
-| `npm run preview`                 | Preview your build locally, before deploying |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare    |
-| `npm wrangler tail`               | View real-time logs for all Workers          |
+| Command           | Action                                                                 |
+| :---------------- | :--------------------------------------------------------------------- |
+| `npm run build`   | Build your production site                                             |
+| `npm run preview` | Preview your build locally, before deploying (runs the OpenNext build) |
+| `npm run deploy`  | Build (via OpenNext), transform for Workers, and deploy to Cloudflare  |
+| `npm wrangler tail` | View real-time logs for all Workers                                  |
+
+> The `deploy` and `preview` scripts call the `opennextjs-cloudflare` CLI, which runs `next build`, generates `.open-next/worker.js`, and then invokes Wrangler. Avoid calling `wrangler deploy` directly unless you run `opennextjs-cloudflare build` beforehand.
 
 ## Learn More
 
