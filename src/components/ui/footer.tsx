@@ -16,6 +16,12 @@ export default function Footer() {
                   <Logo />
                 </div>
                 <div className="text-sm text-slate-300">© Trope.ai <span className="text-slate-500">-</span> All rights reserved.</div>
+                <div className="mt-3 flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                    <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                    <span className="text-xs text-green-400 font-medium">All systems operational</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -65,6 +71,9 @@ export default function Footer() {
             <ul className="text-sm space-y-2">
               <li>
                 <a className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/privacy">Privacy Policy</a>
+              </li>
+              <li>
+                <a className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/subprocessors">Subprocessors</a>
               </li>
             </ul>
           </div>
