@@ -9,6 +9,7 @@ import Features02 from '@/components/features-02'
 import Features03 from '@/components/features-03'
 import Features04 from '@/components/features-04'
 import Pricing from './pricing-section'
+import Faqs from '@/components/faqs'
 import Cta from '@/components/cta'
 import SchemaMarkup from '@/components/schema-markup'
 
@@ -26,6 +27,7 @@ export default function Home() {
       <div id="pricing">
         <Pricing />
       </div>
+      <Faqs />
       <Cta />
     </>
   )

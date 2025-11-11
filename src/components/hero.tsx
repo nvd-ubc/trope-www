@@ -31,7 +31,7 @@ export default function Hero() {
               </div>
             </div>
             <h1 className="h1 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4" data-aos="fade-down">Record Once. Guide & Automate Forever.</h1>
-            <p className="text-lg text-slate-300 mb-8" data-aos="fade-down" data-aos-delay="200">Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop. Never let tribal knowledge slow you down again.</p>
+            <p className="text-lg text-slate-300 mb-8" data-aos="fade-down" data-aos-delay="200">Trope records any workflow once—across <strong className="text-slate-200">desktop apps like Excel</strong> and the web—then delivers living, just-in-time guides and safe one-click automations. Finally, a solution that works where your team actually works.</p>
             <div className="max-w-xs mx-auto sm:max-w-none sm:inline-flex sm:justify-center space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-down" data-aos-delay="400">
               <div>
                 <a className="btn text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">

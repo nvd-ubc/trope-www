@@ -20,8 +20,8 @@ export default function Features02() {
 
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Built for Real Workflows</h2>
-            <p className="text-lg text-slate-400">From Excel accounting closes to inventory management and developer onboarding—Trope captures the workflows that matter most to your team.</p>
+            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Desktop-First. Web-Ready.</h2>
+            <p className="text-lg text-slate-400">Unlike browser-only tools, Trope works with the desktop apps your team relies on daily—Excel spreadsheets, accounting software, inventory systems—plus all your web applications. One platform for every workflow.</p>
           </div>
 
           {/* Highlighted boxes */}
@@ -175,9 +175,9 @@ export default function Features02() {
                 <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
                   <path d="M14.3.3c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-8 8c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.4-.4-.4-1 0-1.4l8-8ZM15 7c.6 0 1 .4 1 1 0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8c.6 0 1 .4 1 1s-.4 1-1 1C4.7 2 2 4.7 2 8s2.7 6 6 6 6-2.7 6-6c0-.6.4-1 1-1Z" />
                 </svg>
-                <h4 className="font-medium text-slate-50">Desktop Support</h4>
+                <h4 className="font-medium text-slate-50">True Desktop & Web</h4>
               </div>
-              <p className="text-sm text-slate-400">Works with browser apps and desktop tools like Excel—capturing the workflows cloud-only solutions miss.</p>
+              <p className="text-sm text-slate-400">Native support for Excel, QuickBooks, and other desktop apps—not just browsers. Capture workflows where they actually happen.</p>
             </div>
             {/* Feature */}
             <div>
