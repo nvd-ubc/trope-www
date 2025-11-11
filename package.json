@@ -13,19 +13,33 @@
 		"publish": true
 	},
 	"dependencies": {
+		"@headlessui/react": "^2.2.0",
+		"@mdx-js/loader": "^3.1.0",
+		"@mdx-js/react": "^3.1.0",
+		"@next/mdx": "15.3.3",
 		"@opennextjs/cloudflare": "^1.12.0",
+		"@types/mdx": "^2.0.13",
+		"aos": "3.0.0-beta.6",
+		"date-fns": "^4.1.0",
 		"next": "15.3.3",
+		"next-mdx-remote": "^5.0.0",
 		"react": "19.0.0",
-		"react-dom": "19.0.0"
+		"react-dom": "19.0.0",
+		"rehype-pretty-code": "^0.14.0",
+		"swiper": "^8.4.7"
 	},
 	"devDependencies": {
 		"@eslint/eslintrc": "3",
+		"@tailwindcss/forms": "^0.5.10",
 		"@tailwindcss/postcss": "4.1.4",
+		"@tailwindcss/typography": "^0.5.16",
+		"@types/aos": "^3.0.7",
 		"@types/node": "^24.0.4",
 		"@types/react": "19.0.10",
 		"@types/react-dom": "19.0.4",
 		"eslint": "9.27.0",
 		"eslint-config-next": "15.3.3",
+		"postcss": "^8.5.1",
 		"tailwindcss": "4.1.1",
 		"typescript": "5.8.3",
 		"wrangler": "^4.46.0"
