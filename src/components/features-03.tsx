@@ -25,8 +25,8 @@ export default function Features03() {
 
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">More than a login box</h2>
-            <p className="text-lg text-slate-400">There are many variations available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look even slightly believable.</p>
+            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">From stale wikis to living workflows</h2>
+            <p className="text-lg text-slate-400">Stop losing time to outdated documentation and tribal knowledge. Trope automatically detects when workflows drift, flags outdated steps, and keeps your team aligned—without the maintenance burden.</p>
           </div>
 
           <div className="max-w-3xl mx-auto">

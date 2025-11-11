@@ -16,10 +16,10 @@ export default function PricingSection() {
           {/* Content */}
           <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
             <div>
-              <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">Pricing plans</div>
+              <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">Pricing</div>
             </div>
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Flexible plans and features</h2>
-            <p className="text-lg text-slate-400">All the lorem ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet.</p>
+            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Simple, transparent pricing</h2>
+            <p className="text-lg text-slate-400">Pay per user, scale as you grow. Starting at $20/user/month with annual billing. Enterprise plans available for teams with custom needs.</p>
           </div>
           <Pricing />
         </div>

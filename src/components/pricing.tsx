@@ -39,33 +39,33 @@ export default function Pricing() {
             </div>
           </div>
         </div>
-        {/* Pro price */}
+        {/* Starter price */}
         <div className="px-6 flex flex-col justify-end">
           <div className="grow pb-4 mb-4 border-b border-slate-800">
-            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Pro</div>
+            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Starter</div>
             <div className="mb-1">
-              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '24' : '29'}</span><span className="text-sm text-slate-600 font-medium">/mo</span>
+              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '20' : '25'}</span><span className="text-sm text-slate-600 font-medium">/user/mo</span>
             </div>
-            <div className="text-slate-500">Everything at your fingertips.</div>
+            <div className="text-slate-500">Perfect for small teams.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="#0">
-              Get Started <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+              Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>
         </div>
-        {/* Team price */}
+        {/* Growth price */}
         <div className="px-6 flex flex-col justify-end">
           <div className="grow pb-4 mb-4 border-b border-slate-800">
-            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Team</div>
+            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Growth</div>
             <div className="mb-1">
-              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '49' : '54'}</span><span className="text-sm text-slate-600 font-medium">/mo</span>
+              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '24' : '30'}</span><span className="text-sm text-slate-600 font-medium">/user/mo</span>
             </div>
-            <div className="text-slate-500">Everything at your fingertips.</div>
+            <div className="text-slate-500">Scale with your team.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-white bg-purple-500 hover:bg-purple-600 w-full transition duration-150 ease-in-out group" href="#0">
-              Get Started <span className="tracking-normal text-purple-300 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+            <a className="btn-sm text-white bg-purple-500 hover:bg-purple-600 w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+              Talk to Sales <span className="tracking-normal text-purple-300 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>
         </div>
@@ -74,13 +74,13 @@ export default function Pricing() {
           <div className="grow pb-4 mb-4 border-b border-slate-800">
             <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Enterprise</div>
             <div className="mb-1">
-              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '79' : '85'}</span><span className="text-sm text-slate-600 font-medium">/mo</span>
+              <span className="text-3xl font-bold text-slate-50">Custom</span>
             </div>
-            <div className="text-slate-500">Everything at your fingertips.</div>
+            <div className="text-slate-500">For large organizations.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="#0">
-              Get Started <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+              Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>
         </div>
@@ -97,16 +97,16 @@ export default function Pricing() {
         <div className="px-6 flex flex-col justify-end">
           <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Usage</div>
         </div>
-        {/* Social Connections */}
+        {/* Workflows */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Social Connections</div>
+          <div className="py-2 text-slate-400 border-b border-slate-800">Workflows</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>100 <span className="md:hidden">Social Connections</span></span>
+            <span>10 <span className="md:hidden">Workflows</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -114,7 +114,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>250 <span className="md:hidden">Social Connections</span></span>
+            <span>50 <span className="md:hidden">Workflows</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -122,27 +122,19 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>Unlimited <span className="md:hidden">Social Connections</span></span>
+            <span>Unlimited <span className="md:hidden">Workflows</span></span>
           </div>
         </div>
-        {/* Custom Domains */}
+        {/* Team Members */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Custom Domains</div>
+          <div className="py-2 text-slate-400 border-b border-slate-800">Team Members</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>4 <span className="md:hidden">Custom Domains</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Unlimited <span className="md:hidden">Custom Domains</span></span>
+            <span>5 <span className="md:hidden">Team Members</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -150,19 +142,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>Unlimited <span className="md:hidden">Custom Domains</span></span>
-          </div>
-        </div>
-        {/* User Role Management */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">User Role Management</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Unlimited <span className="md:hidden">User Role Management</span></span>
+            <span>25 <span className="md:hidden">Team Members</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -170,7 +150,19 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>Unlimited <span className="md:hidden">User Role Management</span></span>
+            <span>Unlimited <span className="md:hidden">Team Members</span></span>
+          </div>
+        </div>
+        {/* Automated Steps/Month */}
+        <div className="px-6 flex flex-col justify-end">
+          <div className="py-2 text-slate-400 border-b border-slate-800">Automated Steps/Month</div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span>1,000 <span className="md:hidden">Automated Steps/Month</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -178,19 +170,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>Unlimited <span className="md:hidden">User Role Management</span></span>
-          </div>
-        </div>
-        {/* External Databases */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">External Databases</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>1 <span className="md:hidden">External Databases</span></span>
+            <span>10,000 <span className="md:hidden">Automated Steps/Month</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -198,15 +178,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span>5 <span className="md:hidden">External Databases</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Unlimited <span className="md:hidden">External Databases</span></span>
+            <span>Custom <span className="md:hidden">Automated Steps/Month</span></span>
           </div>
         </div>
         {/* # Features */}
@@ -222,16 +194,16 @@ export default function Pricing() {
         <div className="px-6 flex flex-col justify-end">
           <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Features</div>
         </div>
-        {/* Custom Connection */}
+        {/* Drift Detection */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Custom Connection</div>
+          <div className="py-2 text-slate-400 border-b border-slate-800">Drift Detection</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Custom Connection</span></span>
+            <span><span className="md:hidden">Drift Detection</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -239,7 +211,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Custom Connection</span></span>
+            <span><span className="md:hidden">Drift Detection</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -247,27 +219,19 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Custom Connection</span></span>
+            <span><span className="md:hidden">Drift Detection</span></span>
           </div>
         </div>
-        {/* Advanced Deployment Options */}
+        {/* In-App Overlays */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Advanced Deployment Options</div>
+          <div className="py-2 text-slate-400 border-b border-slate-800">In-App Overlays</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Advanced Deployment Options</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Advanced Deployment Options</span></span>
+            <span><span className="md:hidden">In-App Overlays</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -275,19 +239,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Advanced Deployment Options</span></span>
-          </div>
-        </div>
-        {/* Extra Add-ons */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Extra Add-ons</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Extra Add-ons</span></span>
+            <span><span className="md:hidden">In-App Overlays</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -295,7 +247,19 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Extra Add-ons</span></span>
+            <span><span className="md:hidden">In-App Overlays</span></span>
+          </div>
+        </div>
+        {/* Desktop Support */}
+        <div className="px-6 flex flex-col justify-end">
+          <div className="py-2 text-slate-400 border-b border-slate-800">Desktop Support</div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Desktop Support</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -303,21 +267,52 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Extra Add-ons</span></span>
+            <span><span className="md:hidden">Desktop Support</span></span>
           </div>
         </div>
-        {/* Admin Roles */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Admin Roles</div>
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Desktop Support</span></span>
+          </div>
+        </div>
+        {/* Audit Logs */}
+        <div className="px-6 flex flex-col justify-end">
+          <div className="py-2 text-slate-400 border-b border-slate-800">Audit Logs</div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Audit Logs</span></span>
+          </div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Audit Logs</span></span>
+          </div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Audit Logs</span></span>
+          </div>
+        </div>
+        {/* Role-Based Permissions */}
+        <div className="px-6 flex flex-col justify-end">
+          <div className="py-2 text-slate-400 border-b border-slate-800">Role-Based Permissions</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Admin Roles</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Admin Roles</span></span>
+            <span><span className="md:hidden">Role-Based Permissions</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -325,21 +320,7 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Admin Roles</span></span>
-          </div>
-        </div>
-        {/* Deploy and Monitor */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Deploy and Monitor</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Deploy and Monitor</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Deploy and Monitor</span></span>
+            <span><span className="md:hidden">Role-Based Permissions</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -347,21 +328,21 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Deploy and Monitor</span></span>
+            <span><span className="md:hidden">Role-Based Permissions</span></span>
           </div>
         </div>
-        {/* Enterprise Add-ons */}
+        {/* SSO & SCIM */}
         <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Enterprise Add-ons</div>
+          <div className="py-2 text-slate-400 border-b border-slate-800">SSO & SCIM</div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Enterprise Add-ons</span></span>
+            <span><span className="md:hidden">SSO & SCIM</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
           <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Enterprise Add-ons</span></span>
+            <span><span className="md:hidden">SSO & SCIM</span></span>
           </div>
         </div>
         <div className="px-6 flex flex-col justify-end">
@@ -369,7 +350,29 @@ export default function Pricing() {
             <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
               <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
             </svg>
-            <span><span className="md:hidden">Enterprise Add-ons</span></span>
+            <span><span className="md:hidden">SSO & SCIM</span></span>
+          </div>
+        </div>
+        {/* Data Residency */}
+        <div className="px-6 flex flex-col justify-end">
+          <div className="py-2 text-slate-400 border-b border-slate-800">Data Residency</div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
+            <span><span className="md:hidden">Data Residency</span></span>
+          </div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
+            <span><span className="md:hidden">Data Residency</span></span>
+          </div>
+        </div>
+        <div className="px-6 flex flex-col justify-end">
+          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
+            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
+              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
+            </svg>
+            <span><span className="md:hidden">Data Residency</span></span>
           </div>
         </div>
         {/* # Support */}

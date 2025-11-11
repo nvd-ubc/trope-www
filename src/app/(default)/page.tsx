@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Home - Stellar',
-  description: 'Page description',
+  title: 'Trope - Record Once. Guide & Automate Forever.',
+  description: 'Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop.',
 }
 
 import Hero from '@/components/hero'
@@ -19,12 +19,18 @@ export default function Home() {
     <>
       <Hero />
       <Clients />
-      <Features />
-      <Features02 />
-      <Features03 />
-      <TestimonialsCarousel />
-      <Features04 />
-      <Pricing />
+      <div id="features">
+        <Features />
+        <Features02 />
+        <Features03 />
+        <Features04 />
+      </div>
+      <div id="use-cases">
+        <TestimonialsCarousel />
+      </div>
+      <div id="pricing">
+        <Pricing />
+      </div>
       <Testimonials />
       <Cta />
     </>

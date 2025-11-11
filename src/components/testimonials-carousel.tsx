@@ -53,10 +53,10 @@ export default function TestimonialsCarousel() {
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
             <div>
-              <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">The security first platform</div>
+              <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">Use Cases</div>
             </div>
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Spot issues faster</h2>
-            <p className="text-lg text-slate-400">All the lorem ipsum generators on the Internet tend to repeat predefined chunks as necessary, making this the first true generator on the Internet.</p>
+            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Built for real teams</h2>
+            <p className="text-lg text-slate-400">From accounting teams to operations and development—Trope captures the workflows that matter most to your organization.</p>
           </div>
 
           {/* Carousel built with Swiper.js [https://swiperjs.com/] */}
@@ -76,8 +76,8 @@ export default function TestimonialsCarousel() {
                     <div className="flex flex-col p-6 h-full">
                       <Image className="mb-3" src={CarouselImg01} width={56} height={56} alt="Icon 01" />
                       <div className="grow">
-                        <div className="font-bold text-lg mb-1">Anonymous User</div>
-                        <div className="text-slate-400 mb-3">Incorporate rich user profiling, and facilitate more transactions.</div>
+                        <div className="font-bold text-lg mb-1">Accounting & Finance</div>
+                        <div className="text-slate-400 mb-3">Monthly close procedures, journal entries, reconciliations, and batch invoicing—captured and kept fresh automatically.</div>
                       </div>
                       <div className="text-right">
                         <a className="text-sm font-medium text-slate-300 hover:text-white inline-flex items-center transition duration-150 ease-in-out group" href="#0">Learn More <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span></a>
@@ -96,8 +96,8 @@ export default function TestimonialsCarousel() {
                     <div className="flex flex-col p-6 h-full">
                       <Image className="mb-3" src={CarouselImg02} width={56} height={56} alt="Icon 01" />
                       <div className="grow">
-                        <div className="font-bold text-lg mb-1">Bot Detection</div>
-                        <div className="text-slate-400 mb-3">Incorporate rich user profiling, and facilitate more transactions.</div>
+                        <div className="font-bold text-lg mb-1">Inventory & Operations</div>
+                        <div className="text-slate-400 mb-3">CSV merges, deduplication, label generation, and data exchanges between POS systems and supplier sheets.</div>
                       </div>
                       <div className="text-right">
                         <a className="text-sm font-medium text-slate-300 hover:text-white inline-flex items-center transition duration-150 ease-in-out group" href="#0">Learn More <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span></a>
@@ -116,8 +116,8 @@ export default function TestimonialsCarousel() {
                     <div className="flex flex-col p-6 h-full">
                       <Image className="mb-3" src={CarouselImg03} width={56} height={56} alt="Icon 01" />
                       <div className="grow">
-                        <div className="font-bold text-lg mb-1">Social integrations</div>
-                        <div className="text-slate-400 mb-3">Incorporate rich user profiling, and facilitate more transactions.</div>
+                        <div className="font-bold text-lg mb-1">Support & Admin</div>
+                        <div className="text-slate-400 mb-3">Repetitive data entry, report exports, templated emails, and document packaging workflows—streamlined and guided.</div>
                       </div>
                       <div className="text-right">
                         <a className="text-sm font-medium text-slate-300 hover:text-white inline-flex items-center transition duration-150 ease-in-out group" href="#0">Learn More <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span></a>
@@ -136,8 +136,8 @@ export default function TestimonialsCarousel() {
                     <div className="flex flex-col p-6 h-full">
                       <Image className="mb-3" src={CarouselImg04} width={56} height={56} alt="Icon 01" />
                       <div className="grow">
-                        <div className="font-bold text-lg mb-1">Progressive Profiling</div>
-                        <div className="text-slate-400 mb-3">Incorporate rich user profiling, and facilitate more transactions.</div>
+                        <div className="font-bold text-lg mb-1">Developer Onboarding</div>
+                        <div className="text-slate-400 mb-3">Access requests, repository setup, environment configuration, and project initialization checklists—always up to date.</div>
                       </div>
                       <div className="text-right">
                         <a className="text-sm font-medium text-slate-300 hover:text-white inline-flex items-center transition duration-150 ease-in-out group" href="#0">Learn More <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span></a>
@@ -156,8 +156,8 @@ export default function TestimonialsCarousel() {
                     <div className="flex flex-col p-6 h-full">
                       <Image className="mb-3" src={CarouselImg05} width={56} height={56} alt="Icon 05" />
                       <div className="grow">
-                        <div className="font-bold text-lg mb-1">Secure Access</div>
-                        <div className="text-slate-400 mb-3">Incorporate rich user profiling, and facilitate more transactions.</div>
+                        <div className="font-bold text-lg mb-1">Desktop Workflows</div>
+                        <div className="text-slate-400 mb-3">Excel operations, desktop app workflows, and file management tasks that cloud-only solutions can't reach.</div>
                       </div>
                       <div className="text-right">
                         <a className="text-sm font-medium text-slate-300 hover:text-white inline-flex items-center transition duration-150 ease-in-out group" href="#0">Learn More <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span></a>
