@@ -1,4 +1,4 @@
-# Next.js Framework Starter
+# Next.js Framework Starter - Trope
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/next-starter-template)
 
