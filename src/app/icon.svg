@@ -1,0 +1,16 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="32" height="32" rx="6" fill="#1e293b"/>
+
+  <!-- Layered stack icon in purple -->
+  <g transform="translate(6, 6)">
+    <!-- Top layer -->
+    <path d="M10 2L2 6L10 10L18 6L10 2Z" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="#a855f7" fill-opacity="0.3"/>
+
+    <!-- Middle layer -->
+    <path d="M2 12L10 16L18 12" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Bottom layer -->
+    <path d="M2 16L10 20L18 16" stroke="#a855f7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>
