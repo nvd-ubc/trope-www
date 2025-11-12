@@ -24,8 +24,8 @@ export default function Features05() {
 
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center pb-12">
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Stop overpaying for software</h2>
-            <p className="text-lg text-slate-400">There are many variations available, but the majority have suffered alteration in some form, by injected humour.</p>
+            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Everything you need to scale knowledge</h2>
+            <p className="text-lg text-slate-400">From capture to guidance to automation—Trope gives you the full toolkit to eliminate tribal knowledge and keep your team aligned as you grow.</p>
           </div>
 
           {/* Rings illustration */}
@@ -55,7 +55,7 @@ export default function Features05() {
                   <Image className="w-14 h-14 drop-shadow-lg animate-[float_2.4s_ease-in-out_infinite] opacity-25" src={Icon06} width={80} height={80} alt="Pricing icon 06" />
                 </div>
                 <div className="rotate-[4deg]">
-                  <Image className="w-11 h-11 drop-shadow-lg animate-[float_2.6ås_ease-in-out_infinite] opacity-10" src={Icon07} width={80} height={80} alt="Pricing icon 07" />
+                  <Image className="w-11 h-11 drop-shadow-lg animate-[float_2.6s_ease-in-out_infinite] opacity-10" src={Icon07} width={80} height={80} alt="Pricing icon 07" />
                 </div>
               </div>
             </div>
@@ -71,7 +71,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  Purpose-built for company that requires more than a <strong className="text-slate-300 font-medium">simple plan</strong> with security infrastructure.
+                  <strong className="text-slate-300 font-medium">Desktop & Web capture</strong> for Excel, QuickBooks, and all your browser-based apps—not just websites.
                 </p>
               </div>
             </div>
@@ -83,7 +83,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  AI-powered to <strong className="text-slate-300 font-medium">remove the burdens</strong> of tedious knowledge management and security tasks.
+                  <strong className="text-slate-300 font-medium">Drift detection</strong> automatically flags outdated steps when apps or documents change.
                 </p>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  There's no prioritized support in Stellar. You can use email or live chat and you will hear back in a <strong className="text-slate-300 font-medium">couple of hours</strong>.
+                  <strong className="text-slate-300 font-medium">In-app overlays</strong> guide your team right where they work—no context switching required.
                 </p>
               </div>
             </div>
@@ -107,7 +107,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  Comprehensive <strong className="text-slate-300 font-medium">developer docs</strong> and a centralized support center packed many resources.
+                  <strong className="text-slate-300 font-medium">Safe automation</strong> with human-in-the-loop approval for critical steps and full audit trails.
                 </p>
               </div>
             </div>
@@ -119,7 +119,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  No upcharges—and we'd never upsell you to a higher plan or a <strong className="text-slate-300 font-medium">dedicated IP</strong> to improve deliverability.
+                  <strong className="text-slate-300 font-medium">Role-based permissions</strong> ensure the right people see the right workflows and automations.
                 </p>
               </div>
             </div>
@@ -131,7 +131,7 @@ export default function Features05() {
                   <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
                 <p className="text-sm text-slate-400">
-                  Tool training, dedicated resources, and <strong className="text-slate-300 font-medium">regular updates</strong> are available for both small and large teams.
+                  <strong className="text-slate-300 font-medium">Version control & lineage</strong> track every workflow change with full rollback capabilities.
                 </p>
               </div>
             </div>
