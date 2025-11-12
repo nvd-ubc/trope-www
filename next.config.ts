@@ -10,8 +10,4 @@ const withMDX = createMDX({
 	// Add markdown plugins here, as desired
 });
 
-// added by create cloudflare to enable calling `getCloudflareContext()` in `next dev`
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-initOpenNextCloudflareForDev();
-
 export default withMDX(nextConfig);
