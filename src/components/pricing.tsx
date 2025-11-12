@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function Pricing() {
   const [annual, setAnnual] = useState<boolean>(true)
@@ -49,7 +50,7 @@ export default function Pricing() {
             <div className="text-slate-500">Perfect for small teams.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
               Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>
@@ -64,7 +65,7 @@ export default function Pricing() {
             <div className="text-slate-500">Scale with your team.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-white bg-purple-500 hover:bg-purple-600 w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+            <a className="btn-sm text-white bg-purple-500 hover:bg-purple-600 w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
               Talk to Sales <span className="tracking-normal text-purple-300 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>
@@ -79,7 +80,7 @@ export default function Pricing() {
             <div className="text-slate-500">For large organizations.</div>
           </div>
           <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
               Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
             </a>
           </div>

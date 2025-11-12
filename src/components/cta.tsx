@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from '@/lib/constants'
+
 export default function Cta() {
   return (
     <section>
@@ -28,7 +30,7 @@ export default function Cta() {
             <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Stop losing knowledge. Start scaling.</h2>
             <p className="text-lg text-slate-400 mb-8">Transform tribal knowledge into living guides that keep your team aligned and productive. Record once, guide forever.</p>
             <div>
-              <a className="btn text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white transition duration-150 ease-in-out group" href="mailto:hello@trope.ai">
+              <a className="btn text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
                 Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
               </a>
             </div>

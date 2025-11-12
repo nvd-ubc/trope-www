@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function MobileMenu() {
   const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false)
@@ -81,7 +82,7 @@ export default function MobileMenu() {
             <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/#pricing">Pricing</Link>
           </li>
           <li>
-            <a className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="mailto:hello@trope.ai">Talk to Sales</a>
+            <a className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
           </li>
         </ul>
       </nav>

@@ -1,3 +1,5 @@
+import { CONTACT_EMAIL } from '@/lib/constants'
+
 export default function SchemaMarkup() {
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -6,7 +8,7 @@ export default function SchemaMarkup() {
     "url": "https://trope.ai",
     "logo": "https://trope.ai/images/logo.png",
     "description": "Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop.",
-    "email": "hello@trope.ai",
+    "email": CONTACT_EMAIL,
     "sameAs": [
       // Add social media profiles here when available
       // "https://twitter.com/tropeai",
