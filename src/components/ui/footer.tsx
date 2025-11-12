@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import Logo from './logo'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
@@ -32,10 +33,10 @@ export default function Footer() {
             <h6 className="text-sm text-slate-50 font-medium mb-2">Product</h6>
             <ul className="text-sm space-y-2">
               <li>
-                <a className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/#features">Features</a>
+                <Link className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/#features">Features</Link>
               </li>
               <li>
-                <a className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/#pricing">Pricing</a>
+                <Link className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="/#pricing">Pricing</Link>
               </li>
               <li>
                 <a className="text-slate-400 hover:text-slate-200 transition duration-150 ease-in-out" href="#0">Documentation</a>

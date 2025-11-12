@@ -1,5 +1,3 @@
-import Image from 'next/image'
-import Illustration from '@public/images/page-illustration.svg'
 import Pricing from '@/components/pricing'
 
 export default function PricingSection() {
