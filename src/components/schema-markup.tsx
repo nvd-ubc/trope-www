@@ -6,14 +6,9 @@ export default function SchemaMarkup() {
     "@type": "Organization",
     "name": "Trope",
     "url": "https://trope.ai",
-    "logo": "https://trope.ai/images/logo.png",
+    "logo": "https://trope.ai/images/logo.svg",
     "description": "Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop.",
     "email": CONTACT_EMAIL,
-    "sameAs": [
-      // Add social media profiles here when available
-      // "https://twitter.com/tropeai",
-      // "https://linkedin.com/company/trope"
-    ],
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "US"
@@ -38,11 +33,6 @@ export default function SchemaMarkup() {
         "unitText": "user per month"
       }
     },
-    "aggregateRating": {
-      "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "ratingCount": "3"
-    },
     "description": "Workflow automation and documentation software that transforms tribal knowledge into living guides with drift detection and safe automation.",
     "featureList": [
       "Workflow Recording",
@@ -59,12 +49,7 @@ export default function SchemaMarkup() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Trope",
-    "url": "https://trope.ai",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://trope.ai/search?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
+    "url": "https://trope.ai"
   }
 
   return (

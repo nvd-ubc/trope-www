@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Customer Post - Stellar',
-  description: 'Page description',
+  title: 'Customer Story',
+  description: 'Read how companies transform their workflows and onboarding with Trope.',
 }
 
 import Link from 'next/link'

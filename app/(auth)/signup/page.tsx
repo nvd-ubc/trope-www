@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Sign Up - Stellar',
-  description: 'Page description',
+  title: 'Sign Up',
+  description: 'Create your free Trope account and start automating workflows with living documentation and in-app guidance.',
 }
 
 import Link from 'next/link'

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'About - Stellar',
-  description: 'Page description',
+  title: 'About',
+  description: 'Learn about Trope\'s mission to transform how teams create, share, and automate workflows through living documentation.',
 }
 
 import Hero from '@/components/hero-about'

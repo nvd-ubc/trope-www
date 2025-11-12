@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Integrations - Stellar',
-  description: 'Page description',
+  title: 'Integrations',
+  description: 'Connect Trope with your favorite tools and platforms to build powerful automated workflows.',
 }
 
 import IntegrationsSection from './integrations-section'

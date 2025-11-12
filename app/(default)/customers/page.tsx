@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Customers - Stellar',
-  description: 'Page description',
+  title: 'Customer Stories',
+  description: 'See how leading companies use Trope to streamline onboarding, accelerate training, and automate workflows.',
 }
 
 import Image from 'next/image'

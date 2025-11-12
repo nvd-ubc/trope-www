@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Integrations Post - Stellar',
-  description: 'Page description',
+  title: 'Integration',
+  description: 'Learn how to integrate this tool with Trope to enhance your workflow automation.',
 }
 
 import Link from 'next/link'

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Reset Password - Stellar',
-  description: 'Page description',
+  title: 'Reset Password',
+  description: 'Reset your Trope account password to regain access to your workspace.',
 }
 
 import AuthLogo from '../auth-logo'

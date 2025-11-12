@@ -12,11 +12,13 @@ import Pricing from './pricing-section'
 import Faqs from '@/components/faqs'
 import Cta from '@/components/cta'
 import SchemaMarkup from '@/components/schema-markup'
+import FAQSchema from '@/components/faq-schema'
 
 export default function Home() {
   return (
     <>
       <SchemaMarkup />
+      <FAQSchema />
       <Hero />
       <div id="features">
         <Features />
