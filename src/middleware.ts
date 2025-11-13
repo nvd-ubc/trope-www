@@ -7,7 +7,6 @@ const blockedRoutes = [
   '/integrations',
   '/customers',
   '/changelog',
-  '/signin',
   '/signup',
   '/reset-password',
 ]
