@@ -82,6 +82,9 @@ export default function MobileMenu() {
             <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/#pricing">Pricing</Link>
           </li>
           <li>
+            <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/signin">Sign in</Link>
+          </li>
+          <li>
             <a className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
           </li>
         </ul>
