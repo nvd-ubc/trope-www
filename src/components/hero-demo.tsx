@@ -7,28 +7,35 @@ export default function HeroDemo() {
   const [hasPlayedOnce, setHasPlayedOnce] = useState(false)
   const [phase, setPhase] = useState<'idle' | 'recording' | 'guiding' | 'automating' | 'complete'>('idle')
   const [step, setStep] = useState(0)
-  const [cursorPos, setCursorPos] = useState({ x: 50, y: 30 })
+  const [cursorPos, setCursorPos] = useState({ x: 28, y: 44 })
   const [isClicking, setIsClicking] = useState(false)
   const [showOverlay, setShowOverlay] = useState(false)
   const [automationProgress, setAutomationProgress] = useState(0)
+  const [windowVisible, setWindowVisible] = useState(false) // Starts hidden, animates in on "Open" step
+  const [dataVisible, setDataVisible] = useState({ b12: false, b15: false }) // Track cell data visibility separately
 
+  // Step 0: "Open file" - window animates in, no cursor
+  // Steps 1-3: Cursor interactions with cells
   const recordingSteps = [
-    { action: 'Open Q3 Report.xlsx', x: 15, y: 12 },
-    { action: 'Navigate to cell B12', x: 45, y: 55 },
-    { action: 'Enter revenue data', x: 45, y: 55 },
-    { action: 'Apply SUM formula', x: 45, y: 70 },
+    { action: 'Open Q3 Report.xlsx', x: null, y: null },  // No cursor - window opens
+    { action: 'Navigate to cell B12', x: 28, y: 44 },     // Cell B12 (row 12 is ~44% down)
+    { action: 'Enter revenue data', x: 28, y: 44 },       // Stay on B12
+    { action: 'Apply SUM formula', x: 28, y: 75 },        // Cell B15 (row 15 is ~75% down)
   ]
 
   const resetAnimation = useCallback(() => {
     setPhase('idle')
     setStep(0)
-    setCursorPos({ x: 50, y: 30 })
+    setCursorPos({ x: 28, y: 44 })
     setShowOverlay(false)
     setAutomationProgress(0)
+    setWindowVisible(false)
+    setDataVisible({ b12: false, b15: false })
   }, [])
 
   const startAnimation = useCallback(() => {
     if (phase !== 'idle') return
+    setWindowVisible(true) // Window animates in for "Open" step
     setPhase('recording')
     setHasPlayedOnce(true)
   }, [phase])
@@ -45,7 +52,7 @@ export default function HeroDemo() {
     if (phase === 'idle') {
       const timeout = setTimeout(() => {
         startAnimation()
-      }, hasPlayedOnce ? 2000 : 1000)
+      }, hasPlayedOnce ? 2000 : 400) // First play triggers quickly
       return () => clearTimeout(timeout)
     }
   }, [phase, hasPlayedOnce, startAnimation])
@@ -58,21 +65,46 @@ export default function HeroDemo() {
       if (phase === 'recording') {
         if (step < recordingSteps.length) {
           const nextStep = recordingSteps[step]
-          setCursorPos({ x: nextStep.x, y: nextStep.y })
-          setTimeout(() => {
-            setIsClicking(true)
-            setTimeout(() => setIsClicking(false), 150)
-          }, 400)
+          // Step 0 is "Open file" - no cursor, just window appearing
+          // Steps 1+ have cursor interactions
+          if (nextStep.x !== null && nextStep.y !== null) {
+            setCursorPos({ x: nextStep.x, y: nextStep.y })
+            setTimeout(() => {
+              setIsClicking(true)
+              setTimeout(() => setIsClicking(false), 150)
+            }, 400)
+          }
+
+          // Show data in cells after the relevant steps
+          // Step 2 = "Enter revenue data" -> show B12 data after click
+          if (step === 2) {
+            setTimeout(() => setDataVisible(d => ({ ...d, b12: true })), 600)
+          }
+          // Step 3 = "Apply SUM formula" -> show B15 formula after click
+          if (step === 3) {
+            setTimeout(() => setDataVisible(d => ({ ...d, b15: true })), 600)
+          }
+
           setStep(s => s + 1)
         } else {
           setTimeout(() => {
             setPhase('guiding')
             setStep(0)
             setShowOverlay(true)
+            // Reset data so it can appear again during guidance
+            setDataVisible({ b12: false, b15: false })
           }, 800)
         }
       } else if (phase === 'guiding') {
-        if (step < 3) {
+        if (step < 4) {
+          // Step 0: "Enter revenue data" tooltip shown, B12 data appears
+          if (step === 0) {
+            setTimeout(() => setDataVisible(d => ({ ...d, b12: true })), 600)
+          }
+          // Step 2: Tooltip switches to "Calculate total", B15 formula appears
+          if (step === 2) {
+            setTimeout(() => setDataVisible(d => ({ ...d, b15: true })), 600)
+          }
           setStep(s => s + 1)
         } else {
           setTimeout(() => {
@@ -108,8 +140,8 @@ export default function HeroDemo() {
       {/* Glow behind the demo */}
       <div className={`absolute inset-0 bg-[#1861C8]/20 rounded-3xl blur-2xl transform transition-all duration-500 ${isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`} />
 
-      {/* Main demo container */}
-      <div className={`relative bg-gradient-to-b from-[#0a1a3a] to-[#061025] border rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${isActive ? 'border-[#1861C8]/40' : 'border-[#1861C8]/20'}`}>
+      {/* Main demo container - animates in on "Open" step */}
+      <div className={`relative bg-gradient-to-b from-[#0a1a3a] to-[#061025] border rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 ${isActive ? 'border-[#1861C8]/40' : 'border-[#1861C8]/20'} ${windowVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
 
         {/* Window chrome */}
@@ -168,9 +200,13 @@ export default function HeroDemo() {
                   {row}
                 </div>
                 {['A', 'B', 'C', 'D', 'E'].map(col => {
-                  const isActive = (col === 'B' && row === 12 && step >= 2) ||
-                                   (col === 'B' && row === 15 && step >= 4)
-                  const isHighlighted = showOverlay && col === 'B' && row === 12
+                  // Cells are "active" (highlighted bg) when they have data entered
+                  const isActive = (col === 'B' && row === 12 && dataVisible.b12) ||
+                                   (col === 'B' && row === 15 && dataVisible.b15)
+                  // Ring highlight during guidance phase
+                  const isHighlighted = showOverlay && col === 'B' && (
+                    (row === 12 && step < 2) || (row === 15 && step >= 2 && step < 4)
+                  )
                   return (
                     <div
                       key={col}
@@ -184,7 +220,7 @@ export default function HeroDemo() {
                       {col === 'A' && row === 11 && 'North'}
                       {col === 'B' && row === 11 && '$42,500'}
                       {col === 'A' && row === 12 && 'South'}
-                      {col === 'B' && row === 12 && step >= 3 && (
+                      {col === 'B' && row === 12 && dataVisible.b12 && (
                         <span className="animate-fade-in">$38,200</span>
                       )}
                       {col === 'A' && row === 13 && 'East'}
@@ -192,7 +228,7 @@ export default function HeroDemo() {
                       {col === 'A' && row === 14 && 'West'}
                       {col === 'B' && row === 14 && '$44,100'}
                       {col === 'A' && row === 15 && <span className="font-medium">Total</span>}
-                      {col === 'B' && row === 15 && step >= 4 && (
+                      {col === 'B' && row === 15 && dataVisible.b15 && (
                         <span className="font-medium text-[#61AFF9] animate-fade-in">=SUM(B11:B14)</span>
                       )}
                     </div>
@@ -202,8 +238,8 @@ export default function HeroDemo() {
             ))}
           </div>
 
-          {/* Animated cursor */}
-          {phase === 'recording' && (
+          {/* Animated cursor - only shows after step 0 (the "Open" step) */}
+          {phase === 'recording' && step > 0 && (
             <div
               className="absolute transition-all duration-500 ease-out pointer-events-none z-20"
               style={{
@@ -227,22 +263,44 @@ export default function HeroDemo() {
             </div>
           )}
 
-          {/* Guidance overlay tooltip */}
+          {/* Guidance overlay tooltips - cycles through steps */}
           {showOverlay && (
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-fade-in">
-              <div className="bg-[#1861C8] text-white px-4 py-3 rounded-xl shadow-xl max-w-[200px]">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
-                    {step}
+            <>
+              {/* Step 1: Enter revenue data (cell B12) - shows for steps 0-1 */}
+              {step < 2 && (
+                <div className="absolute left-[18%] top-[5%] z-30 animate-fade-in" key="guidance-1">
+                  <div className="bg-[#1861C8] text-white px-4 py-3 rounded-xl shadow-xl max-w-[200px]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                        1
+                      </div>
+                      <span className="text-xs font-medium">Enter revenue data</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">
+                      Type the Q3 revenue for the South region
+                    </p>
+                    <div className="absolute -bottom-2 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-[#1861C8]" />
                   </div>
-                  <span className="text-xs font-medium">Enter revenue data</span>
                 </div>
-                <p className="text-[10px] text-white/70">
-                  Type the Q3 revenue for the South region
-                </p>
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-[#1861C8]" />
-              </div>
-            </div>
+              )}
+              {/* Step 2: Apply SUM formula (cell B15) - shows for steps 2-3 */}
+              {step >= 2 && step < 4 && (
+                <div className="absolute left-[18%] top-[38%] z-30 animate-fade-in" key="guidance-2">
+                  <div className="bg-[#1861C8] text-white px-4 py-3 rounded-xl shadow-xl max-w-[200px]">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">
+                        2
+                      </div>
+                      <span className="text-xs font-medium">Calculate total</span>
+                    </div>
+                    <p className="text-[10px] text-white/70">
+                      Apply SUM formula to get the total revenue
+                    </p>
+                    <div className="absolute -bottom-2 left-8 w-0 h-0 border-l-8 border-r-8 border-t-8 border-transparent border-t-[#1861C8]" />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Automation progress overlay */}
@@ -275,27 +333,40 @@ export default function HeroDemo() {
           )}
         </div>
 
-        {/* Steps panel */}
+        {/* Steps panel - fixed height to prevent layout jumps */}
         <div className="p-4 bg-[#000E2E]/80 border-t border-[#1861C8]/20">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs text-[#D7EEFC]/40">Captured steps</span>
             <span className="text-xs text-[#61AFF9]">{Math.min(step, recordingSteps.length)} of {recordingSteps.length}</span>
           </div>
-          <div className="space-y-2">
-            {recordingSteps.slice(0, Math.min(step, recordingSteps.length)).map((s, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 p-2 rounded-lg bg-[#010329]/50 animate-slide-in"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <div className="w-5 h-5 rounded-full bg-[#1861C8] flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+          {/* Fixed height container for all 4 steps */}
+          <div className="space-y-2 h-[168px]">
+            {recordingSteps.map((s, idx) => {
+              const isVisible = idx < Math.min(step, recordingSteps.length)
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ease-out ${
+                    isVisible
+                      ? 'bg-[#010329]/50 opacity-100 translate-y-0'
+                      : 'bg-transparent opacity-0 translate-y-2'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-300 ${
+                    isVisible ? 'bg-[#1861C8]' : 'bg-[#1861C8]/20'
+                  }`}>
+                    {isVisible && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors duration-300 ${
+                    isVisible ? 'text-[#D7EEFC]/70' : 'text-[#D7EEFC]/20'
+                  }`}>{s.action}</span>
                 </div>
-                <span className="text-xs text-[#D7EEFC]/70">{s.action}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
