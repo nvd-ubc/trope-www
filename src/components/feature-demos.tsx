@@ -240,7 +240,7 @@ export function RecordDemo({ index = 0 }: { index?: number }) {
           <div
             key={i}
             className={`h-6 rounded bg-[#1861C8]/10 transition-all duration-300 ${
-              i === 1 && isActive && activeStep >= 1 ? 'bg-[#1861C8]/30 ring-1 ring-[#61AFF9]' : ''
+              isActive && activeStep === i ? 'bg-[#1861C8]/30 ring-1 ring-[#61AFF9]' : ''
             }`}
             style={{ width: `${70 - i * 15}%` }}
           />
