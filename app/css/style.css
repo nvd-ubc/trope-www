@@ -117,9 +117,19 @@
     }
   }
 
+  @keyframes bounce-subtle {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-3px);
+    }
+  }
+
   --animate-fade-in: fade-in 0.4s ease-out forwards;
   --animate-slide-in: slide-in 0.3s ease-out forwards;
   --animate-scale-in: scale-in 0.3s ease-out forwards;
+  --animate-bounce-subtle: bounce-subtle 1.5s ease-in-out infinite;
 }
 
 /*
@@ -154,6 +164,9 @@
   }
   .animate-scale-in {
     animation: scale-in 0.3s ease-out forwards;
+  }
+  .animate-bounce-subtle {
+    animation: bounce-subtle 1.5s ease-in-out infinite;
   }
 }
 
