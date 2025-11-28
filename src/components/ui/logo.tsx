@@ -10,8 +10,7 @@ export default function Logo() {
         alt=""
         width={24}
         height={17}
-        className="h-[17px] w-auto dark:invert"
-        style={{ filter: 'invert(1)' }}
+        className="h-[17px] w-auto"
       />
       {/* Logotype */}
       <Image
@@ -19,8 +18,7 @@ export default function Logo() {
         alt="Trope"
         width={80}
         height={29}
-        className="h-[18px] w-auto dark:invert"
-        style={{ filter: 'invert(1)' }}
+        className="h-[18px] w-auto"
       />
     </Link>
   )

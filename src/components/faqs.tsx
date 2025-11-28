@@ -27,7 +27,7 @@ export default function Faqs() {
       answer: (
         <>
           Absolutely. Trope uses end-to-end encryption for all workflow data. We're in the process of obtaining SOC2 compliance. Review our{' '}
-          <a href="/subprocessors" className="text-gray-900 underline hover:no-underline">
+          <a href="/subprocessors" className="text-[#61AFF9] underline hover:no-underline">
             subprocessors page
           </a>{' '}
           for details.
@@ -45,11 +45,15 @@ export default function Faqs() {
   ]
 
   return (
-    <section className="py-20 md:py-28 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="py-20 md:py-28 relative bg-[#010329]">
+      {/* Subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#000E2E] to-[#010329]" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-12" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-medium text-gray-900 mb-4">
+          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">FAQ</p>
+          <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
             Questions & Answers
           </h2>
         </div>
@@ -59,18 +63,18 @@ export default function Faqs() {
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden"
+              className="bg-[#000E2E]/50 rounded-xl border border-[#1861C8]/20 overflow-hidden backdrop-blur-sm"
               data-aos="fade-up"
               data-aos-delay={index * 50}
             >
               <button
                 onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-5 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between p-5 text-left hover:bg-[#031663]/30 transition-colors"
                 aria-expanded={openIndex === index}
               >
-                <h4 className="font-medium text-gray-900 pr-4">{faq.question}</h4>
+                <h4 className="font-medium text-white pr-4">{faq.question}</h4>
                 <svg
-                  className={`shrink-0 w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                  className={`shrink-0 w-5 h-5 text-[#61AFF9] transition-transform duration-200 ${
                     openIndex === index ? 'rotate-180' : ''
                   }`}
                   xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +93,7 @@ export default function Faqs() {
                   openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
                 }`}
               >
-                <div className="px-5 pb-5 text-gray-600">
+                <div className="px-5 pb-5 text-[#D7EEFC]/60">
                   {typeof faq.answer === 'string' ? <p>{faq.answer}</p> : <div>{faq.answer}</div>}
                 </div>
               </div>

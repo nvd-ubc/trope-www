@@ -31,36 +31,45 @@ export default function Features() {
   ]
 
   return (
-    <section className="py-20 md:py-28">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section id="features" className="py-20 md:py-28 relative bg-[#010329]">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#010329] via-[#031663] to-[#010329] opacity-50" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-medium text-gray-900 mb-4">
-            How Trope works
+          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">How it works</p>
+          <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
+            From manual to magical
           </h2>
-          <p className="text-lg text-gray-600">
-            From manual workflows to guided automation in three simple steps.
+          <p className="text-lg text-[#D7EEFC]/60">
+            Three simple steps to transform tribal knowledge into living documentation.
           </p>
         </div>
 
         {/* Features grid */}
-        <div className="grid md:grid-cols-3 gap-8 md:gap-12">
+        <div className="grid md:grid-cols-3 gap-8 md:gap-6">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="text-center"
+              className="group relative p-8 rounded-2xl bg-[#000E2E]/50 border border-[#1861C8]/20 hover:border-[#1861C8]/40 transition-all duration-300 hover:-translate-y-1 backdrop-blur-sm"
               data-aos="fade-up"
               data-aos-delay={index * 100}
             >
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gray-100 text-gray-700 mb-5">
-                {feature.icon}
+              {/* Gradient glow on hover */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#1861C8]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+              <div className="relative">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#031663] text-[#61AFF9] mb-5 group-hover:bg-[#1861C8]/30 transition-colors duration-300">
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-medium text-white mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-[#D7EEFC]/60 leading-relaxed">
+                  {feature.description}
+                </p>
               </div>
-              <h3 className="text-xl font-medium text-gray-900 mb-3">
-                {feature.title}
-              </h3>
-              <p className="text-gray-600">
-                {feature.description}
-              </p>
             </div>
           ))}
         </div>

@@ -58,22 +58,22 @@ export default function Pricing() {
     <div>
       {/* Toggle */}
       <div className="flex justify-center mb-12" data-aos="fade-up">
-        <div className="inline-flex items-center gap-3 bg-gray-100 rounded-full p-1">
+        <div className="inline-flex items-center gap-1 bg-[#031663]/50 rounded-full p-1 border border-[#1861C8]/20">
           <button
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-              !annual ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+            className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 ${
+              !annual ? 'bg-[#1861C8] text-white shadow-sm' : 'text-[#D7EEFC]/60 hover:text-white'
             }`}
             onClick={() => setAnnual(false)}
           >
             Monthly
           </button>
           <button
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${
-              annual ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600'
+            className={`px-5 py-2.5 text-sm font-medium rounded-full transition-all duration-300 ${
+              annual ? 'bg-[#1861C8] text-white shadow-sm' : 'text-[#D7EEFC]/60 hover:text-white'
             }`}
             onClick={() => setAnnual(true)}
           >
-            Yearly <span className="text-emerald-600 ml-1">-20%</span>
+            Yearly <span className="text-[#61AFF9] font-medium ml-1">-20%</span>
           </button>
         </div>
       </div>
@@ -83,19 +83,28 @@ export default function Pricing() {
         {plans.map((plan, index) => (
           <div
             key={index}
-            className={`rounded-2xl p-6 ${
+            className={`group relative rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 ${
               plan.highlighted
-                ? 'bg-gray-900 text-white ring-2 ring-gray-900'
-                : 'bg-white border border-gray-200'
+                ? 'bg-gradient-to-b from-[#1861C8] to-[#031663] text-white shadow-2xl shadow-[#1861C8]/20 border border-[#61AFF9]/30'
+                : 'bg-[#000E2E]/50 border border-[#1861C8]/20 hover:border-[#1861C8]/40'
             }`}
             data-aos="fade-up"
             data-aos-delay={index * 100}
           >
+            {/* Popular badge for highlighted plan */}
+            {plan.highlighted && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-[#61AFF9] rounded-full shadow-lg">
+                  Most Popular
+                </span>
+              </div>
+            )}
+
             <div className="mb-6">
-              <h3 className={`text-lg font-medium mb-1 ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+              <h3 className={`text-lg font-medium mb-1 ${plan.highlighted ? 'text-white' : 'text-white'}`}>
                 {plan.name}
               </h3>
-              <p className={`text-sm ${plan.highlighted ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm ${plan.highlighted ? 'text-[#D7EEFC]/80' : 'text-[#D7EEFC]/60'}`}>
                 {plan.description}
               </p>
             </div>
@@ -103,15 +112,15 @@ export default function Pricing() {
             <div className="mb-6">
               {plan.price !== null ? (
                 <div className="flex items-baseline">
-                  <span className={`text-4xl font-medium ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+                  <span className="text-4xl font-medium text-white">
                     ${plan.price}
                   </span>
-                  <span className={`ml-1 ${plan.highlighted ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <span className={`ml-1 ${plan.highlighted ? 'text-[#D7EEFC]/80' : 'text-[#D7EEFC]/60'}`}>
                     /user/mo
                   </span>
                 </div>
               ) : (
-                <div className={`text-4xl font-medium ${plan.highlighted ? 'text-white' : 'text-gray-900'}`}>
+                <div className="text-4xl font-medium text-white">
                   Custom
                 </div>
               )}
@@ -119,20 +128,25 @@ export default function Pricing() {
 
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className={`block w-full py-3 px-4 text-center text-sm font-medium rounded-full transition-all mb-6 ${
+              className={`group/btn relative block w-full py-3 px-4 text-center text-sm font-medium rounded-full transition-all duration-300 mb-6 overflow-hidden ${
                 plan.highlighted
-                  ? 'bg-white text-gray-900 hover:bg-gray-100'
-                  : 'bg-gray-900 text-white hover:bg-gray-800'
+                  ? 'text-[#031663]'
+                  : 'text-white'
               }`}
             >
-              {plan.cta}
+              {plan.highlighted ? (
+                <span className="absolute inset-0 bg-white group-hover/btn:bg-[#D7EEFC] transition-colors" />
+              ) : (
+                <span className="absolute inset-0 bg-gradient-to-r from-[#1861C8] to-[#61AFF9] group-hover/btn:from-[#61AFF9] group-hover/btn:to-[#1861C8] transition-all" />
+              )}
+              <span className="relative">{plan.cta}</span>
             </a>
 
             <ul className="space-y-3">
               {plan.features.map((feature, featureIndex) => (
                 <li key={featureIndex} className="flex items-start gap-3">
                   <svg
-                    className={`w-5 h-5 shrink-0 mt-0.5 ${plan.highlighted ? 'text-emerald-400' : 'text-emerald-600'}`}
+                    className="w-5 h-5 shrink-0 mt-0.5 text-[#61AFF9]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -140,7 +154,7 @@ export default function Pricing() {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className={`text-sm ${plan.highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className={`text-sm ${plan.highlighted ? 'text-[#D7EEFC]/90' : 'text-[#D7EEFC]/60'}`}>
                     {feature}
                   </span>
                 </li>

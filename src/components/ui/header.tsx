@@ -18,10 +18,10 @@ export default function Header() {
           <nav className="hidden md:flex md:grow">
             <ul className="flex grow justify-center flex-wrap items-center">
               <li>
-                <Link className="font-medium text-sm text-gray-600 hover:text-gray-900 mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#features">Features</Link>
+                <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#features">Features</Link>
               </li>
               <li>
-                <Link className="font-medium text-sm text-gray-600 hover:text-gray-900 mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#pricing">Pricing</Link>
+                <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#pricing">Pricing</Link>
               </li>
             </ul>
           </nav>
@@ -29,14 +29,15 @@ export default function Header() {
           {/* Desktop CTA */}
           <ul className="flex-1 flex justify-end items-center">
             <li>
-              <Link className="font-medium text-sm text-gray-600 hover:text-gray-900 whitespace-nowrap transition duration-150 ease-in-out" href="/signin">Sign in</Link>
+              <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white whitespace-nowrap transition duration-150 ease-in-out" href="/signin">Sign in</Link>
             </li>
             <li className="ml-6">
               <a
-                className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 transition duration-150 ease-in-out"
+                className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-full transition-all duration-300 overflow-hidden hover:-translate-y-0.5"
                 href={`mailto:${CONTACT_EMAIL}`}
               >
-                Talk to Sales
+                <span className="absolute inset-0 bg-gradient-to-r from-[#1861C8] to-[#61AFF9] opacity-90 group-hover:opacity-100 transition-opacity" />
+                <span className="relative">Talk to Sales</span>
               </a>
             </li>
           </ul>

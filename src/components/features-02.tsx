@@ -19,14 +19,18 @@ export default function Features02() {
   ]
 
   return (
-    <section className="py-20 md:py-28 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="py-20 md:py-28 relative bg-[#031663]">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#010329] to-[#031663]" />
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-16" data-aos="fade-up">
-          <h2 className="text-3xl md:text-4xl font-medium text-gray-900 mb-4">
+          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">Capabilities</p>
+          <h2 className="text-3xl md:text-4xl font-medium text-white mb-4">
             Built for real workflows
           </h2>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-[#D7EEFC]/60">
             Unlike browser-only tools, Trope works where your team actually works.
           </p>
         </div>
@@ -36,14 +40,14 @@ export default function Features02() {
           {capabilities.map((capability, index) => (
             <div
               key={index}
-              className="bg-white rounded-2xl p-6 border border-gray-100"
+              className="group bg-[#000E2E]/50 rounded-2xl p-6 border border-[#1861C8]/20 hover:border-[#1861C8]/40 transition-all duration-300 backdrop-blur-sm"
               data-aos="fade-up"
               data-aos-delay={index * 50}
             >
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <h3 className="text-lg font-medium text-white mb-2">
                 {capability.title}
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-[#D7EEFC]/60 text-sm">
                 {capability.description}
               </p>
             </div>
