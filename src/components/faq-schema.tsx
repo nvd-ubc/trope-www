@@ -8,7 +8,7 @@ export default function FAQSchema() {
         "name": "What is Trope?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope is a workflow automation platform that records any workflow once, then delivers living, just-in-time guides and safe one-click automations for browser and desktop applications."
+          "text": "Trope is a workflow documentation platform that records any workflow once, then delivers living, just-in-time guides for browser and desktop applications."
         }
       },
       {

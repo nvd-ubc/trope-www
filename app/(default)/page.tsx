@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Trope - Record Once. Guide & Automate Forever.',
-  description: 'Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop.',
+  title: 'Trope - Record once. Guide forever.',
+  description: 'Trope records any workflow once—then delivers living, just-in-time guides for browser and desktop. Transform tribal knowledge into scalable processes.',
 }
 
 import Hero from '@/components/hero'

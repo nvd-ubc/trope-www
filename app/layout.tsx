@@ -27,11 +27,11 @@ const circularStd = localFont({
 export const metadata = {
   metadataBase: new URL('https://trope.ai'),
   title: {
-    default: 'Trope - Record Once. Guide & Automate Forever.',
+    default: 'Trope - Record once. Guide forever.',
     template: '%s | Trope'
   },
-  description: 'Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop. Transform tribal knowledge into scalable processes.',
-  keywords: ['workflow automation', 'process documentation', 'SOP automation', 'knowledge management', 'workflow recording', 'employee training automation', 'living documentation', 'drift detection'],
+  description: 'Trope records any workflow once—then delivers living, just-in-time guides for browser and desktop. Transform tribal knowledge into scalable processes.',
+  keywords: ['workflow documentation', 'process documentation', 'SOP software', 'knowledge management', 'workflow recording', 'employee training', 'living documentation', 'drift detection', 'desktop workflow'],
   authors: [{ name: 'Trope' }],
   creator: 'Trope',
   publisher: 'Trope',
@@ -40,19 +40,19 @@ export const metadata = {
     locale: 'en_US',
     url: 'https://trope.ai',
     siteName: 'Trope',
-    title: 'Trope - Record Once. Guide & Automate Forever.',
-    description: 'Transform tribal knowledge into living guides and safe automation. Record workflows once, guide your team forever.',
+    title: 'Trope - Record once. Guide forever.',
+    description: 'Transform tribal knowledge into living guides. Record workflows once, guide your team forever.',
     images: [{
       url: '/images/og-image.jpg',
       width: 1200,
       height: 630,
-      alt: 'Trope - Workflow Automation Platform'
+      alt: 'Trope - Workflow Documentation Platform'
     }]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Trope - Record Once. Guide & Automate Forever.',
-    description: 'Transform tribal knowledge into living guides and safe automation.',
+    title: 'Trope - Record once. Guide forever.',
+    description: 'Transform tribal knowledge into living guides. Record workflows once, guide your team forever.',
     images: ['/images/og-image.jpg'],
   },
   robots: {
