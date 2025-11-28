@@ -12,7 +12,6 @@ export default function AuthLogo() {
           width={28}
           height={20}
           className="h-[20px] w-auto"
-          style={{ filter: 'invert(1)' }}
         />
         {/* Logotype */}
         <Image
@@ -21,7 +20,6 @@ export default function AuthLogo() {
           width={90}
           height={33}
           className="h-[22px] w-auto"
-          style={{ filter: 'invert(1)' }}
         />
       </Link>
     </div>

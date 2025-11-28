@@ -12,19 +12,19 @@ export default function SignIn() {
       {/* Page header */}
       <div className="max-w-3xl mx-auto text-center pb-8">
         <AuthLogo />
-        <h1 className="text-2xl md:text-3xl font-medium text-gray-900">Sign in to your account</h1>
+        <h1 className="text-2xl md:text-3xl font-medium text-white">Sign in to your account</h1>
       </div>
 
       {/* Form */}
       <div className="max-w-sm mx-auto">
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+        <div className="bg-[#010329]/60 rounded-2xl border border-[#1861C8]/20 p-6 backdrop-blur-sm">
           <form>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-700 font-medium mb-1.5" htmlFor="email">Email</label>
+                <label className="block text-sm text-[#D7EEFC]/70 font-medium mb-1.5" htmlFor="email">Email</label>
                 <input
                   id="email"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#1861C8]/30 bg-[#000E2E] text-white placeholder-[#D7EEFC]/30 focus:border-[#61AFF9] focus:ring-1 focus:ring-[#61AFF9] transition"
                   type="email"
                   placeholder="you@example.com"
                   required
@@ -32,12 +32,12 @@ export default function SignIn() {
               </div>
               <div>
                 <div className="flex justify-between">
-                  <label className="block text-sm text-gray-700 font-medium mb-1.5" htmlFor="password">Password</label>
-                  <Link className="text-sm font-medium text-gray-600 hover:text-gray-900 transition" href="/reset-password">Forgot?</Link>
+                  <label className="block text-sm text-[#D7EEFC]/70 font-medium mb-1.5" htmlFor="password">Password</label>
+                  <Link className="text-sm font-medium text-[#61AFF9] hover:text-[#61AFF9]/80 transition" href="/reset-password">Forgot?</Link>
                 </div>
                 <input
                   id="password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900 transition"
+                  className="w-full px-4 py-2.5 rounded-lg border border-[#1861C8]/30 bg-[#000E2E] text-white placeholder-[#D7EEFC]/30 focus:border-[#61AFF9] focus:ring-1 focus:ring-[#61AFF9] transition"
                   type="password"
                   autoComplete="on"
                   required
@@ -45,16 +45,16 @@ export default function SignIn() {
               </div>
             </div>
             <div className="mt-6">
-              <button className="w-full py-3 px-4 text-sm font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 transition">
+              <button className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition">
                 Sign In
               </button>
             </div>
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-[#D7EEFC]/50 mt-6">
           Don&apos;t have an account?{' '}
-          <Link className="font-medium text-gray-900 hover:underline" href="/signup">Sign up</Link>
+          <Link className="font-medium text-[#61AFF9] hover:text-[#61AFF9]/80" href="/signup">Sign up</Link>
         </p>
       </div>
     </>
