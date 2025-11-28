@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { CONTACT_EMAIL } from '@/lib/constants'
+import AnimateIn from './animate-in'
 
 // Floating window component with typing animation
 function FloatingWindow({
@@ -225,40 +226,48 @@ export default function Cta() {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-2xl mx-auto text-center">
           {/* Eyebrow text */}
-          <p className="text-[#61AFF9] text-sm font-medium mb-5 tracking-wide uppercase">
-            Get Started
-          </p>
+          <AnimateIn>
+            <p className="text-[#61AFF9] text-sm font-medium mb-5 tracking-wide uppercase">
+              Get Started
+            </p>
+          </AnimateIn>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-            Ready to transform how<br className="hidden sm:block" /> your team works?
-          </h2>
+          <AnimateIn delay={100}>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to transform how<br className="hidden sm:block" /> your team works?
+            </h2>
+          </AnimateIn>
 
-          <p className="text-lg text-[#D7EEFC]/50 mb-10 max-w-lg mx-auto">
-            Join teams who have turned tribal knowledge into living documentation that scales.
-          </p>
+          <AnimateIn delay={200}>
+            <p className="text-lg text-[#D7EEFC]/50 mb-10 max-w-lg mx-auto">
+              Join teams who have turned tribal knowledge into living documentation that scales.
+            </p>
+          </AnimateIn>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              className="group inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition-all duration-200"
-              href={`mailto:${CONTACT_EMAIL}`}
-            >
-              Talk to Sales
-              <svg
-                className="ml-2 w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <AnimateIn delay={300}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                className="group inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition-all duration-200"
+                href={`mailto:${CONTACT_EMAIL}`}
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </a>
-            <a
-              className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-[#D7EEFC]/80 border border-[#D7EEFC]/20 rounded-full hover:border-[#D7EEFC]/40 hover:text-white transition-all duration-200"
-              href="#features"
-            >
-              Learn more
-            </a>
-          </div>
+                Talk to Sales
+                <svg
+                  className="ml-2 w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </a>
+              <a
+                className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-[#D7EEFC]/80 border border-[#D7EEFC]/20 rounded-full hover:border-[#D7EEFC]/40 hover:text-white transition-all duration-200"
+                href="#features"
+              >
+                Learn more
+              </a>
+            </div>
+          </AnimateIn>
         </div>
       </div>
     </section>

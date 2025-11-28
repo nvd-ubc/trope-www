@@ -1,5 +1,6 @@
 import { CONTACT_EMAIL } from '@/lib/constants'
 import HeroDemo from './hero-demo'
+import AnimateIn from './animate-in'
 
 export default function Hero() {
   return (
@@ -29,42 +30,52 @@ export default function Hero() {
             {/* Left: Content */}
             <div className="text-center lg:text-left">
               {/* Subtitle */}
-              <p className="text-[#61AFF9] text-sm md:text-base mb-4 tracking-wide font-medium">
-                Workflow automation for teams
-              </p>
+              <AnimateIn delay={0} duration={700}>
+                <p className="text-[#61AFF9] text-sm md:text-base mb-4 tracking-wide font-medium">
+                  Workflow automation for teams
+                </p>
+              </AnimateIn>
 
               {/* Main headline */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-white leading-[1.1]">
-                Record once,<br />
-                <span className="text-[#61AFF9]">guide forever</span>
-              </h1>
+              <AnimateIn delay={100} duration={700}>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-white leading-[1.1]">
+                  Record once,<br />
+                  <span className="text-[#61AFF9]">guide forever</span>
+                </h1>
+              </AnimateIn>
 
               {/* Description */}
-              <p className="text-base md:text-lg text-[#D7EEFC]/60 max-w-lg mx-auto lg:mx-0 mb-8">
-                Trope records any workflow once—across desktop apps and the web—then delivers living guides and safe one-click automations.
-              </p>
+              <AnimateIn delay={200} duration={700}>
+                <p className="text-base md:text-lg text-[#D7EEFC]/60 max-w-lg mx-auto lg:mx-0 mb-8">
+                  Trope records any workflow once—across desktop apps and the web—then delivers living guides and safe one-click automations.
+                </p>
+              </AnimateIn>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <a
-                  className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-[#1861C8] rounded-full hover:bg-[#61AFF9] transition-colors duration-200"
-                  href={`mailto:${CONTACT_EMAIL}`}
-                >
-                  Talk to Sales
-                </a>
-                <a
-                  className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[#D7EEFC]/80 border border-[#1861C8]/40 rounded-full hover:border-[#61AFF9] hover:text-white transition-colors duration-200"
-                  href="#features"
-                >
-                  Learn more
-                </a>
-              </div>
+              <AnimateIn delay={300} duration={700}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <a
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-[#1861C8] rounded-full hover:bg-[#61AFF9] transition-colors duration-200"
+                    href={`mailto:${CONTACT_EMAIL}`}
+                  >
+                    Talk to Sales
+                  </a>
+                  <a
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[#D7EEFC]/80 border border-[#1861C8]/40 rounded-full hover:border-[#61AFF9] hover:text-white transition-colors duration-200"
+                    href="#features"
+                  >
+                    Learn more
+                  </a>
+                </div>
+              </AnimateIn>
             </div>
 
             {/* Right: Animated demo */}
-            <div className="relative flex justify-center lg:justify-end">
-              <HeroDemo />
-            </div>
+            <AnimateIn delay={400} duration={800} animation="scale">
+              <div className="relative flex justify-center lg:justify-end">
+                <HeroDemo />
+              </div>
+            </AnimateIn>
           </div>
 
         </div>
