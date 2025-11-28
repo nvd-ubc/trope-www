@@ -14,7 +14,21 @@ interface AutoPlayContextType {
 const AutoPlayContext = createContext<AutoPlayContextType | null>(null)
 
 // Timer indicator component - positioned by parent
-function TimerIndicator({ duration, isActive }: { duration: number; isActive: boolean }) {
+// Uses a key prop from parent to reset animation when active item changes
+function TimerIndicator({ duration }: { duration: number }) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    // Start from 0 and animate to full
+    setProgress(0)
+    // Small delay to ensure the reset happens before animation starts
+    const startTimeout = setTimeout(() => {
+      setProgress(100)
+    }, 50)
+
+    return () => clearTimeout(startTimeout)
+  }, [])
+
   return (
     <div className="w-5 h-5">
       <svg className="w-5 h-5 -rotate-90" viewBox="0 0 24 24">
@@ -35,9 +49,9 @@ function TimerIndicator({ duration, isActive }: { duration: number; isActive: bo
           stroke="currentColor"
           strokeWidth="2"
           strokeDasharray={62.83}
-          strokeDashoffset={isActive ? 0 : 62.83}
+          strokeDashoffset={62.83 - (62.83 * progress) / 100}
           className="text-[#61AFF9] transition-all ease-linear"
-          style={{ transitionDuration: isActive ? `${duration}ms` : '0ms' }}
+          style={{ transitionDuration: progress === 100 ? `${duration}ms` : '0ms' }}
         />
       </svg>
     </div>
@@ -116,6 +130,9 @@ interface FeatureCardProps {
 
 export function FeatureCard({ index, icon, title, description, children }: FeatureCardProps) {
   const { isActive, isAutoPlayActive, hoverProps } = useAutoPlay(index)
+  const context = useContext(AutoPlayContext)
+  // Use activeIndex as key to force TimerIndicator to remount and restart animation
+  const timerKey = context?.activeIndex ?? 0
 
   return (
     <div
@@ -143,10 +160,10 @@ export function FeatureCard({ index, icon, title, description, children }: Featu
         {description}
       </p>
 
-      {/* Timer at bottom right */}
+      {/* Timer at bottom right - key forces remount to restart animation */}
       {isAutoPlayActive && (
         <div className="absolute bottom-4 right-4">
-          <TimerIndicator duration={5000} isActive={true} />
+          <TimerIndicator key={timerKey} duration={5000} />
         </div>
       )}
     </div>
@@ -157,12 +174,15 @@ export function FeatureCard({ index, icon, title, description, children }: Featu
 export function RecordDemo({ index = 0 }: { index?: number }) {
   const { isActive } = useAutoPlay(index)
   const [activeStep, setActiveStep] = useState(0)
-  const [cursorPos, setCursorPos] = useState({ x: 20, y: 20 })
+  const [cursorPos, setCursorPos] = useState({ x: 55, y: 40 })
+  const [isClicking, setIsClicking] = useState(false)
 
+  // Cursor positions aligned with the 3 horizontal bars in the mock UI
+  // Bars start at top-12 (48px) in a 160px tall container, each h-6 with space-y-2
   const steps = [
-    { x: 25, y: 30 },
-    { x: 60, y: 45 },
-    { x: 45, y: 70 },
+    { x: 55, y: 40 },   // First bar (70% width)
+    { x: 45, y: 55 },   // Second bar (55% width) - this one highlights
+    { x: 35, y: 70 },   // Third bar (40% width)
   ]
 
   // Reset and animate when becoming active
@@ -170,6 +190,7 @@ export function RecordDemo({ index = 0 }: { index?: number }) {
     if (isActive) {
       setActiveStep(0)
       setCursorPos({ x: steps[0].x, y: steps[0].y })
+      setIsClicking(false)
     }
   }, [isActive])
 
@@ -181,9 +202,14 @@ export function RecordDemo({ index = 0 }: { index?: number }) {
       setActiveStep(s => {
         const next = (s + 1) % steps.length
         setCursorPos({ x: steps[next].x, y: steps[next].y })
+        // Click effect after cursor reaches destination (500ms transition)
+        setTimeout(() => {
+          setIsClicking(true)
+          setTimeout(() => setIsClicking(false), 200)
+        }, 500)
         return next
       })
-    }, 1000)
+    }, 1200)
 
     return () => clearInterval(interval)
   }, [isActive])
@@ -227,10 +253,16 @@ export function RecordDemo({ index = 0 }: { index?: number }) {
           className="absolute w-4 h-4 transition-all duration-500 ease-out z-10"
           style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
         >
-          <svg className="w-4 h-4 text-white drop-shadow-lg" viewBox="0 0 24 24" fill="currentColor">
+          <svg
+            className={`w-4 h-4 text-white drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
             <path d="M4 4l16 8-7 2-2 7z" />
           </svg>
-          <div className="absolute top-0 left-0 w-6 h-6 rounded-full bg-[#61AFF9]/40 animate-ping" />
+          {isClicking && (
+            <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#61AFF9]/50 animate-ping" />
+          )}
         </div>
       )}
 
@@ -260,10 +292,13 @@ export function GuidanceDemo({ index = 1 }: { index?: number }) {
   const [step, setStep] = useState(0)
   const [showTooltip, setShowTooltip] = useState(true)
 
+  // Tooltip positions aligned with form fields
+  // Form: inset-4, title h-4 + mb-3, then 3 fields with space-y-2
+  // Tooltips positioned to the right of each field
   const tooltipPositions = [
-    { top: '20%', left: '30%', label: 'Start here', desc: 'Click to begin' },
-    { top: '50%', left: '55%', label: 'Enter data', desc: 'Fill in the form' },
-    { top: '75%', left: '40%', label: 'Submit', desc: 'Click to save' },
+    { top: '2%', left: '55%', label: 'Start here', desc: 'Click to begin' },
+    { top: '22%', left: '55%', label: 'Enter data', desc: 'Fill in the form' },
+    { top: '42%', left: '12%', label: 'Submit', desc: 'Click to save' },
   ]
 
   // Reset when becoming active
@@ -394,11 +429,11 @@ export function AutomationDemo({ index = 2 }: { index?: number }) {
     >
 
       {/* Workflow steps */}
-      <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+      <div className="absolute top-4 left-4 right-4 flex items-center">
         {['Start', 'Process', 'Review', 'Done'].map((label, i) => (
-          <div key={label} className="flex items-center">
+          <div key={label} className="flex items-center flex-1 last:flex-none">
             <div
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-all duration-300 ${
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium transition-all duration-300 shrink-0 ${
                 isActive && progress >= (i + 1) * 25
                   ? 'bg-[#61AFF9] text-white'
                   : isActive && progress >= i * 25
@@ -416,7 +451,7 @@ export function AutomationDemo({ index = 2 }: { index?: number }) {
             </div>
             {i < 3 && (
               <div
-                className={`w-8 h-0.5 transition-colors duration-300 ${
+                className={`flex-1 h-0.5 transition-colors duration-300 ${
                   isActive && progress >= (i + 1) * 25 ? 'bg-[#61AFF9]' : 'bg-[#1861C8]/20'
                 }`}
               />

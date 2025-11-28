@@ -13,7 +13,21 @@ interface CapabilityAutoPlayContextType {
 const CapabilityAutoPlayContext = createContext<CapabilityAutoPlayContextType | null>(null)
 
 // Timer indicator component - positioned by parent
-function TimerIndicator({ duration, isActive }: { duration: number; isActive: boolean }) {
+// Uses a key prop from parent to reset animation when active item changes
+function TimerIndicator({ duration }: { duration: number }) {
+  const [progress, setProgress] = useState(0)
+
+  useEffect(() => {
+    // Start from 0 and animate to full
+    setProgress(0)
+    // Small delay to ensure the reset happens before animation starts
+    const startTimeout = setTimeout(() => {
+      setProgress(100)
+    }, 50)
+
+    return () => clearTimeout(startTimeout)
+  }, [])
+
   return (
     <div className="w-4 h-4">
       <svg className="w-4 h-4 -rotate-90" viewBox="0 0 24 24">
@@ -34,9 +48,9 @@ function TimerIndicator({ duration, isActive }: { duration: number; isActive: bo
           stroke="currentColor"
           strokeWidth="3"
           strokeDasharray={62.83}
-          strokeDashoffset={isActive ? 0 : 62.83}
+          strokeDashoffset={62.83 - (62.83 * progress) / 100}
           className="text-[#61AFF9] transition-all ease-linear"
-          style={{ transitionDuration: isActive ? `${duration}ms` : '0ms' }}
+          style={{ transitionDuration: progress === 100 ? `${duration}ms` : '0ms' }}
         />
       </svg>
     </div>
@@ -113,6 +127,9 @@ interface CapabilityCardProps {
 
 export function CapabilityCard({ index, title, description, children }: CapabilityCardProps) {
   const { isActive, isAutoPlayActive, hoverProps } = useCapabilityAutoPlay(index)
+  const context = useContext(CapabilityAutoPlayContext)
+  // Use activeIndex as key to force TimerIndicator to remount and restart animation
+  const timerKey = context?.activeIndex ?? 0
 
   return (
     <div
@@ -133,10 +150,10 @@ export function CapabilityCard({ index, title, description, children }: Capabili
         {description}
       </p>
 
-      {/* Timer at bottom right */}
+      {/* Timer at bottom right - key forces remount to restart animation */}
       {isAutoPlayActive && (
         <div className="absolute bottom-4 right-4">
-          <TimerIndicator duration={4000} isActive={true} />
+          <TimerIndicator key={timerKey} duration={4000} />
         </div>
       )}
     </div>
