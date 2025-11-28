@@ -1,20 +1,26 @@
+import { DesktopFirstIcon, DriftDetectionIcon, AuditTrailsIcon, RoleBasedIcon, CapabilityIconsContainer, CapabilityCard } from './capability-icons'
+
 export default function Features02() {
   const capabilities = [
     {
       title: 'Desktop-first',
       description: 'Works natively with Excel, QuickBooks, and desktop apps—not just browsers.',
+      Icon: DesktopFirstIcon,
     },
     {
       title: 'Drift detection',
       description: 'Automatically flags when apps change and workflows become outdated.',
+      Icon: DriftDetectionIcon,
     },
     {
       title: 'Audit trails',
       description: 'Every action logged with full lineage for compliance and coaching.',
+      Icon: AuditTrailsIcon,
     },
     {
       title: 'Role-based access',
       description: 'Scope workflows and permissions by team role.',
+      Icon: RoleBasedIcon,
     },
   ]
 
@@ -32,22 +38,21 @@ export default function Features02() {
           </p>
         </div>
 
-        {/* Capabilities grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {capabilities.map((capability, index) => (
-            <div
-              key={index}
-              className="bg-[#000E2E] rounded-xl p-5 md:p-6 border border-[#1861C8]/20 hover:border-[#1861C8]/40 transition-colors duration-200"
-            >
-              <h3 className="text-base md:text-lg font-semibold text-white mb-2">
-                {capability.title}
-              </h3>
-              <p className="text-[#D7EEFC]/60 text-sm leading-relaxed">
-                {capability.description}
-              </p>
-            </div>
-          ))}
-        </div>
+        {/* Capabilities grid with auto-play coordination */}
+        <CapabilityIconsContainer>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+            {capabilities.map((capability, index) => (
+              <CapabilityCard
+                key={index}
+                index={index}
+                title={capability.title}
+                description={capability.description}
+              >
+                <capability.Icon index={index} />
+              </CapabilityCard>
+            ))}
+          </div>
+        </CapabilityIconsContainer>
       </div>
     </section>
   )
