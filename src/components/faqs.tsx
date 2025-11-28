@@ -2,8 +2,60 @@
 
 import { useState } from 'react'
 
+// Individual FAQ item with smooth animation
+function FaqItem({
+  question,
+  answer,
+  isOpen,
+  onToggle
+}: {
+  question: string
+  answer: React.ReactNode
+  isOpen: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="border-b border-[#1861C8]/20">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between py-5 md:py-6 text-left group"
+        aria-expanded={isOpen}
+      >
+        <h4 className="font-semibold text-white pr-4 text-base md:text-lg">{question}</h4>
+        <svg
+          className={`shrink-0 w-5 h-5 text-[#D7EEFC]/40 transition-transform duration-300 ease-out ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M5 7.5L10 12.5L15 7.5"
+          />
+        </svg>
+      </button>
+      {/* Grid-based animation for smooth height transitions */}
+      <div
+        className="grid transition-all duration-300 ease-out"
+        style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
+      >
+        <div className="overflow-hidden">
+          <div className="pb-5 md:pb-6 text-[#D7EEFC]/60 text-base md:text-lg leading-relaxed max-w-[90%]">
+            {typeof answer === 'string' ? <p>{answer}</p> : <div>{answer}</div>}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Faqs() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const [openIndex, setOpenIndex] = useState<number | null>(0) // First one open by default
 
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index)
@@ -46,53 +98,24 @@ export default function Faqs() {
 
   return (
     <section className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Section header */}
-        <div className="max-w-3xl mx-auto text-center mb-10 md:mb-12">
-          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">FAQ</p>
+        <div className="mb-10 md:mb-14">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
-            Questions & Answers
+            Frequently asked questions
           </h2>
         </div>
 
-        {/* FAQ Accordion */}
-        <div className="max-w-3xl mx-auto space-y-3">
+        {/* FAQ Accordion - clean minimal style */}
+        <div className="border-t border-[#1861C8]/20">
           {faqs.map((faq, index) => (
-            <div
+            <FaqItem
               key={index}
-              className="bg-[#000E2E]/60 rounded-xl border border-[#1861C8]/20 overflow-hidden"
-            >
-              <button
-                onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-4 md:p-5 text-left hover:bg-[#031663]/20 transition-colors duration-200 active:bg-[#031663]/30"
-                aria-expanded={openIndex === index}
-              >
-                <h4 className="font-medium text-white pr-4 text-sm md:text-base">{faq.question}</h4>
-                <svg
-                  className={`shrink-0 w-5 h-5 text-[#61AFF9] transition-transform duration-200 ${
-                    openIndex === index ? 'rotate-180' : ''
-                  }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <div
-                className={`overflow-hidden transition-all duration-200 ease-out ${
-                  openIndex === index ? 'max-h-96' : 'max-h-0'
-                }`}
-              >
-                <div className="px-4 md:px-5 pb-4 md:pb-5 text-[#D7EEFC]/60 text-sm md:text-base">
-                  {typeof faq.answer === 'string' ? <p>{faq.answer}</p> : <div>{faq.answer}</div>}
-                </div>
-              </div>
-            </div>
+              question={faq.question}
+              answer={faq.answer}
+              isOpen={openIndex === index}
+              onToggle={() => toggleFaq(index)}
+            />
           ))}
         </div>
       </div>
