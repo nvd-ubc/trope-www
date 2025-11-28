@@ -2,7 +2,7 @@ import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function Cta() {
   return (
-    <section className="py-16 md:py-24 lg:py-28 bg-[#00050F]">
+    <section className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">

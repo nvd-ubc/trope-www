@@ -2,7 +2,7 @@ import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden min-h-screen flex items-center bg-[#00050F]">
+    <section className="relative overflow-hidden min-h-screen flex items-center bg-[#000E2E]">
       {/* Optimized gradient background - using CSS gradients instead of blur */}
       <div className="absolute inset-0">
         {/* Base radial gradient */}

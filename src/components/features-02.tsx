@@ -19,7 +19,7 @@ export default function Features02() {
   ]
 
   return (
-    <section className="py-16 md:py-24 lg:py-28 bg-[#010329]">
+    <section className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         {/* Section header */}
         <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
