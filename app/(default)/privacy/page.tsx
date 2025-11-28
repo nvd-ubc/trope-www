@@ -17,7 +17,7 @@ export default function PrivacyPolicy() {
 
               <div className="prose prose-invert max-w-none">
                 <p className="text-lg text-[#D7EEFC]/70 mb-6">
-                  Welcome to the Privacy Policy of Trope.ai ("we", "us", or "our"). We're building services that improve the personal computing experience by understanding your unique context and taking action at your command. When you use our services, you're trusting us to handle your personal data. We take that trust seriously and aim to incorporate privacy principles into every step of what we do, from the ground up.
+                  Welcome to the Privacy Policy of Trope ("we", "us", or "our"). We're building services that improve the personal computing experience by understanding your unique context and taking action at your command. When you use our services, you're trusting us to handle your personal data. We take that trust seriously and aim to incorporate privacy principles into every step of what we do, from the ground up.
                 </p>
 
                 <p className="text-[#D7EEFC]/70 mb-6">

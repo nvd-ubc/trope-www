@@ -74,7 +74,7 @@ export default function Footer() {
           {/* Bottom section */}
           <div className="pt-6 border-t border-[#1861C8]/10">
             <p className="text-sm text-[#D7EEFC]/30">
-              © {new Date().getFullYear()} Trope.ai. All rights reserved.
+              © {new Date().getFullYear()} Trope. All rights reserved.
             </p>
           </div>
         </div>
