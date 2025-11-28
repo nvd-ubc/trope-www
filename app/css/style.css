@@ -53,121 +53,25 @@
   --tracking-wider: 0.02em;
   --tracking-widest: 0.4em;
 
-  --animate-endless: endless 20s linear infinite;
-  --animate-shine: shine 5s linear 500ms infinite;
-  --animate-float: float 2s ease-in-out infinite;
-  --animate-infinite-scroll: infinite-scroll 40s linear infinite;
-  --animate-aurora: aurora 15s ease-in-out infinite;
-  --animate-aurora-reverse: aurora-reverse 18s ease-in-out infinite;
-  --animate-gradient-shift: gradient-shift 8s ease-in-out infinite;
-  --animate-pulse-subtle: pulse-subtle 4s ease-in-out infinite;
-  --animate-glow: glow 3s ease-in-out infinite;
+  /* Simplified, performant animations */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 8s ease-in-out infinite;
+  --animate-pulse-slow: pulse-slow 4s ease-in-out infinite;
 
-  @keyframes endless {
-    0% {
+  @keyframes float {
+    0%, 100% {
       transform: translateY(0);
     }
-    100% {
-      transform: translateY(-245px);
-    }
-  }
-  @keyframes shine {
-    0% {
-      top: 0;
-      transform: translateY(-100%) scaleY(10);
-      opacity: 0;
-    }
-    2% {
-      opacity: 0.5;
-    }
-    40% {
-      top: 100%;
-      transform: translateY(0) scaleY(200);
-      opacity: 0;
-    }
-    100% {
-      top: 100%;
-      transform: translateY(0) scaleY(1);
-      opacity: 0;
-    }
-  }
-  @keyframes float {
-    0% {
-      transform: translateY(3%);
-    }
     50% {
-      transform: translateY(-3%);
-    }
-    100% {
-      transform: translateY(3%);
+      transform: translateY(-10px);
     }
   }
-  @keyframes infinite-scroll {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-100%);
-    }
-  }
-  @keyframes aurora {
-    0%, 100% {
-      transform: translate(0%, 0%) scale(1);
-      opacity: 0.5;
-    }
-    25% {
-      transform: translate(5%, 10%) scale(1.1);
-      opacity: 0.6;
-    }
-    50% {
-      transform: translate(-5%, 5%) scale(0.95);
-      opacity: 0.4;
-    }
-    75% {
-      transform: translate(3%, -5%) scale(1.05);
-      opacity: 0.55;
-    }
-  }
-  @keyframes aurora-reverse {
-    0%, 100% {
-      transform: translate(0%, 0%) scale(1);
-      opacity: 0.4;
-    }
-    25% {
-      transform: translate(-8%, -5%) scale(1.08);
-      opacity: 0.5;
-    }
-    50% {
-      transform: translate(6%, -8%) scale(0.92);
-      opacity: 0.35;
-    }
-    75% {
-      transform: translate(-4%, 6%) scale(1.02);
-      opacity: 0.45;
-    }
-  }
-  @keyframes gradient-shift {
-    0%, 100% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-  }
-  @keyframes pulse-subtle {
+  @keyframes pulse-slow {
     0%, 100% {
       opacity: 1;
     }
     50% {
-      opacity: 0.85;
-    }
-  }
-  @keyframes glow {
-    0%, 100% {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 40px rgba(59, 130, 246, 0.5);
+      opacity: 0.7;
     }
   }
 }
@@ -176,9 +80,6 @@
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
 */
 @layer base {
   *,
@@ -190,7 +91,62 @@
   }
 }
 
-/* Additional Tailwind directives: https://tailwindcss.com/docs/functions-and-directives/#responsive */
+/* GPU-accelerated animations */
+@layer utilities {
+  .will-change-transform {
+    will-change: transform;
+  }
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar - dark and minimal */
+/* Webkit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Firefox - use @supports to avoid conflicting with webkit */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+}
+
+/* Better touch targets on mobile */
+@media (max-width: 768px) {
+  button, a {
+    min-height: 44px;
+  }
+}
+
 @utility rtl {
   direction: rtl;
 }
