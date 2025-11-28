@@ -1,18 +1,27 @@
 import './css/style.css'
 
-import { DM_Sans, Instrument_Serif } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-dm-sans',
-  display: 'swap'
-})
-
-const instrumentSerif = Instrument_Serif({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-instrument-serif',
-  display: 'swap'
+const circularStd = localFont({
+  src: [
+    {
+      path: './fonts/CircularStd-Book.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/CircularStd-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: './fonts/CircularStd-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-circular',
+  display: 'swap',
 })
 
 export const metadata = {
@@ -69,7 +78,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${dmSans.variable} ${instrumentSerif.variable} font-sans antialiased bg-white text-gray-900 tracking-tight`}>
+      <body className={`${circularStd.variable} font-sans antialiased bg-white text-gray-900`} style={{ letterSpacing: '-0.03em' }}>
         <div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
           {children}
         </div>

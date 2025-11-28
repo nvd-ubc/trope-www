@@ -21,10 +21,9 @@ export default function Hero() {
               A workflow automation platform for teams
             </p>
 
-            {/* Main headline with gradient text */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight mb-6" data-aos="fade-down" data-aos-delay="100">
-              <span className="text-gradient-warm font-serif italic">Record</span>{' '}
-              <span className="text-gray-900">once, guide forever</span>
+            {/* Main headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6" data-aos="fade-down" data-aos-delay="100">
+              Record once, guide forever
             </h1>
 
             {/* Description */}
