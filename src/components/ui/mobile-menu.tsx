@@ -36,32 +36,32 @@ export default function MobileMenu() {
       {/* Hamburger button */}
       <button
         ref={trigger}
-        className={`group inline-flex w-8 h-8 text-slate-300 hover:text-white text-center items-center justify-center transition`}
+        className={`group inline-flex w-8 h-8 text-gray-600 hover:text-gray-900 text-center items-center justify-center transition`}
         aria-controls="mobile-nav"
         aria-expanded={mobileNavOpen}
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
       >
         <span className="sr-only">Menu</span>
         <svg className="w-4 h-4 fill-current pointer-events-none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-          <rect 
+          <rect
             className="origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] -translate-y-[5px] group-aria-expanded:rotate-[315deg] group-aria-expanded:translate-y-0"
-            y="7" 
-            width="16" 
-            height="2" 
+            y="7"
+            width="16"
+            height="2"
             rx="1"
           />
-          <rect 
+          <rect
             className="origin-center group-aria-expanded:rotate-45 transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.8)]"
-            y="7" 
-            width="16" 
-            height="2" 
+            y="7"
+            width="16"
+            height="2"
             rx="1"
           />
-          <rect 
+          <rect
             className="origin-center transition-all duration-300 ease-[cubic-bezier(.5,.85,.25,1.1)] translate-y-[5px] group-aria-expanded:rotate-[135deg] group-aria-expanded:translate-y-0"
-            y="7" 
-            width="16" 
-            height="2" 
+            y="7"
+            width="16"
+            height="2"
             rx="1"
           />
         </svg>
@@ -74,18 +74,18 @@ export default function MobileMenu() {
         className="absolute top-full z-20 left-0 w-full px-4 sm:px-6 overflow-hidden transition-all duration-300 ease-in-out"
         style={mobileNavOpen ? { maxHeight: mobileNav.current?.scrollHeight, opacity: 1 } : { maxHeight: 0, opacity: 0.8 }}
       >
-        <ul className="border border-transparent [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] rounded-lg px-4 py-1.5">
+        <ul className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-2">
           <li>
-            <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/#features">Features</Link>
+            <Link className="flex font-medium text-sm text-gray-600 hover:text-gray-900 py-2" href="/#features">Features</Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/#pricing">Pricing</Link>
+            <Link className="flex font-medium text-sm text-gray-600 hover:text-gray-900 py-2" href="/#pricing">Pricing</Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href="/signin">Sign in</Link>
+            <Link className="flex font-medium text-sm text-gray-600 hover:text-gray-900 py-2" href="/signin">Sign in</Link>
           </li>
           <li>
-            <a className="flex font-medium text-sm text-slate-300 hover:text-white py-1.5" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
+            <a className="flex font-medium text-sm text-gray-600 hover:text-gray-900 py-2" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
           </li>
         </ul>
       </nav>

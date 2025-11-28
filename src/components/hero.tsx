@@ -1,54 +1,46 @@
-import Image from 'next/image'
-import Particles from './particles'
-import Illustration from '@public/images/glow-bottom.svg'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function Hero() {
   return (
-    <section>
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="relative overflow-hidden">
+      {/* Soft gradient background */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-violet-50/50 via-rose-50/30 to-amber-50/20" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-200/30 rounded-full blur-3xl" />
+        <div className="absolute top-20 right-1/4 w-80 h-80 bg-rose-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-1/2 w-[600px] h-[400px] bg-amber-100/30 rounded-full blur-3xl -translate-x-1/2" />
+      </div>
 
-        {/* Particles animation */}
-        <Particles className="absolute inset-0 -z-10" />
-
-        {/* Illustration */}
-        <div className="absolute inset-0 -z-10 -mx-28 rounded-b-[3rem] pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 -z-10">
-            <Image src={Illustration} className="max-w-none" width={2146} priority alt="Trope workflow automation platform - Record workflows once, guide your team forever" />
-          </div>
-        </div>
-
-        <div className="pt-32 pb-16 md:pt-52 md:pb-32">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="pt-32 pb-20 md:pt-44 md:pb-32">
 
           {/* Hero content */}
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="mb-6" data-aos="fade-down">
-              <div className="inline-flex relative before:absolute before:inset-0 before:bg-purple-500 before:blur-md">
-                <a className="btn-sm py-0.5 text-slate-300 hover:text-white transition duration-150 ease-in-out group [background:linear-gradient(var(--color-purple-500),var(--color-purple-500))_padding-box,linear-gradient(var(--color-purple-500),var(--color-purple-200)_75%,transparent_100%)_border-box] relative before:absolute before:inset-0 before:bg-slate-800/50 before:rounded-full before:pointer-events-none shadow-sm" href="#0">
-                  <span className="relative inline-flex items-center">
-                    Transform tribal knowledge into living guides <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-                  </span>
-                </a>
-              </div>
-            </div>
-            <h1 className="h1 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4" data-aos="fade-down">Record Once. Guide & Automate Forever.</h1>
-            <p className="text-lg text-slate-300 mb-8" data-aos="fade-down" data-aos-delay="200">Trope records any workflow once—across <strong className="text-slate-200">desktop apps like Excel</strong> and the web—then delivers living, just-in-time guides and safe one-click automations. Finally, a solution that works where your team actually works.</p>
-            <div className="max-w-xs mx-auto sm:max-w-none sm:inline-flex sm:justify-center space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-down" data-aos-delay="400">
-              <div>
-                <a className="btn text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
-                  Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-                </a>
-              </div>
-              <div>
-                <a className="btn text-slate-200 hover:text-white bg-slate-900/25 hover:bg-slate-900/30 w-full transition duration-150 ease-in-out" href={`mailto:${CONTACT_EMAIL}?subject=Demo Request`}>
-                  <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                    <path d="m1.999 0 1 2-1 2 2-1 2 1-1-2 1-2-2 1zM11.999 0l1 2-1 2 2-1 2 1-1-2 1-2-2 1zM11.999 10l1 2-1 2 2-1 2 1-1-2 1-2-2 1zM6.292 7.586l2.646-2.647L11.06 7.06 8.413 9.707zM0 13.878l5.586-5.586 2.122 2.121L2.12 16z" />
-                  </svg>
-                  <span>Request Demo</span>
-                </a>
-              </div>
-            </div>
+          <div className="max-w-4xl mx-auto text-center">
+            {/* Subtitle */}
+            <p className="text-gray-500 text-sm md:text-base mb-6" data-aos="fade-down">
+              A workflow automation platform for teams
+            </p>
 
+            {/* Main headline with gradient text */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium tracking-tight mb-6" data-aos="fade-down" data-aos-delay="100">
+              <span className="text-gradient-warm font-serif italic">Record</span>{' '}
+              <span className="text-gray-900">once, guide forever</span>
+            </h1>
+
+            {/* Description */}
+            <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10" data-aos="fade-down" data-aos-delay="200">
+              Trope records any workflow once—across desktop apps and the web—then delivers living guides and safe one-click automations.
+            </p>
+
+            {/* CTA Button */}
+            <div data-aos="fade-down" data-aos-delay="300">
+              <a
+                className="inline-flex items-center justify-center px-8 py-4 text-base font-medium text-white bg-gray-900 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg shadow-gray-900/10 hover:shadow-xl hover:shadow-gray-900/20 hover:-translate-y-0.5"
+                href={`mailto:${CONTACT_EMAIL}`}
+              >
+                Talk to Sales
+              </a>
+            </div>
           </div>
 
         </div>

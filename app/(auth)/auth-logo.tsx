@@ -1,14 +1,17 @@
 import Link from 'next/link'
-import Image from 'next/image'
-import Logo from '@public/images/logo.svg'
 
 export default function AuthLogo() {
   return (
-    <div className="mb-5">
-      <Link className="inline-flex" href="/">
-        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-          <Image className="relative" src={Logo} width={42} height={42} alt="Stellar" />
+    <div className="mb-8">
+      <Link className="inline-flex items-center gap-2" href="/">
+        <div className="relative w-10 h-10 flex items-center justify-center bg-gray-900 rounded-xl">
+          <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="currentColor" fillOpacity="0.2"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </div>
+        <span className="text-xl font-bold text-gray-900">Trope</span>
       </Link>
     </div>
   )
