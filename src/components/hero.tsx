@@ -1,54 +1,81 @@
-import Image from 'next/image'
-import Particles from './particles'
-import Illustration from '@public/images/glow-bottom.svg'
 import { CONTACT_EMAIL } from '@/lib/constants'
+import HeroDemo from './hero-demo'
+import AnimateIn from './animate-in'
 
 export default function Hero() {
   return (
-    <section>
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="relative overflow-hidden min-h-screen flex items-center bg-[#000E2E]">
+      {/* Optimized gradient background - using CSS gradients instead of blur */}
+      <div className="absolute inset-0">
+        {/* Base radial gradient */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(24, 97, 200, 0.15), transparent)'
+          }}
+        />
+        {/* Bottom glow */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 60% 40% at 50% 100%, rgba(97, 175, 249, 0.08), transparent)'
+          }}
+        />
+      </div>
 
-        {/* Particles animation */}
-        <Particles className="absolute inset-0 -z-10" />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 w-full relative">
+        <div className="pt-24 pb-16 md:pt-32 md:pb-24 lg:pt-40 lg:pb-32">
 
-        {/* Illustration */}
-        <div className="absolute inset-0 -z-10 -mx-28 rounded-b-[3rem] pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className="absolute left-1/2 -translate-x-1/2 bottom-0 -z-10">
-            <Image src={Illustration} className="max-w-none" width={2146} priority alt="Trope workflow automation platform - Record workflows once, guide your team forever" />
-          </div>
-        </div>
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            {/* Left: Content */}
+            <div className="text-center lg:text-left">
+              {/* Subtitle */}
+              <AnimateIn delay={0} duration={700}>
+                <p className="text-[#61AFF9] text-sm md:text-base mb-4 tracking-wide font-medium">
+                  Workflow automation for teams
+                </p>
+              </AnimateIn>
 
-        <div className="pt-32 pb-16 md:pt-52 md:pb-32">
+              {/* Main headline */}
+              <AnimateIn delay={100} duration={700}>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-5 text-white leading-[1.1]">
+                  Record once,<br />
+                  <span className="text-[#61AFF9]">guide forever</span>
+                </h1>
+              </AnimateIn>
 
-          {/* Hero content */}
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="mb-6" data-aos="fade-down">
-              <div className="inline-flex relative before:absolute before:inset-0 before:bg-purple-500 before:blur-md">
-                <a className="btn-sm py-0.5 text-slate-300 hover:text-white transition duration-150 ease-in-out group [background:linear-gradient(var(--color-purple-500),var(--color-purple-500))_padding-box,linear-gradient(var(--color-purple-500),var(--color-purple-200)_75%,transparent_100%)_border-box] relative before:absolute before:inset-0 before:bg-slate-800/50 before:rounded-full before:pointer-events-none shadow-sm" href="#0">
-                  <span className="relative inline-flex items-center">
-                    Transform tribal knowledge into living guides <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-                  </span>
-                </a>
-              </div>
+              {/* Description */}
+              <AnimateIn delay={200} duration={700}>
+                <p className="text-base md:text-lg text-[#D7EEFC]/60 max-w-lg mx-auto lg:mx-0 mb-8">
+                  Trope records any workflow once—across desktop apps and the web—then delivers living guides and safe one-click automations.
+                </p>
+              </AnimateIn>
+
+              {/* CTA Buttons */}
+              <AnimateIn delay={300} duration={700}>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <a
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-[#1861C8] rounded-full hover:bg-[#61AFF9] transition-colors duration-200"
+                    href={`mailto:${CONTACT_EMAIL}`}
+                  >
+                    Talk to Sales
+                  </a>
+                  <a
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[#D7EEFC]/80 border border-[#1861C8]/40 rounded-full hover:border-[#61AFF9] hover:text-white transition-colors duration-200"
+                    href="#features"
+                  >
+                    Learn more
+                  </a>
+                </div>
+              </AnimateIn>
             </div>
-            <h1 className="h1 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4" data-aos="fade-down">Record Once. Guide & Automate Forever.</h1>
-            <p className="text-lg text-slate-300 mb-8" data-aos="fade-down" data-aos-delay="200">Trope records any workflow once—across <strong className="text-slate-200">desktop apps like Excel</strong> and the web—then delivers living, just-in-time guides and safe one-click automations. Finally, a solution that works where your team actually works.</p>
-            <div className="max-w-xs mx-auto sm:max-w-none sm:inline-flex sm:justify-center space-y-4 sm:space-y-0 sm:space-x-4" data-aos="fade-down" data-aos-delay="400">
-              <div>
-                <a className="btn text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
-                  Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-                </a>
-              </div>
-              <div>
-                <a className="btn text-slate-200 hover:text-white bg-slate-900/25 hover:bg-slate-900/30 w-full transition duration-150 ease-in-out" href={`mailto:${CONTACT_EMAIL}?subject=Demo Request`}>
-                  <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                    <path d="m1.999 0 1 2-1 2 2-1 2 1-1-2 1-2-2 1zM11.999 0l1 2-1 2 2-1 2 1-1-2 1-2-2 1zM11.999 10l1 2-1 2 2-1 2 1-1-2 1-2-2 1zM6.292 7.586l2.646-2.647L11.06 7.06 8.413 9.707zM0 13.878l5.586-5.586 2.122 2.121L2.12 16z" />
-                  </svg>
-                  <span>Request Demo</span>
-                </a>
-              </div>
-            </div>
 
+            {/* Right: Animated demo */}
+            <AnimateIn delay={400} duration={800} animation="scale">
+              <div className="relative flex justify-center lg:justify-end">
+                <HeroDemo />
+              </div>
+            </AnimateIn>
           </div>
 
         </div>

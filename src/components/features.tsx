@@ -1,138 +1,64 @@
-'use client'
-
-import { useState } from 'react'
-
-import { Transition } from '@headlessui/react'
-import Particles from './particles'
+import { RecordDemo, GuidanceDemo, AutomationDemo, FeatureDemosContainer, FeatureCard } from './feature-demos'
 
 export default function Features() {
-
-  const [tab, setTab] = useState<number>(1)
+  const features = [
+    {
+      title: 'Record workflows',
+      description: 'Capture any workflow across desktop apps and the web with a single click. Works natively with Excel, QuickBooks, and more.',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="3" fill="currentColor" />
+        </svg>
+      ),
+      Demo: RecordDemo,
+    },
+    {
+      title: 'Just-in-time guidance',
+      description: 'Deliver contextual help right where your team works. Interactive overlays guide users through each step.',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+        </svg>
+      ),
+      Demo: GuidanceDemo,
+    },
+    {
+      title: 'Safe automation',
+      description: 'Graduate repetitive steps to one-click automations. Critical actions require approval, every step is logged.',
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      Demo: AutomationDemo,
+    },
+  ]
 
   return (
-    <section>
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
-
-        <div className="pt-16 pb-12 md:pt-52 md:pb-20">
-
-          <div>
-
-            {/* Section content */}
-            <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
-
-              {/* Content */}
-              <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none max-md:text-center" data-aos="fade-down">
-                {/* Content #1 */}
-                <div>
-                  <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">How Trope Works</div>
-                </div>
-                <h3 className="h3 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-3">From manual workflows to guided automation</h3>
-                <p className="text-lg text-slate-400 mb-8">Capture once, guide forever. Trope transforms your workflows into living documentation that stays fresh, proves lineage, and safely automates repetitive tasks.</p>
-                <div className="mt-8 max-w-xs max-md:mx-auto space-y-2">
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 1 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(1)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M15 2h-2V0h-2v2H9V0H7v2H5V0H3v2H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1ZM2 14V6h12v8H2Z" />
-                    </svg>
-                    <span>Record workflows effortlessly</span>
-                  </button>
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 2 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(2)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M2 6H0V2a2 2 0 0 1 2-2h4v2H2v4ZM16 6h-2V2h-4V0h4a2 2 0 0 1 2 2v4ZM14 16h-4v-2h4v-4h2v4a2 2 0 0 1-2 2ZM6 16H2a2 2 0 0 1-2-2v-4h2v4h4v2Z" />
-                    </svg>
-                    <span>Just-in-time guidance</span>
-                  </button>
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 3 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(3)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6Zm1-9H7v5h2V5Zm0 6H7v2h2v-2Z" />
-                    </svg>
-                    <span>Safe automation with governance</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Image */}
-              <div className="md:w-5/12 lg:w-1/2" data-aos="fade-up" data-aos-delay="100">
-                <div className="relative py-24 -mt-12">
-
-                  {/* Particles animation */}
-                  <Particles className="absolute inset-0 -z-10" quantity={8} staticity={30} />
-
-                  <div className="flex items-center justify-center">
-                    <div className="relative w-48 h-48 flex justify-center items-center">
-                      {/* Halo effect */}
-                      <svg className="absolute inset-0 -z-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 will-change-transform pointer-events-none blur-md" width="480" height="480" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <linearGradient id="pulse-a" x1="50%" x2="50%" y1="100%" y2="0%">
-                            <stop offset="0%" stopColor="#A855F7" />
-                            <stop offset="76.382%" stopColor="#FAF5FF" />
-                            <stop offset="100%" stopColor="#6366F1" />
-                          </linearGradient>
-                        </defs>
-                        <g fillRule="evenodd">
-                          <path className="pulse" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                          <path className="pulse pulse-1" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                          <path className="pulse pulse-2" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                        </g>
-                      </svg>
-                      {/* Grid */}
-                      <div className="absolute inset-0 -z-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none w-[500px] h-[500px] rounded-full overflow-hidden [mask-image:_radial-gradient(black,_transparent_60%)]">
-                        <div className="h-[200%] animate-endless">
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(transparent,transparent_48px,var(--color-white)_48px,var(--color-white)_49px)] blur-[2px] opacity-20" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(transparent,transparent_48px,var(--color-purple-500)_48px,var(--color-purple-500)_49px)]" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(90deg,transparent,transparent_48px,var(--color-white)_48px,var(--color-white)_49px)] blur-[2px] opacity-20" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(90deg,transparent,transparent_48px,var(--color-purple-500)_48px,var(--color-purple-500)_49px)]" />
-                        </div>
-                      </div>
-                      {/* Icons */}
-                      <Transition
-                        as="div"
-                        show={tab === 1}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >                      
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="23" height="25">
-                            <path fillRule="nonzero" d="M10.55 15.91H.442L14.153.826 12.856 9.91h10.107L9.253 24.991l1.297-9.082Zm.702-8.919L4.963 13.91h7.893l-.703 4.918 6.289-6.918H10.55l.702-4.918Z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                      <Transition
-                        as="div"
-                        show={tab === 2}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >    
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
-                            <path d="M18 14h-2V8h2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4v2H8V4c0-2.2-1.8-4-4-4S0 1.8 0 4s1.8 4 4 4h2v6H4c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4v-2h6v2c0 2.2 1.8 4 4 4s4-1.8 4-4-1.8-4-4-4ZM16 4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2h-2V4ZM2 4c0-1.1.9-2 2-2s2 .9 2 2v2H4c-1.1 0-2-.9-2-2Zm4 14c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2h2v2ZM8 8h6v6H8V8Zm10 12c-1.1 0-2-.9-2-2v-2h2c1.1 0 2 .9 2 2s-.9 2-2 2Z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                      <Transition
-                        as="div"
-                        show={tab === 3}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >    
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="26" height="14">
-                            <path fillRule="nonzero" d="m10 5.414-8 8L.586 12 10 2.586l6 6 8-8L25.414 2 16 11.414z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
+    <section id="features" className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Section header */}
+        <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">How it works</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+            From manual to magical
+          </h2>
+          <p className="text-base md:text-lg text-[#D7EEFC]/60">
+            Three simple steps to transform tribal knowledge into living documentation.
+          </p>
         </div>
+
+        {/* Features grid with auto-play coordination */}
+        <FeatureDemosContainer>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <FeatureCard key={index} index={index} icon={feature.icon} title={feature.title} description={feature.description}>
+                <feature.Demo index={index} />
+              </FeatureCard>
+            ))}
+          </div>
+        </FeatureDemosContainer>
       </div>
     </section>
   )

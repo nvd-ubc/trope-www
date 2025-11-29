@@ -1,14 +1,26 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import Logo from '@public/images/logo.svg'
 
 export default function AuthLogo() {
   return (
-    <div className="mb-5">
-      <Link className="inline-flex" href="/">
-        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-          <Image className="relative" src={Logo} width={42} height={42} alt="Stellar" />
-        </div>
+    <div className="mb-8">
+      <Link className="inline-flex items-center gap-1" href="/">
+        {/* Logomark */}
+        <Image
+          src="/logo/trope_logomark.svg"
+          alt=""
+          width={28}
+          height={20}
+          className="h-[20px] w-auto"
+        />
+        {/* Logotype */}
+        <Image
+          src="/logo/trope_logotype.svg"
+          alt="Trope"
+          width={90}
+          height={33}
+          className="h-[22px] w-auto"
+        />
       </Link>
     </div>
   )

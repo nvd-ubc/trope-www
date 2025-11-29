@@ -7,7 +7,7 @@ export default function SchemaMarkup() {
     "name": "Trope",
     "url": "https://trope.ai",
     "logo": "https://trope.ai/images/logo.svg",
-    "description": "Trope records any workflow once—then delivers living, just-in-time guides and safe one-click automations for browser and desktop.",
+    "description": "Trope records any workflow once—then delivers living, just-in-time guides for browser and desktop. Transform tribal knowledge into scalable processes.",
     "email": CONTACT_EMAIL,
     "address": {
       "@type": "PostalAddress",
@@ -33,7 +33,7 @@ export default function SchemaMarkup() {
         "unitText": "user per month"
       }
     },
-    "description": "Workflow automation and documentation software that transforms tribal knowledge into living guides with drift detection and safe automation.",
+    "description": "Workflow documentation software that transforms tribal knowledge into living guides with drift detection. Record once, guide forever.",
     "featureList": [
       "Workflow Recording",
       "Living Documentation",

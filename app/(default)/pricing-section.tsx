@@ -2,27 +2,20 @@ import Pricing from '@/components/pricing'
 
 export default function PricingSection() {
   return (
-    <section className="relative">
-      {/* Radial gradient */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10" aria-hidden="true">
-        <div className="absolute flex items-center justify-center top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 w-1/3 aspect-square">
-          <div className="absolute inset-0 translate-z-0 bg-purple-500 rounded-full blur-[120px] opacity-50" />
-        </div>
-      </div>
+    <section id="pricing" className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="py-12 md:py-20">
-          {/* Content */}
-          <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-            <div>
-              <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">Pricing</div>
-            </div>
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Simple, transparent pricing</h2>
-            <p className="text-lg text-slate-400">Pay per user, scale as you grow. Starting at $20/user/month with annual billing. Enterprise plans available for teams with custom needs.</p>
-          </div>
-          <Pricing />
+        {/* Section header */}
+        <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+          <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">Pricing</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+            Simple, transparent pricing
+          </h2>
+          <p className="text-base md:text-lg text-[#D7EEFC]/60">
+            Pay per user, scale as you grow.
+          </p>
         </div>
+        <Pricing />
       </div>
-
     </section>
   )
 }
