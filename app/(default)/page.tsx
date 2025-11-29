@@ -6,6 +6,7 @@ export const metadata = {
 import Hero from '@/components/hero'
 import Features from '@/components/features'
 import Features02 from '@/components/features-02'
+import Features03 from '@/components/features-03'
 import Pricing from './pricing-section'
 import Faqs from '@/components/faqs'
 import Cta from '@/components/cta'
@@ -21,6 +22,7 @@ export default function Home() {
       <div id="features">
         <Features />
         <Features02 />
+        <Features03 />
       </div>
       <div id="pricing">
         <Pricing />
