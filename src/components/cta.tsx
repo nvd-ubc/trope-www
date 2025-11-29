@@ -145,15 +145,37 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
 
 export default function Cta() {
   return (
-    <section className="relative py-20 md:py-28 lg:py-36 bg-[#000E2E] overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Primary glow - centered top */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#1861C8]/20 rounded-full blur-[120px]" />
-        {/* Secondary glow - bottom right */}
-        <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 w-[400px] h-[300px] bg-[#61AFF9]/10 rounded-full blur-[100px]" />
-        {/* Accent glow - left */}
-        <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[400px] bg-[#1861C8]/10 rounded-full blur-[80px]" />
+    <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden">
+      {/* Inverted hero gradient - horizon at top, fading to black at bottom */}
+      <div className="absolute inset-0">
+        {/* Base: gradient from mid blue at top to dark at bottom (inverted hero) */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, #010329 0%, #000E2E 40%, #00050F 100%)'
+          }}
+        />
+        {/* Radial glow from top center - creates the inverted horizon effect */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 140% 70% at 50% 0%, rgba(24, 97, 200, 0.45), transparent 65%)'
+          }}
+        />
+        {/* Secondary glow for depth at top */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 100% 50% at 50% -5%, rgba(97, 175, 249, 0.3), transparent 55%)'
+          }}
+        />
+        {/* Bright horizon line at top */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse 120% 15% at 50% 0%, rgba(97, 175, 249, 0.4), transparent 50%)'
+          }}
+        />
       </div>
 
       {/* Animated floating windows - hidden on mobile */}
