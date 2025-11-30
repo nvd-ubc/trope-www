@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react'
+import ChromaText from './chroma-text'
 
 // Context for coordinating autoplay across all capability cards
 interface CapabilityAutoPlayContextType {
@@ -86,7 +87,7 @@ export default function Features02() {
           <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
             <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">Capabilities</p>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
-              Built for real workflows
+              Built for <ChromaText color="inherit">real workflows</ChromaText>
             </h2>
             <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
               Unlike browser-only tools, Trope works where your team actually works.

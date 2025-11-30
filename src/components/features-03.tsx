@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import ChromaText from './chroma-text'
 
 export default function Features03() {
   return (
@@ -16,7 +17,7 @@ export default function Features03() {
           {/* Right - Stats */}
           <div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Built for scale
+              Built for <ChromaText color="inherit">scale</ChromaText>
             </h2>
 
             <div className="space-y-8">
