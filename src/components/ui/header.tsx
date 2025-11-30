@@ -18,10 +18,10 @@ export default function Header() {
           <nav className="hidden md:flex md:grow">
             <ul className="flex grow justify-center flex-wrap items-center">
               <li>
-                <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#features">Features</Link>
+                <Link className="font-medium text-sm text-slate-600 hover:text-slate-900 mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#features">Features</Link>
               </li>
               <li>
-                <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#pricing">Pricing</Link>
+                <Link className="font-medium text-sm text-slate-600 hover:text-slate-900 mx-4 lg:mx-5 transition duration-150 ease-in-out" href="/#pricing">Pricing</Link>
               </li>
             </ul>
           </nav>
@@ -29,7 +29,7 @@ export default function Header() {
           {/* Desktop CTA */}
           <ul className="flex-1 flex justify-end items-center">
             <li>
-              <Link className="font-medium text-sm text-[#D7EEFC]/60 hover:text-white whitespace-nowrap transition duration-150 ease-in-out" href="/signin">Sign in</Link>
+              <Link className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out" href="/signin">Sign in</Link>
             </li>
             <li className="ml-6">
               <a

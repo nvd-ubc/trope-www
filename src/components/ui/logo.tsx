@@ -6,7 +6,7 @@ export default function Logo() {
     <Link className="inline-flex items-center gap-1" href="/" aria-label="Trope">
       {/* Logomark */}
       <Image
-        src="/logo/trope_logomark.svg"
+        src="/logo/trope_logomark_dark.svg"
         alt=""
         width={24}
         height={17}
@@ -14,7 +14,7 @@ export default function Logo() {
       />
       {/* Logotype */}
       <Image
-        src="/logo/trope_logotype.svg"
+        src="/logo/trope_logotype_dark.svg"
         alt="Trope"
         width={80}
         height={29}

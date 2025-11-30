@@ -138,56 +138,56 @@ export default function HeroDemo() {
       onClick={startAnimation}
     >
       {/* Glow behind the demo */}
-      <div className={`absolute inset-0 bg-[#1861C8]/20 rounded-3xl blur-2xl transform transition-all duration-500 ${isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`} />
+      <div className={`absolute inset-0 bg-[#1861C8]/5 rounded-3xl blur-2xl transform transition-all duration-500 ${isActive ? 'scale-100 opacity-100' : 'scale-95 opacity-50'}`} />
 
       {/* Main demo container - animates in on "Open" step */}
-      <div className={`relative bg-gradient-to-b from-[#0a1a3a] to-[#061025] border rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 ${isActive ? 'border-[#1861C8]/40' : 'border-[#1861C8]/20'} ${windowVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+      <div className={`relative bg-white border rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 ${isActive ? 'border-slate-300' : 'border-slate-200'} ${windowVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
 
 
         {/* Window chrome */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-[#000E2E] border-b border-[#1861C8]/20">
+        <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-200">
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
             <div className="w-3 h-3 rounded-full bg-[#febc2e]" />
             <div className="w-3 h-3 rounded-full bg-[#28c840]" />
           </div>
           <div className="flex-1 flex justify-center">
-            <div className="px-3 py-1 bg-[#010329] rounded text-[#D7EEFC]/40 text-xs">
+            <div className="px-3 py-1 bg-white rounded border border-slate-200 text-slate-600 text-xs">
               Q3_Financial_Report.xlsx
             </div>
           </div>
           {/* Status indicator */}
           <div className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs transition-all duration-300 ${
             phase === 'recording'
-              ? 'bg-red-500/20 text-red-400'
+              ? 'bg-red-500/20 text-red-600'
               : phase === 'guiding'
-              ? 'bg-[#61AFF9]/20 text-[#61AFF9]'
+              ? 'bg-[#1861C8]/20 text-[#1861C8]'
               : phase === 'automating'
-              ? 'bg-green-500/20 text-green-400'
-              : 'bg-[#1861C8]/10 text-[#D7EEFC]/40'
+              ? 'bg-green-500/20 text-green-600'
+              : 'bg-slate-100 text-slate-500'
           }`}>
             <span className={`w-2 h-2 rounded-full transition-colors ${
               phase === 'recording'
                 ? 'bg-red-500 animate-pulse'
                 : phase === 'guiding'
-                ? 'bg-[#61AFF9]'
+                ? 'bg-[#1861C8]'
                 : phase === 'automating'
                 ? 'bg-green-500'
-                : 'bg-[#D7EEFC]/20'
+                : 'bg-slate-400'
             }`} />
             {phase === 'idle' ? 'Ready' : phase === 'recording' ? 'Recording' : phase === 'guiding' ? 'Guiding' : phase === 'complete' ? 'Done' : 'Automating'}
           </div>
         </div>
 
         {/* Spreadsheet content */}
-        <div className="relative h-64 bg-[#010329]/50">
+        <div className="relative h-64 bg-slate-50">
           {/* Excel-like grid */}
           <div className="absolute inset-0 p-2">
             {/* Column headers */}
-            <div className="flex border-b border-[#1861C8]/10 mb-1">
-              <div className="w-8 h-6 flex items-center justify-center text-[10px] text-[#D7EEFC]/30" />
+            <div className="flex border-b border-slate-200 mb-1">
+              <div className="w-8 h-6 flex items-center justify-center text-[10px] text-slate-400" />
               {['A', 'B', 'C', 'D', 'E'].map(col => (
-                <div key={col} className="w-16 h-6 flex items-center justify-center text-[10px] text-[#D7EEFC]/40 border-r border-[#1861C8]/10">
+                <div key={col} className="w-16 h-6 flex items-center justify-center text-[10px] text-slate-500 border-r border-slate-200">
                   {col}
                 </div>
               ))}
@@ -195,8 +195,8 @@ export default function HeroDemo() {
 
             {/* Rows */}
             {[10, 11, 12, 13, 14, 15].map((row) => (
-              <div key={row} className="flex border-b border-[#1861C8]/5">
-                <div className="w-8 h-7 flex items-center justify-center text-[10px] text-[#D7EEFC]/30">
+              <div key={row} className="flex border-b border-slate-200/50">
+                <div className="w-8 h-7 flex items-center justify-center text-[10px] text-slate-400">
                   {row}
                 </div>
                 {['A', 'B', 'C', 'D', 'E'].map(col => {
@@ -210,9 +210,9 @@ export default function HeroDemo() {
                   return (
                     <div
                       key={col}
-                      className={`w-16 h-7 flex items-center justify-center text-[10px] border-r border-[#1861C8]/5 transition-all duration-300 ${
-                        isActive ? 'bg-[#1861C8]/20 text-white' : 'text-[#D7EEFC]/50'
-                      } ${isHighlighted ? 'ring-2 ring-[#61AFF9] ring-offset-1 ring-offset-[#010329]' : ''}`}
+                      className={`w-16 h-7 flex items-center justify-center text-[10px] border-r border-slate-200/50 transition-all duration-300 ${
+                        isActive ? 'bg-[#1861C8]/10 text-slate-900' : 'text-slate-600'
+                      } ${isHighlighted ? 'ring-2 ring-[#1861C8] ring-offset-1 ring-offset-slate-50' : ''}`}
                     >
                       {col === 'A' && row === 10 && 'Region'}
                       {col === 'B' && row === 10 && 'Revenue'}
@@ -229,7 +229,7 @@ export default function HeroDemo() {
                       {col === 'B' && row === 14 && '$44,100'}
                       {col === 'A' && row === 15 && <span className="font-medium">Total</span>}
                       {col === 'B' && row === 15 && dataVisible.b15 && (
-                        <span className="font-medium text-[#61AFF9] animate-fade-in">=SUM(B11:B14)</span>
+                        <span className="font-medium text-[#1861C8] animate-fade-in">=SUM(B11:B14)</span>
                       )}
                     </div>
                   )
@@ -249,7 +249,7 @@ export default function HeroDemo() {
               }}
             >
               <svg
-                className={`w-5 h-5 text-white drop-shadow-lg transition-transform duration-150 ${isClicking ? 'scale-90' : 'scale-100'}`}
+                className={`w-5 h-5 text-slate-800 drop-shadow-lg transition-transform duration-150 ${isClicking ? 'scale-90' : 'scale-100'}`}
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
@@ -257,7 +257,7 @@ export default function HeroDemo() {
               </svg>
               {isClicking && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-8 h-8 rounded-full bg-[#61AFF9]/30 animate-ping" />
+                  <div className="w-8 h-8 rounded-full bg-[#1861C8]/30 animate-ping" />
                 </div>
               )}
             </div>
@@ -305,24 +305,24 @@ export default function HeroDemo() {
 
           {/* Automation progress overlay */}
           {phase === 'automating' && (
-            <div className="absolute inset-0 bg-[#010329]/80 flex items-center justify-center z-30 animate-fade-in">
+            <div className="absolute inset-0 bg-white/90 flex items-center justify-center z-30 animate-fade-in">
               <div className="text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1861C8]/20 flex items-center justify-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#1861C8]/10 flex items-center justify-center">
                   {automationProgress < 100 ? (
-                    <svg className="w-8 h-8 text-[#61AFF9] animate-spin" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-[#1861C8] animate-spin" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                   ) : (
-                    <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   )}
                 </div>
-                <p className="text-white font-medium text-sm mb-2">
+                <p className="text-slate-900 font-medium text-sm mb-2">
                   {automationProgress < 100 ? 'Running automation...' : 'Workflow complete!'}
                 </p>
-                <div className="w-48 h-1.5 bg-[#1861C8]/20 rounded-full overflow-hidden">
+                <div className="w-48 h-1.5 bg-slate-200 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#1861C8] to-[#61AFF9] transition-all duration-500 rounded-full"
                     style={{ width: `${automationProgress}%` }}
@@ -334,10 +334,10 @@ export default function HeroDemo() {
         </div>
 
         {/* Steps panel - fixed height to prevent layout jumps */}
-        <div className="p-4 bg-[#000E2E]/80 border-t border-[#1861C8]/20">
+        <div className="p-4 bg-slate-100 border-t border-slate-200">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs text-[#D7EEFC]/40">Captured steps</span>
-            <span className="text-xs text-[#61AFF9]">{Math.min(step, recordingSteps.length)} of {recordingSteps.length}</span>
+            <span className="text-xs text-slate-500">Captured steps</span>
+            <span className="text-xs text-[#1861C8]">{Math.min(step, recordingSteps.length)} of {recordingSteps.length}</span>
           </div>
           {/* Fixed height container for all 4 steps */}
           <div className="space-y-2 h-[168px]">
@@ -348,12 +348,12 @@ export default function HeroDemo() {
                   key={idx}
                   className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ease-out ${
                     isVisible
-                      ? 'bg-[#010329]/50 opacity-100 translate-y-0'
+                      ? 'bg-white opacity-100 translate-y-0 shadow-sm'
                       : 'bg-transparent opacity-0 translate-y-2'
                   }`}
                 >
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                    isVisible ? 'bg-[#1861C8]' : 'bg-[#1861C8]/20'
+                    isVisible ? 'bg-[#1861C8]' : 'bg-slate-200'
                   }`}>
                     {isVisible && (
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -362,7 +362,7 @@ export default function HeroDemo() {
                     )}
                   </div>
                   <span className={`text-xs transition-colors duration-300 ${
-                    isVisible ? 'text-[#D7EEFC]/70' : 'text-[#D7EEFC]/20'
+                    isVisible ? 'text-slate-700' : 'text-slate-400'
                   }`}>{s.action}</span>
                 </div>
               )
@@ -380,8 +380,8 @@ export default function HeroDemo() {
               phase === p
                 ? 'bg-[#1861C8] text-white'
                 : phase === 'complete' || (phase !== 'idle' && ['recording', 'guiding', 'automating'].indexOf(p) < ['recording', 'guiding', 'automating'].indexOf(phase as 'recording' | 'guiding' | 'automating'))
-                ? 'bg-[#1861C8]/30 text-[#61AFF9]'
-                : 'bg-[#1861C8]/10 text-[#D7EEFC]/40'
+                ? 'bg-[#1861C8]/30 text-[#1861C8]'
+                : 'bg-slate-200 text-slate-500'
             }`}
           >
             {p === 'recording' ? 'Record' : p === 'guiding' ? 'Guide' : 'Automate'}

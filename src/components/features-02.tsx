@@ -70,13 +70,13 @@ export default function Features02() {
 
   return (
     <CapabilityAutoPlayContext.Provider value={{ activeCard, setActiveCard, pauseAutoPlay, resumeAutoPlay }}>
-      <section ref={sectionRef} className="py-20 md:py-28 bg-[#010329] relative overflow-hidden">
+      <section ref={sectionRef} className="py-20 md:py-28 bg-slate-50 relative overflow-hidden">
         {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
-            backgroundImage: `linear-gradient(rgba(97, 175, 249, 0.5) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(97, 175, 249, 0.5) 1px, transparent 1px)`,
+            backgroundImage: `linear-gradient(rgba(24, 97, 200, 0.5) 1px, transparent 1px),
+                             linear-gradient(90deg, rgba(24, 97, 200, 0.5) 1px, transparent 1px)`,
             backgroundSize: '60px 60px'
           }}
         />
@@ -84,11 +84,11 @@ export default function Features02() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
-            <p className="text-[#61AFF9] text-sm font-medium mb-3 tracking-wide uppercase">Capabilities</p>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5">
+            <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">Capabilities</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
               Built for real workflows
             </h2>
-            <p className="text-base md:text-lg text-[#D7EEFC]/50 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
               Unlike browser-only tools, Trope works where your team actually works.
             </p>
           </div>
@@ -159,8 +159,8 @@ function DesktopFirstCard() {
   return (
     <div
       {...hoverProps}
-      className={`group relative bg-gradient-to-br from-[#0a1a3a]/80 to-[#010329]/90 rounded-3xl border p-8 overflow-hidden transition-all duration-500 ${
-        isActive ? 'border-[#61AFF9]/40' : 'border-[#1861C8]/20'
+      className={`group relative bg-white rounded-3xl border p-8 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
       }`}
     >
       <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-3xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
@@ -175,11 +175,11 @@ function DesktopFirstCard() {
             </svg>
           </div>
           <div>
-            <h3 className="text-xl font-semibold text-white">Desktop-first</h3>
-            <p className="text-[#D7EEFC]/40 text-sm">Not just browsers</p>
+            <h3 className="text-xl font-semibold text-slate-900">Desktop-first</h3>
+            <p className="text-slate-500 text-sm">Not just browsers</p>
           </div>
         </div>
-        <p className="text-[#D7EEFC]/50 text-base mb-8 max-w-sm">
+        <p className="text-slate-600 text-base mb-8 max-w-sm">
           Works natively with Excel, QuickBooks, and desktop apps—not just browsers.
           Record workflows anywhere your team works.
         </p>
@@ -191,7 +191,7 @@ function DesktopFirstCard() {
               <div
                 className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${
                   isActive && i === activeApp
-                    ? 'scale-110 ring-2 ring-[#61AFF9] ring-offset-2 ring-offset-[#010329] shadow-lg'
+                    ? 'scale-110 ring-2 ring-[#61AFF9] ring-offset-2 ring-offset-white shadow-lg'
                     : isActive && i < activeApp
                     ? 'opacity-80'
                     : !isActive
@@ -206,7 +206,7 @@ function DesktopFirstCard() {
                 {app.icon}
               </div>
               <span className={`text-[10px] text-center transition-colors duration-300 ${
-                isActive && i === activeApp ? 'text-white' : 'text-[#D7EEFC]/30'
+                isActive && i === activeApp ? 'text-slate-900' : 'text-slate-400'
               }`}>
                 {app.name.split(' ')[0]}
               </span>
@@ -221,12 +221,12 @@ function DesktopFirstCard() {
               <div
                 key={i}
                 className={`w-8 h-1 rounded-full transition-all duration-300 ${
-                  isActive && i === activeApp ? 'bg-[#61AFF9]' : 'bg-[#1861C8]/20'
+                  isActive && i === activeApp ? 'bg-[#1861C8]' : 'bg-slate-200'
                 }`}
               />
             ))}
           </div>
-          <span className="text-xs text-[#D7EEFC]/40 ml-2">
+          <span className="text-xs text-slate-500 ml-2">
             {isActive ? `Recording: ${apps[activeApp].name}` : 'Hover to preview'}
           </span>
         </div>
@@ -249,7 +249,7 @@ function DesktopFirstCard() {
               className="rounded-t-2xl border border-b-0 overflow-hidden"
               style={{
                 borderColor: `${app.color}40`,
-                boxShadow: `0 -8px 40px ${app.color}30`
+                boxShadow: `0 -8px 40px ${app.color}20`
               }}
             >
               {/* Title bar */}
@@ -265,21 +265,21 @@ function DesktopFirstCard() {
                 <span className="text-xs text-white/80 font-medium ml-2">{app.name}</span>
               </div>
               {/* Window content preview */}
-              <div className="bg-[#0d1f3c] p-4">
+              <div className="bg-slate-50 p-4">
                 <div className="space-y-3">
                   <div className="flex gap-3">
-                    <div className="w-20 h-4 rounded bg-[#1861C8]/30" />
-                    <div className="w-32 h-4 rounded bg-[#1861C8]/30" />
-                    <div className="w-16 h-4 rounded bg-[#1861C8]/30" />
+                    <div className="w-20 h-4 rounded bg-slate-200" />
+                    <div className="w-32 h-4 rounded bg-slate-200" />
+                    <div className="w-16 h-4 rounded bg-slate-200" />
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-24 h-4 rounded bg-[#1861C8]/20" />
-                    <div className="w-20 h-4 rounded bg-[#1861C8]/20" />
-                    <div className="w-28 h-4 rounded bg-[#1861C8]/20" />
+                    <div className="w-24 h-4 rounded bg-slate-100" />
+                    <div className="w-20 h-4 rounded bg-slate-100" />
+                    <div className="w-28 h-4 rounded bg-slate-100" />
                   </div>
                   <div className="flex gap-3">
-                    <div className="w-16 h-4 rounded bg-[#1861C8]/15" />
-                    <div className="w-36 h-4 rounded bg-[#1861C8]/15" />
+                    <div className="w-16 h-4 rounded bg-slate-100" />
+                    <div className="w-36 h-4 rounded bg-slate-100" />
                   </div>
                 </div>
               </div>
@@ -316,45 +316,45 @@ function DriftDetectionCard() {
   return (
     <div
       {...hoverProps}
-      className={`group relative bg-gradient-to-br from-[#0a1a3a]/80 to-[#010329]/90 rounded-2xl border p-5 overflow-hidden transition-all duration-500 ${
-        isActive ? 'border-[#61AFF9]/40' : 'border-[#1861C8]/20'
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
       }`}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br from-[#61AFF9]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
 
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/10 flex items-center justify-center">
-            <svg className="w-5 h-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <svg className="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
           {isActive && phase === 'alert' && (
-            <div className="px-2 py-0.5 bg-yellow-500/20 rounded-full animate-scale-in">
-              <span className="text-[10px] text-yellow-400 font-medium">UI Changed</span>
+            <div className="px-2 py-0.5 bg-yellow-100 rounded-full animate-scale-in">
+              <span className="text-[10px] text-yellow-700 font-medium">UI Changed</span>
             </div>
           )}
         </div>
 
-        <h3 className="text-base font-semibold text-white mb-1">Drift detection</h3>
-        <p className="text-[#D7EEFC]/50 text-sm mb-4">
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Drift detection</h3>
+        <p className="text-slate-600 text-sm mb-4">
           Auto-flags when apps change and workflows become outdated.
         </p>
 
         {/* UI change demo */}
-        <div className="relative h-16 bg-[#0d1f3c] rounded-lg border border-[#1861C8]/20 overflow-hidden">
+        <div className="relative h-16 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden">
           <div className="absolute inset-2 flex gap-2">
             <div className={`h-full rounded transition-all duration-500 ${
-              !isActive ? 'w-1/3 bg-[#1861C8]/20' :
-              phase === 'normal' ? 'w-1/3 bg-[#1861C8]/20' :
-              phase === 'changing' ? 'w-1/2 bg-[#1861C8]/30' :
-              'w-1/2 bg-[#1861C8]/40 ring-1 ring-yellow-500/50'
+              !isActive ? 'w-1/3 bg-slate-200' :
+              phase === 'normal' ? 'w-1/3 bg-slate-200' :
+              phase === 'changing' ? 'w-1/2 bg-slate-300' :
+              'w-1/2 bg-[#1861C8]/20 ring-1 ring-yellow-500/50'
             }`} />
             <div className={`h-full rounded transition-all duration-500 ${
-              !isActive ? 'w-2/3 bg-[#1861C8]/20' :
-              phase === 'normal' ? 'w-2/3 bg-[#1861C8]/20' :
-              phase === 'changing' ? 'w-1/2 bg-red-500/20' :
-              'w-1/2 bg-red-500/30 ring-1 ring-yellow-500/50'
+              !isActive ? 'w-2/3 bg-slate-200' :
+              phase === 'normal' ? 'w-2/3 bg-slate-200' :
+              phase === 'changing' ? 'w-1/2 bg-red-200' :
+              'w-1/2 bg-red-200 ring-1 ring-yellow-500/50'
             }`} />
           </div>
         </div>
@@ -389,21 +389,21 @@ function AuditTrailsCard() {
   return (
     <div
       {...hoverProps}
-      className={`group relative bg-gradient-to-br from-[#0a1a3a]/80 to-[#010329]/90 rounded-2xl border p-5 overflow-hidden transition-all duration-500 ${
-        isActive ? 'border-[#61AFF9]/40' : 'border-[#1861C8]/20'
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
       }`}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br from-[#61AFF9]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
 
       <div className="relative z-10">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/30 to-[#61AFF9]/10 flex items-center justify-center mb-3">
-          <svg className="w-5 h-5 text-[#61AFF9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/20 to-[#61AFF9]/10 flex items-center justify-center mb-3">
+          <svg className="w-5 h-5 text-[#1861C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
 
-        <h3 className="text-base font-semibold text-white mb-1">Audit trails</h3>
-        <p className="text-[#D7EEFC]/50 text-sm mb-4">
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Audit trails</h3>
+        <p className="text-slate-600 text-sm mb-4">
           Every action logged with full lineage.
         </p>
 
@@ -413,16 +413,16 @@ function AuditTrailsCard() {
             <div
               key={i}
               className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-300 ${
-                isActive && i < logCount ? 'bg-[#1861C8]/10 opacity-100' : 'opacity-30'
+                isActive && i < logCount ? 'bg-slate-100 opacity-100' : 'opacity-30'
               }`}
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium ${
-                isActive && i === logCount - 1 ? 'bg-[#61AFF9] text-white' : 'bg-[#1861C8]/30 text-[#D7EEFC]/50'
+                isActive && i === logCount - 1 ? 'bg-[#1861C8] text-white' : 'bg-slate-200 text-slate-500'
               }`}>
                 {log.user}
               </div>
-              <span className="text-[11px] text-[#D7EEFC]/60 flex-1">{log.action}</span>
-              <span className="text-[10px] text-[#D7EEFC]/30">{log.time}</span>
+              <span className="text-[11px] text-slate-600 flex-1">{log.action}</span>
+              <span className="text-[10px] text-slate-400">{log.time}</span>
             </div>
           ))}
         </div>
@@ -457,22 +457,22 @@ function RoleBasedCard() {
   return (
     <div
       {...hoverProps}
-      className={`group relative bg-gradient-to-br from-[#0a1a3a]/80 to-[#010329]/90 rounded-2xl border p-5 overflow-hidden transition-all duration-500 ${
-        isActive ? 'border-[#61AFF9]/40' : 'border-[#1861C8]/20'
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
       }`}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br from-[#61AFF9]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
 
       <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
         <div className="flex-1">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/30 to-[#61AFF9]/10 flex items-center justify-center mb-3">
-            <svg className="w-5 h-5 text-[#61AFF9]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/20 to-[#61AFF9]/10 flex items-center justify-center mb-3">
+            <svg className="w-5 h-5 text-[#1861C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
             </svg>
           </div>
 
-          <h3 className="text-base font-semibold text-white mb-1">Role-based access</h3>
-          <p className="text-[#D7EEFC]/50 text-sm">
+          <h3 className="text-base font-semibold text-slate-900 mb-1">Role-based access</h3>
+          <p className="text-slate-600 text-sm">
             Scope workflows and permissions by team role. Control who can view, edit, or automate.
           </p>
         </div>
@@ -484,8 +484,8 @@ function RoleBasedCard() {
               key={role.name}
               className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 ${
                 isActive && i === activeRole
-                  ? 'bg-[#1861C8]/20 ring-1 ring-[#61AFF9]/50'
-                  : 'bg-[#1861C8]/5'
+                  ? 'bg-slate-100 ring-1 ring-[#1861C8]/30'
+                  : 'bg-slate-50'
               }`}
             >
               <div
@@ -501,7 +501,7 @@ function RoleBasedCard() {
               </div>
               <div className="hidden sm:block">
                 <div className={`text-xs font-medium transition-colors ${
-                  isActive && i === activeRole ? 'text-white' : 'text-[#D7EEFC]/40'
+                  isActive && i === activeRole ? 'text-slate-900' : 'text-slate-400'
                 }`}>
                   {role.name}
                 </div>
@@ -511,8 +511,8 @@ function RoleBasedCard() {
                       key={p}
                       className={`w-4 h-4 rounded text-[8px] flex items-center justify-center font-medium transition-all duration-300 ${
                         isActive && i === activeRole && pi < role.permissions.length
-                          ? 'bg-[#61AFF9]/30 text-[#61AFF9]'
-                          : 'bg-[#1861C8]/10 text-[#D7EEFC]/20'
+                          ? 'bg-[#1861C8]/20 text-[#1861C8]'
+                          : 'bg-slate-100 text-slate-300'
                       }`}
                     >
                       {p}

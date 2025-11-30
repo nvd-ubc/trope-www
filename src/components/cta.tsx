@@ -64,13 +64,13 @@ function FloatingWindow({
       }`}
     >
       {/* Window chrome */}
-      <div className="bg-[#0a1628]/80 backdrop-blur-sm rounded-lg border border-[#1861C8]/20 overflow-hidden shadow-2xl shadow-black/20">
+      <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
         {/* Title bar */}
-        <div className="flex items-center gap-1.5 px-3 py-2 bg-[#0a1628]/90 border-b border-[#1861C8]/10">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]/60" />
-          <span className="ml-2 text-[10px] text-[#D7EEFC]/30 font-medium">{title}</span>
+        <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border-b border-slate-100">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+          <span className="ml-2 text-[10px] text-slate-400 font-medium">{title}</span>
         </div>
         {/* Content */}
         <div className="p-3 space-y-2">
@@ -78,14 +78,14 @@ function FloatingWindow({
             <div key={i} className="flex items-center gap-2 h-3">
               {typingRow === i && typingText ? (
                 <div className="flex items-center">
-                  <span className="text-[10px] text-[#61AFF9]/60 font-mono">
+                  <span className="text-[10px] text-[#1861C8] font-mono">
                     {typingText.slice(0, typedChars)}
                   </span>
-                  <span className="w-0.5 h-3 bg-[#61AFF9]/60 animate-pulse ml-0.5" />
+                  <span className="w-0.5 h-3 bg-[#1861C8] animate-pulse ml-0.5" />
                 </div>
               ) : (
                 <div
-                  className={`h-2 rounded ${row.color || 'bg-[#1861C8]/20'}`}
+                  className={`h-2 rounded ${row.color || 'bg-slate-200'}`}
                   style={{ width: row.width }}
                 />
               )}
@@ -131,14 +131,14 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
         <path
           d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.48 0 .72-.58.38-.92L6.35 2.85a.5.5 0 0 0-.85.36Z"
-          fill="#fff"
+          fill="#1861C8"
           fillOpacity="0.9"
-          stroke="#1861C8"
+          stroke="#0f172a"
           strokeWidth="1"
         />
       </svg>
       {/* Click ripple */}
-      <div className="absolute top-0 left-0 w-4 h-4 rounded-full bg-[#61AFF9]/30 animate-ping" />
+      <div className="absolute top-0 left-0 w-4 h-4 rounded-full bg-[#1861C8]/30 animate-ping" />
     </div>
   )
 }
@@ -146,34 +146,34 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
 export default function Cta() {
   return (
     <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden">
-      {/* Inverted hero gradient - horizon at top, fading to black at bottom */}
+      {/* Light mode gradient background */}
       <div className="absolute inset-0">
-        {/* Base: gradient from mid blue at top to dark at bottom (inverted hero) */}
+        {/* Base: gradient from light slate to white */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #010329 0%, #000E2E 40%, #00050F 100%)'
+            background: 'linear-gradient(180deg, #E2E8F0 0%, #F1F5F9 40%, #FFFFFF 100%)'
           }}
         />
-        {/* Radial glow from top center - creates the inverted horizon effect */}
+        {/* Radial glow from top center */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 140% 70% at 50% 0%, rgba(24, 97, 200, 0.45), transparent 65%)'
+            background: 'radial-gradient(ellipse 140% 70% at 50% 0%, rgba(24, 97, 200, 0.12), transparent 65%)'
           }}
         />
         {/* Secondary glow for depth at top */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 100% 50% at 50% -5%, rgba(97, 175, 249, 0.3), transparent 55%)'
+            background: 'radial-gradient(ellipse 100% 50% at 50% -5%, rgba(97, 175, 249, 0.1), transparent 55%)'
           }}
         />
-        {/* Bright horizon line at top */}
+        {/* Subtle horizon line at top */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 120% 15% at 50% 0%, rgba(97, 175, 249, 0.4), transparent 50%)'
+            background: 'radial-gradient(ellipse 120% 15% at 50% 0%, rgba(97, 175, 249, 0.15), transparent 50%)'
           }}
         />
       </div>
@@ -186,10 +186,10 @@ export default function Cta() {
           delay={200}
           title="Q3 Report.xlsx"
           rows={[
-            { width: '100%', color: 'bg-[#1861C8]/10' },
+            { width: '100%', color: 'bg-[#1861C8]/20' },
             { width: '60%' },
             { width: '80%' },
-            { width: '45%', color: 'bg-[#61AFF9]/20' },
+            { width: '45%', color: 'bg-[#61AFF9]/30' },
           ]}
         />
 
@@ -213,7 +213,7 @@ export default function Cta() {
           delay={1000}
           title="Tasks"
           rows={[
-            { width: '80%', color: 'bg-[#28c840]/20' },
+            { width: '80%', color: 'bg-[#28c840]/30' },
             { width: '65%' },
             { width: '90%' },
           ]}
@@ -225,9 +225,9 @@ export default function Cta() {
           delay={400}
           title="Run Workflow"
           rows={[
-            { width: '50%', color: 'bg-[#61AFF9]/15' },
-            { width: '70%', color: 'bg-[#61AFF9]/15' },
-            { width: '40%', color: 'bg-[#61AFF9]/15' },
+            { width: '50%', color: 'bg-[#1861C8]/20' },
+            { width: '70%', color: 'bg-[#1861C8]/20' },
+            { width: '40%', color: 'bg-[#1861C8]/20' },
           ]}
         />
 
@@ -237,9 +237,9 @@ export default function Cta() {
 
       {/* Grid pattern overlay */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
-          backgroundImage: `linear-gradient(#61AFF9 1px, transparent 1px), linear-gradient(90deg, #61AFF9 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(#1861C8 1px, transparent 1px), linear-gradient(90deg, #1861C8 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
         }}
         aria-hidden="true"
@@ -255,13 +255,13 @@ export default function Cta() {
           </AnimateIn>
 
           <AnimateIn delay={100}>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
               Ready to transform how<br className="hidden sm:block" /> your team works?
             </h2>
           </AnimateIn>
 
           <AnimateIn delay={200}>
-            <p className="text-lg text-[#D7EEFC]/50 mb-10 max-w-lg mx-auto">
+            <p className="text-lg text-slate-600 mb-10 max-w-lg mx-auto">
               Join teams who have turned tribal knowledge into living documentation that scales.
             </p>
           </AnimateIn>
@@ -283,7 +283,7 @@ export default function Cta() {
                 </svg>
               </a>
               <a
-                className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-[#D7EEFC]/80 border border-[#D7EEFC]/20 rounded-full hover:border-[#D7EEFC]/40 hover:text-white transition-all duration-200"
+                className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-slate-700 border border-slate-300 rounded-full hover:border-slate-400 hover:text-slate-900 transition-all duration-200"
                 href="#features"
               >
                 Learn more

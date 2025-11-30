@@ -36,7 +36,7 @@ export default function MobileMenu() {
       {/* Hamburger button */}
       <button
         ref={trigger}
-        className={`group inline-flex w-8 h-8 text-[#D7EEFC]/60 hover:text-white text-center items-center justify-center transition`}
+        className={`group inline-flex w-8 h-8 text-slate-600 hover:text-slate-900 text-center items-center justify-center transition`}
         aria-controls="mobile-nav"
         aria-expanded={mobileNavOpen}
         onClick={() => setMobileNavOpen(!mobileNavOpen)}
@@ -74,18 +74,18 @@ export default function MobileMenu() {
         className="absolute top-full z-20 left-0 w-full px-4 sm:px-6 overflow-hidden transition-all duration-300 ease-in-out"
         style={mobileNavOpen ? { maxHeight: mobileNav.current?.scrollHeight, opacity: 1 } : { maxHeight: 0, opacity: 0.8 }}
       >
-        <ul className="bg-[#000E2E] border border-[#1861C8]/20 rounded-xl shadow-lg px-4 py-2">
+        <ul className="bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-2">
           <li>
-            <Link className="flex font-medium text-sm text-[#D7EEFC]/60 hover:text-white py-2" href="/#features">Features</Link>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#features">Features</Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-[#D7EEFC]/60 hover:text-white py-2" href="/#pricing">Pricing</Link>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#pricing">Pricing</Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-[#D7EEFC]/60 hover:text-white py-2" href="/signin">Sign in</Link>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/signin">Sign in</Link>
           </li>
           <li>
-            <a className="flex font-medium text-sm text-[#61AFF9] hover:text-white py-2" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
+            <a className="flex font-medium text-sm text-[#1861C8] hover:text-[#1861C8]/80 py-2" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
           </li>
         </ul>
       </nav>

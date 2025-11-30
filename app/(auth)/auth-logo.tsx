@@ -7,7 +7,7 @@ export default function AuthLogo() {
       <Link className="inline-flex items-center gap-1" href="/">
         {/* Logomark */}
         <Image
-          src="/logo/trope_logomark.svg"
+          src="/logo/trope_logomark_dark.svg"
           alt=""
           width={28}
           height={20}
@@ -15,7 +15,7 @@ export default function AuthLogo() {
         />
         {/* Logotype */}
         <Image
-          src="/logo/trope_logotype.svg"
+          src="/logo/trope_logotype_dark.svg"
           alt="Trope"
           width={90}
           height={33}
