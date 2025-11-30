@@ -5,7 +5,7 @@ import { CONTACT_EMAIL } from '@/lib/constants'
 import AnimateIn from './animate-in'
 import ChromaText from './chroma-text'
 
-// Floating window component with typing animation
+// Static floating window - no JS animations, pure CSS
 function FloatingWindow({
   className,
   delay = 0,
@@ -23,40 +23,26 @@ function FloatingWindow({
 }) {
   const [visible, setVisible] = useState(false)
   const [typedChars, setTypedChars] = useState(0)
-  const [isTyping, setIsTyping] = useState(true)
+  const [doneTyping, setDoneTyping] = useState(false)
 
   useEffect(() => {
     const timeout = setTimeout(() => setVisible(true), delay)
     return () => clearTimeout(timeout)
   }, [delay])
 
-  // Typing animation with proper state management
+  // Typing animation - runs once then stops (no looping)
   useEffect(() => {
-    if (!visible || typingText === undefined) return
+    if (!visible || typingText === undefined || doneTyping) return
 
-    if (isTyping) {
-      // Typing phase
-      if (typedChars < typingText.length) {
-        const timeout = setTimeout(() => {
-          setTypedChars(c => c + 1)
-        }, 100)
-        return () => clearTimeout(timeout)
-      } else {
-        // Done typing, pause then reset
-        const timeout = setTimeout(() => {
-          setIsTyping(false)
-        }, 2000)
-        return () => clearTimeout(timeout)
-      }
-    } else {
-      // Reset phase - clear and start again
+    if (typedChars < typingText.length) {
       const timeout = setTimeout(() => {
-        setTypedChars(0)
-        setIsTyping(true)
-      }, 500)
+        setTypedChars(c => c + 1)
+      }, 100)
       return () => clearTimeout(timeout)
+    } else {
+      setDoneTyping(true)
     }
-  }, [visible, typingText, typedChars, isTyping])
+  }, [visible, typingText, typedChars, doneTyping])
 
   return (
     <div
@@ -64,8 +50,8 @@ function FloatingWindow({
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      {/* Window chrome */}
-      <div className="bg-white/90 backdrop-blur-sm rounded-lg border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
+      {/* Window chrome - solid bg for performance (no backdrop-blur) */}
+      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-xl shadow-slate-200/50">
         {/* Title bar */}
         <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 border-b border-slate-100">
           <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
@@ -82,7 +68,9 @@ function FloatingWindow({
                   <span className="text-[10px] text-[#1861C8] font-mono">
                     {typingText.slice(0, typedChars)}
                   </span>
-                  <span className="w-0.5 h-3 bg-[#1861C8] animate-pulse ml-0.5" />
+                  {!doneTyping && (
+                    <span className="w-0.5 h-3 bg-[#1861C8] animate-pulse ml-0.5" />
+                  )}
                 </div>
               ) : (
                 <div
@@ -98,37 +86,19 @@ function FloatingWindow({
   )
 }
 
-// Cursor with trail effect
+// Cursor - pure CSS animation, no JS state updates
 function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: number }) {
   const [visible, setVisible] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     const timeout = setTimeout(() => setVisible(true), delay)
     return () => clearTimeout(timeout)
   }, [delay])
 
-  // Gentle floating movement
-  useEffect(() => {
-    if (!visible) return
-
-    const interval = setInterval(() => {
-      setPosition({
-        x: Math.sin(Date.now() / 1000) * 10,
-        y: Math.cos(Date.now() / 800) * 8
-      })
-    }, 50)
-
-    return () => clearInterval(interval)
-  }, [visible])
-
   if (!visible) return null
 
   return (
-    <div
-      className={`absolute transition-opacity duration-500 ${className}`}
-      style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
-    >
+    <div className={`absolute animate-cursor-float ${className}`}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="drop-shadow-lg">
         <path
           d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.48 0 .72-.58.38-.92L6.35 2.85a.5.5 0 0 0-.85.36Z"
@@ -138,8 +108,6 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
           strokeWidth="1"
         />
       </svg>
-      {/* Click ripple */}
-      <div className="absolute top-0 left-0 w-4 h-4 rounded-full bg-[#1861C8]/30 animate-ping" />
     </div>
   )
 }
@@ -147,41 +115,19 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
 export default function Cta() {
   return (
     <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden">
-      {/* Light mode gradient background - flows into footer */}
-      <div className="absolute inset-0">
-        {/* Base: gradient from light slate to footer color (slate-100) */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(180deg, #E2E8F0 0%, #F1F5F9 40%, #F1F5F9 100%)'
-          }}
-        />
-        {/* Radial glow from top center */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 140% 70% at 50% 0%, rgba(24, 97, 200, 0.12), transparent 65%)'
-          }}
-        />
-        {/* Secondary glow for depth at top */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 100% 50% at 50% -5%, rgba(97, 175, 249, 0.1), transparent 55%)'
-          }}
-        />
-        {/* Subtle horizon line at top */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 120% 15% at 50% 0%, rgba(97, 175, 249, 0.15), transparent 50%)'
-          }}
-        />
-      </div>
+      {/* Simplified gradient background - single layer for performance */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 140% 70% at 50% 0%, rgba(24, 97, 200, 0.12), transparent 65%),
+            linear-gradient(180deg, #E2E8F0 0%, #F1F5F9 40%, #F1F5F9 100%)
+          `
+        }}
+      />
 
-      {/* Animated floating windows - hidden on mobile */}
+      {/* Floating windows - CSS animations only, no JS loops */}
       <div className="hidden lg:block absolute inset-0 pointer-events-none" aria-hidden="true">
-        {/* Left side - spreadsheet window */}
         <FloatingWindow
           className="left-[5%] top-[15%] w-48 animate-float-slow"
           delay={200}
@@ -194,7 +140,6 @@ export default function Cta() {
           ]}
         />
 
-        {/* Right side - form window with typing */}
         <FloatingWindow
           className="right-[8%] top-[20%] w-44 animate-float-slower"
           delay={600}
@@ -208,7 +153,6 @@ export default function Cta() {
           typingText="$12,450.00"
         />
 
-        {/* Bottom left - smaller window */}
         <FloatingWindow
           className="left-[12%] bottom-[20%] w-36 animate-float-slower"
           delay={1000}
@@ -220,7 +164,6 @@ export default function Cta() {
           ]}
         />
 
-        {/* Bottom right - code/terminal style */}
         <FloatingWindow
           className="right-[5%] bottom-[25%] w-40 animate-float-slow"
           delay={400}
@@ -232,7 +175,6 @@ export default function Cta() {
           ]}
         />
 
-        {/* Animated cursor */}
         <AnimatedCursor className="left-[18%] top-[35%]" delay={1500} />
       </div>
 

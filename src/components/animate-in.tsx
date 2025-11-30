@@ -77,8 +77,7 @@ export default function AnimateIn({
       className={className}
       style={{
         ...(isVisible ? getAnimatedStyles() : getInitialStyles()),
-        transition: `opacity ${duration}ms ease-out ${delay}ms, transform ${duration}ms ease-out ${delay}ms`,
-        willChange: 'opacity, transform'
+        transition: `opacity ${duration}ms ease-out ${delay}ms, transform ${duration}ms ease-out ${delay}ms`
       }}
     >
       {children}
