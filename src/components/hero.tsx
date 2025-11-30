@@ -1,6 +1,7 @@
 import { CONTACT_EMAIL } from '@/lib/constants'
 import HeroDemo from './hero-demo'
 import AnimateIn from './animate-in'
+import ChromaText from './chroma-text'
 
 export default function Hero() {
   return (
@@ -61,7 +62,7 @@ export default function Hero() {
               <AnimateIn delay={100} duration={700}>
                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-slate-900 leading-[1.05] tracking-tight">
                   Record once,<br />
-                  <span className="bg-gradient-to-r from-[#1861C8] to-[#61AFF9] bg-clip-text text-transparent">guide forever</span>
+                  <ChromaText delay={400}>guide forever</ChromaText>
                 </h1>
               </AnimateIn>
 

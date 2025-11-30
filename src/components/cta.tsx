@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { CONTACT_EMAIL } from '@/lib/constants'
 import AnimateIn from './animate-in'
+import ChromaText from './chroma-text'
 
 // Floating window component with typing animation
 function FloatingWindow({
@@ -256,7 +257,7 @@ export default function Cta() {
 
           <AnimateIn delay={100}>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Ready to transform how<br className="hidden sm:block" /> your team works?
+              Ready to <ChromaText>transform</ChromaText> how<br className="hidden sm:block" /> your team works?
             </h2>
           </AnimateIn>
 
