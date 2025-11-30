@@ -146,13 +146,13 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
 export default function Cta() {
   return (
     <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden">
-      {/* Light mode gradient background */}
+      {/* Light mode gradient background - flows into footer */}
       <div className="absolute inset-0">
-        {/* Base: gradient from light slate to white */}
+        {/* Base: gradient from light slate to footer color (slate-100) */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #E2E8F0 0%, #F1F5F9 40%, #FFFFFF 100%)'
+            background: 'linear-gradient(180deg, #E2E8F0 0%, #F1F5F9 40%, #F1F5F9 100%)'
           }}
         />
         {/* Radial glow from top center */}

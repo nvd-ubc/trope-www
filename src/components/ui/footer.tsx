@@ -4,7 +4,7 @@ import { CONTACT_EMAIL } from '@/lib/constants'
 
 export default function Footer() {
   return (
-    <footer className="bg-slate-100 border-t border-slate-200">
+    <footer className="bg-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="py-10 md:py-12">
           {/* Top section */}
