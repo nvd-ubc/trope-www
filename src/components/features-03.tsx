@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import ChromaText from './chroma-text'
 
 export default function Features03() {
   return (
-    <section className="py-20 md:py-28 bg-[#010329] relative overflow-hidden">
+    <section className="py-20 md:py-28 bg-white relative overflow-hidden">
       {/* Subtle background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#1861C8]/5 rounded-full blur-[100px]" />
 
@@ -15,8 +16,8 @@ export default function Features03() {
 
           {/* Right - Stats */}
           <div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
-              Built for scale
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+              Built for <ChromaText color="inherit">scale</ChromaText>
             </h2>
 
             <div className="space-y-8">
@@ -25,13 +26,13 @@ export default function Features03() {
                 label="Faster onboarding"
                 description="New team members get up to speed in days, not weeks. Interactive guides replace shadowing sessions."
               />
-              <div className="border-t border-[#1861C8]/20" />
+              <div className="border-t border-slate-200" />
               <StatItem
                 value="85%"
                 label="Reduction in support tickets"
                 description="Self-serve documentation means fewer interruptions. Your experts stay focused on high-value work."
               />
-              <div className="border-t border-[#1861C8]/20" />
+              <div className="border-t border-slate-200" />
               <StatItem
                 value="100%"
                 label="Action traceability"
@@ -64,14 +65,14 @@ function StatItem({ value, label, description }: { value: string; label: string;
 
   return (
     <div ref={ref} className="grid grid-cols-[120px_1fr] gap-10 items-start">
-      <div className={`text-4xl md:text-5xl font-bold transition-all duration-700 tabular-nums ${isVisible ? 'text-white' : 'text-[#1861C8]/30'}`}>
+      <div className={`text-4xl md:text-5xl font-bold transition-all duration-700 tabular-nums ${isVisible ? 'text-[#1861C8]' : 'text-slate-200'}`}>
         {value}
       </div>
       <div>
-        <div className={`text-lg md:text-xl font-semibold mb-1 transition-colors duration-500 ${isVisible ? 'text-white' : 'text-[#D7EEFC]/40'}`}>
+        <div className={`text-lg md:text-xl font-semibold mb-1 transition-colors duration-500 ${isVisible ? 'text-slate-900' : 'text-slate-400'}`}>
           {label}
         </div>
-        <p className="text-sm text-[#D7EEFC]/50 leading-relaxed">
+        <p className="text-sm text-slate-600 leading-relaxed">
           {description}
         </p>
       </div>
@@ -116,36 +117,36 @@ function TranscriptDemo() {
   return (
     <div ref={ref} className="relative">
       {/* Background glow */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#1861C8]/10 to-transparent rounded-3xl blur-2xl" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/5 to-transparent rounded-3xl blur-2xl" />
 
       {/* Main card */}
-      <div className="relative bg-gradient-to-br from-[#0d1a33]/90 to-[#0a1428]/95 rounded-3xl border border-[#1861C8]/20 overflow-hidden shadow-2xl">
+      <div className="relative bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xl">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-[#1861C8]/20">
+        <div className="px-6 py-4 border-b border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-[#D7EEFC]/40 mb-1">Thursday, Oct 24 • Recorded</div>
-              <h3 className="text-lg font-semibold text-white">Customer Support Call</h3>
+              <div className="text-xs text-slate-400 mb-1">Thursday, Oct 24 • Recorded</div>
+              <h3 className="text-lg font-semibold text-slate-900">Customer Support Call</h3>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                <div className="w-7 h-7 rounded-full bg-[#1861C8] flex items-center justify-center text-[10px] font-medium text-white ring-2 ring-[#0d1a33]">S</div>
-                <div className="w-7 h-7 rounded-full bg-[#61AFF9] flex items-center justify-center text-[10px] font-medium text-white ring-2 ring-[#0d1a33]">Y</div>
+                <div className="w-7 h-7 rounded-full bg-[#1861C8] flex items-center justify-center text-[10px] font-medium text-white ring-2 ring-white">S</div>
+                <div className="w-7 h-7 rounded-full bg-[#61AFF9] flex items-center justify-center text-[10px] font-medium text-white ring-2 ring-white">Y</div>
               </div>
-              <span className="text-[11px] text-[#D7EEFC]/40">+1 more</span>
+              <span className="text-[11px] text-slate-400">+1 more</span>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="px-6 py-3 border-b border-[#1861C8]/20 flex gap-4">
-          <button className="text-xs text-[#D7EEFC]/40 hover:text-[#D7EEFC]/60 transition-colors">Summary</button>
-          <button className="text-xs text-white font-medium border-b-2 border-[#61AFF9] pb-1">Transcript</button>
-          <button className="text-xs text-[#D7EEFC]/40 hover:text-[#D7EEFC]/60 transition-colors">Actions</button>
+        <div className="px-6 py-3 border-b border-slate-200 flex gap-4">
+          <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Summary</button>
+          <button className="text-xs text-slate-900 font-medium border-b-2 border-[#1861C8] pb-1">Transcript</button>
+          <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Actions</button>
         </div>
 
         {/* Transcript */}
-        <div className="p-6 h-64 overflow-hidden">
+        <div className="p-6 h-64 overflow-hidden bg-slate-50">
           <div className="space-y-4">
             {messages.map((msg, i) => (
               <div
@@ -155,24 +156,24 @@ function TranscriptDemo() {
                 }`}
               >
                 <div className="flex items-baseline gap-2 mb-1">
-                  <span className={`text-sm font-medium ${msg.speaker === 'You' ? 'text-[#61AFF9]' : 'text-[#D7EEFC]/80'}`}>
+                  <span className={`text-sm font-medium ${msg.speaker === 'You' ? 'text-[#1861C8]' : 'text-slate-700'}`}>
                     {msg.speaker}
                   </span>
-                  <span className="text-[10px] text-[#D7EEFC]/30">{msg.time}</span>
+                  <span className="text-[10px] text-slate-400">{msg.time}</span>
                 </div>
-                <p className="text-sm text-[#D7EEFC]/60 pl-0">{msg.text}</p>
+                <p className="text-sm text-slate-600 pl-0">{msg.text}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-[#0a1830]/50 border-t border-[#1861C8]/20 flex items-center justify-between">
+        <div className="px-6 py-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-400" />
-            <span className="text-[11px] text-[#D7EEFC]/40">Workflow captured</span>
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-[11px] text-slate-500">Workflow captured</span>
           </div>
-          <div className="text-[11px] text-[#D7EEFC]/30">
+          <div className="text-[11px] text-slate-500">
             {activeMessage} of {messages.length} interactions
           </div>
         </div>

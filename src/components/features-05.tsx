@@ -24,8 +24,8 @@ export default function Features05() {
 
           {/* Section header */}
           <div className="max-w-3xl mx-auto text-center pb-12">
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Everything you need to scale knowledge</h2>
-            <p className="text-lg text-slate-400">From capture to guidance to automation—Trope gives you the full toolkit to eliminate tribal knowledge and keep your team aligned as you grow.</p>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 pb-4">Everything you need to scale knowledge</h2>
+            <p className="text-lg text-slate-600">From capture to guidance to automation—Trope gives you the full toolkit to eliminate tribal knowledge and keep your team aligned as you grow.</p>
           </div>
 
           {/* Rings illustration */}
@@ -64,74 +64,74 @@ export default function Features05() {
           {/* Features list */}
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {/* Card #1 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">Desktop & Web capture</strong> for Excel, QuickBooks, and all your browser-based apps—not just websites.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">Desktop & Web capture</strong> for Excel, QuickBooks, and all your browser-based apps—not just websites.
                 </p>
               </div>
             </div>
             {/* Card #2 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">Drift detection</strong> automatically flags outdated steps when apps or documents change.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">Drift detection</strong> automatically flags outdated steps when apps or documents change.
                 </p>
               </div>
             </div>
             {/* Card #3 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">In-app overlays</strong> guide your team right where they work—no context switching required.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">In-app overlays</strong> guide your team right where they work—no context switching required.
                 </p>
               </div>
             </div>
             {/* Card #4 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">Safe automation</strong> with human-in-the-loop approval for critical steps and full audit trails.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">Safe automation</strong> with human-in-the-loop approval for critical steps and full audit trails.
                 </p>
               </div>
             </div>
             {/* Card #5 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">Role-based permissions</strong> ensure the right people see the right workflows and automations.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">Role-based permissions</strong> ensure the right people see the right workflows and automations.
                 </p>
               </div>
             </div>
             {/* Card #6 */}
-            <div className="bg-linear-to-tr from-slate-800/50 to-slate-800/10 rounded-3xl border border-slate-800">
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm">
               <div className="flex items-center space-x-4 p-4 h-full">
                 <svg className="shrink-0" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                  <path className="fill-purple-500" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
-                  <path className="fill-purple-400" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
+                  <path className="fill-[#1861C8]" fillOpacity=".24" d="M10 0C4.5 0 0 4.5 0 10s4.5 10 10 10 10-4.5 10-10S15.5 0 10 0Z" />
+                  <path className="fill-[#1861C8]" fillRule="nonzero" d="M13 6.586 14.414 8l-5.747 5.748-3.081-3.081L7 9.252l1.667 1.667z" />
                 </svg>
-                <p className="text-sm text-slate-400">
-                  <strong className="text-slate-300 font-medium">Version control & lineage</strong> track every workflow change with full rollback capabilities.
+                <p className="text-sm text-slate-600">
+                  <strong className="text-slate-900 font-medium">Version control & lineage</strong> track every workflow change with full rollback capabilities.
                 </p>
               </div>
             </div>

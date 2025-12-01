@@ -15,15 +15,15 @@ function FaqItem({
   onToggle: () => void
 }) {
   return (
-    <div className="border-b border-[#1861C8]/20">
+    <div className="border-b border-slate-200">
       <button
         onClick={onToggle}
         className="w-full flex items-center justify-between py-5 md:py-6 text-left group"
         aria-expanded={isOpen}
       >
-        <h4 className="font-semibold text-white pr-4 text-base md:text-lg">{question}</h4>
+        <h4 className="font-semibold text-slate-900 pr-4 text-base md:text-lg">{question}</h4>
         <svg
-          className={`shrink-0 w-5 h-5 text-[#D7EEFC]/40 transition-transform duration-300 ease-out ${
+          className={`shrink-0 w-5 h-5 text-slate-400 transition-transform duration-300 ease-out ${
             isOpen ? 'rotate-180' : ''
           }`}
           xmlns="http://www.w3.org/2000/svg"
@@ -45,7 +45,7 @@ function FaqItem({
         style={{ gridTemplateRows: isOpen ? '1fr' : '0fr' }}
       >
         <div className="overflow-hidden">
-          <div className="pb-5 md:pb-6 text-[#D7EEFC]/60 text-base md:text-lg leading-relaxed max-w-[90%]">
+          <div className="pb-5 md:pb-6 text-slate-600 text-base md:text-lg leading-relaxed max-w-[90%]">
             {typeof answer === 'string' ? <p>{answer}</p> : <div>{answer}</div>}
           </div>
         </div>
@@ -79,7 +79,7 @@ export default function Faqs() {
       answer: (
         <>
           Absolutely. Trope uses end-to-end encryption for all workflow data. We're in the process of obtaining SOC2 compliance. Review our{' '}
-          <a href="/subprocessors" className="text-[#61AFF9] hover:underline">
+          <a href="/subprocessors" className="text-[#1861C8] hover:underline">
             subprocessors page
           </a>{' '}
           for details.
@@ -97,17 +97,17 @@ export default function Faqs() {
   ]
 
   return (
-    <section className="py-16 md:py-24 lg:py-28 bg-[#000E2E]">
+    <section className="py-16 md:py-24 lg:py-28 bg-slate-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Section header */}
         <div className="mb-10 md:mb-14">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
             Frequently asked questions
           </h2>
         </div>
 
         {/* FAQ Accordion - clean minimal style */}
-        <div className="border-t border-[#1861C8]/20">
+        <div className="border-t border-slate-200">
           {faqs.map((faq, index) => (
             <FaqItem
               key={index}

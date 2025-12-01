@@ -58,10 +58,10 @@ export default function Pricing() {
     <div>
       {/* Toggle */}
       <div className="flex justify-center mb-10 md:mb-12">
-        <div className="inline-flex items-center bg-[#031663]/50 rounded-full p-1 border border-[#1861C8]/20">
+        <div className="inline-flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
           <button
             className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
-              !annual ? 'bg-[#1861C8] text-white' : 'text-[#D7EEFC]/60 hover:text-white'
+              !annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
             }`}
             onClick={() => setAnnual(false)}
           >
@@ -69,11 +69,11 @@ export default function Pricing() {
           </button>
           <button
             className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
-              annual ? 'bg-[#1861C8] text-white' : 'text-[#D7EEFC]/60 hover:text-white'
+              annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
             }`}
             onClick={() => setAnnual(true)}
           >
-            Yearly <span className="text-[#61AFF9] font-medium ml-1 hidden sm:inline">-20%</span>
+            Yearly <span className={`font-medium ml-1 hidden sm:inline ${annual ? 'text-white/80' : 'text-[#1861C8]'}`}>-20%</span>
           </button>
         </div>
       </div>
@@ -85,8 +85,8 @@ export default function Pricing() {
             key={index}
             className={`relative rounded-2xl p-6 transition-colors duration-200 ${
               plan.highlighted
-                ? 'bg-gradient-to-b from-[#1861C8]/80 to-[#031663] border border-[#61AFF9]/40'
-                : 'bg-[#000E2E]/60 border border-[#1861C8]/20 hover:border-[#1861C8]/40'
+                ? 'bg-gradient-to-b from-[#1861C8] to-[#0d4a9e] border border-[#61AFF9]/40'
+                : 'bg-slate-50 border border-slate-200 hover:border-slate-300'
             }`}
           >
             {/* Popular badge */}
@@ -99,10 +99,10 @@ export default function Pricing() {
             )}
 
             <div className="mb-5">
-              <h3 className="text-lg font-semibold text-white mb-1">
+              <h3 className={`text-lg font-semibold mb-1 ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
                 {plan.name}
               </h3>
-              <p className="text-sm text-[#D7EEFC]/60">
+              <p className={`text-sm ${plan.highlighted ? 'text-white/70' : 'text-slate-600'}`}>
                 {plan.description}
               </p>
             </div>
@@ -110,15 +110,15 @@ export default function Pricing() {
             <div className="mb-6">
               {plan.price !== null ? (
                 <div className="flex items-baseline">
-                  <span className="text-3xl md:text-4xl font-bold text-white">
+                  <span className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
                     ${plan.price}
                   </span>
-                  <span className="ml-1 text-[#D7EEFC]/60">
+                  <span className={`ml-1 ${plan.highlighted ? 'text-white/70' : 'text-slate-600'}`}>
                     /user/mo
                   </span>
                 </div>
               ) : (
-                <div className="text-3xl md:text-4xl font-bold text-white">
+                <div className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
                   Custom
                 </div>
               )}
@@ -128,8 +128,8 @@ export default function Pricing() {
               href={`mailto:${CONTACT_EMAIL}`}
               className={`block w-full py-3 px-4 text-center text-sm font-medium rounded-full transition-colors duration-200 mb-6 ${
                 plan.highlighted
-                  ? 'bg-white text-[#031663] hover:bg-[#D7EEFC]'
-                  : 'bg-[#1861C8] text-white hover:bg-[#61AFF9]'
+                  ? 'bg-white text-[#1861C8] hover:bg-slate-100'
+                  : 'bg-[#1861C8] text-white hover:bg-[#2171d8]'
               }`}
             >
               {plan.cta}
@@ -139,7 +139,7 @@ export default function Pricing() {
               {plan.features.map((feature, featureIndex) => (
                 <li key={featureIndex} className="flex items-start gap-3">
                   <svg
-                    className="w-5 h-5 shrink-0 mt-0.5 text-[#61AFF9]"
+                    className={`w-5 h-5 shrink-0 mt-0.5 ${plan.highlighted ? 'text-white' : 'text-[#1861C8]'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -147,7 +147,7 @@ export default function Pricing() {
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-sm text-[#D7EEFC]/70">
+                  <span className={`text-sm ${plan.highlighted ? 'text-white/80' : 'text-slate-700'}`}>
                     {feature}
                   </span>
                 </li>
