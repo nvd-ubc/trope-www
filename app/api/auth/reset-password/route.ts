@@ -36,6 +36,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    if ((code && !newPassword) || (!code && newPassword)) {
+      return NextResponse.redirect(
+        buildErrorRedirect(request, 'Enter both the verification code and a new password.')
+      )
+    }
+
     if (code && newPassword) {
       await confirmForgotPassword({ email, code, newPassword })
       const url = new URL('/signin', request.url)
