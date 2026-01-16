@@ -145,11 +145,15 @@ export async function POST(request: Request) {
 
   const email = formValue(formData, 'email')
   const password = formValue(formData, 'password')
-  const client = formValue(formData, 'client') === 'desktop' ? 'desktop' : 'web'
   const state = formValue(formData, 'state')
   const redirectUri = formValue(formData, 'redirect')
   const platform = formValue(formData, 'platform') || 'unknown'
   const next = formValue(formData, 'next')
+
+  let client = formValue(formData, 'client') === 'desktop' ? 'desktop' : 'web'
+  if (client !== 'desktop' && state && redirectUri && isAllowedDesktopRedirect(redirectUri)) {
+    client = 'desktop'
+  }
 
   if (!email || !password) {
     return redirectAfterPost(
@@ -218,7 +222,10 @@ export async function POST(request: Request) {
         state,
       })
 
-      const response = redirectAfterPost(request, callbackUrl)
+      const completeUrl = new URL('/signin/desktop-complete', request.url)
+      completeUrl.searchParams.set('callback', callbackUrl.toString())
+
+      const response = redirectAfterPost(request, completeUrl)
       if (webTokens) {
         setAuthCookies(response, webTokens)
       }

@@ -29,9 +29,10 @@ export default function SignIn({
   searchParams?: SignInSearchParams
 }) {
   const error = toSingle(searchParams?.error)
-  const client = toSingle(searchParams?.client) === 'desktop' ? 'desktop' : 'web'
   const redirect = toSingle(searchParams?.redirect) ?? ''
   const state = toSingle(searchParams?.state) ?? ''
+  const inferredDesktop = toSingle(searchParams?.client) === 'desktop' || Boolean(redirect && state)
+  const client = inferredDesktop ? 'desktop' : 'web'
   const platform = toSingle(searchParams?.platform) ?? ''
   const next = toSingle(searchParams?.next) ?? ''
   const signup = toSingle(searchParams?.signup)
