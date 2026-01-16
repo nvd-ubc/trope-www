@@ -130,12 +130,17 @@ const buildRedirectWithParams = (raw: string, params: Record<string, string>) =>
   return url
 }
 
+const redirectAfterPost = (request: Request, url: URL) => {
+  const destination = new URL(url.toString(), request.url)
+  return NextResponse.redirect(destination, 303)
+}
+
 export async function POST(request: Request) {
   let formData: FormData
   try {
     formData = await request.formData()
   } catch {
-    return NextResponse.redirect(buildErrorRedirect(request, { error: 'Invalid sign-in request.' }))
+    return redirectAfterPost(request, buildErrorRedirect(request, { error: 'Invalid sign-in request.' }))
   }
 
   const email = formValue(formData, 'email')
@@ -147,7 +152,8 @@ export async function POST(request: Request) {
   const next = formValue(formData, 'next')
 
   if (!email || !password) {
-    return NextResponse.redirect(
+    return redirectAfterPost(
+      request,
       buildErrorRedirect(request, {
         error: 'Email and password are required.',
         client,
@@ -163,7 +169,8 @@ export async function POST(request: Request) {
 
     if (client === 'desktop') {
       if (!state || !redirectUri) {
-        return NextResponse.redirect(
+        return redirectAfterPost(
+          request,
           buildErrorRedirect(request, {
             error: 'Missing desktop sign-in details. Try again from the app.',
           })
@@ -171,7 +178,8 @@ export async function POST(request: Request) {
       }
 
       if (!isAllowedDesktopRedirect(redirectUri)) {
-        return NextResponse.redirect(
+        return redirectAfterPost(
+          request,
           buildErrorRedirect(request, {
             error: 'Invalid desktop redirect. Try again from the app.',
             client,
@@ -210,7 +218,7 @@ export async function POST(request: Request) {
         state,
       })
 
-      const response = NextResponse.redirect(callbackUrl)
+      const response = redirectAfterPost(request, callbackUrl)
       if (webTokens) {
         setAuthCookies(response, webTokens)
       }
@@ -218,12 +226,13 @@ export async function POST(request: Request) {
     }
 
     const tokens = await signInWithPassword(email, password, 'web')
-    const response = NextResponse.redirect(new URL(safeRedirectPath(next), request.url))
+    const response = redirectAfterPost(request, new URL(safeRedirectPath(next), request.url))
     setAuthCookies(response, tokens)
     return response
   } catch (error) {
     const message = authErrorMessage(error)
-    return NextResponse.redirect(
+    return redirectAfterPost(
+      request,
       buildErrorRedirect(request, {
         error: message,
         client,
