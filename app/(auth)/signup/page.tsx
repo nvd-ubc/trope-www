@@ -22,11 +22,17 @@ const parseBoolean = (value: string | undefined): boolean | undefined => {
   return undefined
 }
 
+const normalizeStage = (value: string): string => {
+  const trimmed = value.trim().toLowerCase()
+  return trimmed || 'dev'
+}
+
 const isSelfSignupEnabled = () => {
-  const stage =
+  const stageRaw =
     process.env.TROPE_STAGE ||
     process.env.NEXT_PUBLIC_TROPE_STAGE ||
     (process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
+  const stage = normalizeStage(stageRaw)
   const override =
     parseBoolean(process.env.TROPE_SELF_SIGNUP_ENABLED) ??
     parseBoolean(process.env.NEXT_PUBLIC_TROPE_SELF_SIGNUP_ENABLED)
