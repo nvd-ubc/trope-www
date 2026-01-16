@@ -15,6 +15,42 @@ const formValue = (formData: FormData, key: string): string => {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+const defaultDesktopRedirectAllowlist = [
+  'trope://auth-callback',
+  'http://127.0.0.1:4378/auth-callback',
+  'http://localhost:4378/auth-callback',
+]
+
+const normalizeRedirectUri = (value: string): string | null => {
+  try {
+    const url = new URL(value)
+    return `${url.protocol}//${url.host}${url.pathname}`
+  } catch {
+    return null
+  }
+}
+
+const buildDesktopRedirectAllowlist = (): Set<string> => {
+  const raw =
+    process.env.TROPE_AUTH_HANDOFF_REDIRECT_ALLOWLIST ?? defaultDesktopRedirectAllowlist.join(',')
+  const entries = raw
+    .split(',')
+    .map(value => value.trim())
+    .filter(value => value.length > 0)
+  const normalized = entries
+    .map(entry => normalizeRedirectUri(entry) ?? entry)
+    .filter((entry): entry is string => Boolean(entry))
+  return new Set(normalized)
+}
+
+const desktopRedirectAllowlist = buildDesktopRedirectAllowlist()
+
+const isAllowedDesktopRedirect = (redirectUri: string): boolean => {
+  const normalized = normalizeRedirectUri(redirectUri)
+  if (!normalized) return false
+  return desktopRedirectAllowlist.has(normalized)
+}
+
 const buildErrorRedirect = (request: Request, params: Record<string, string>) => {
   const url = new URL('/signin', request.url)
   Object.entries(params).forEach(([key, value]) => {
@@ -130,6 +166,17 @@ export async function POST(request: Request) {
         return NextResponse.redirect(
           buildErrorRedirect(request, {
             error: 'Missing desktop sign-in details. Try again from the app.',
+          })
+        )
+      }
+
+      if (!isAllowedDesktopRedirect(redirectUri)) {
+        return NextResponse.redirect(
+          buildErrorRedirect(request, {
+            error: 'Invalid desktop redirect. Try again from the app.',
+            client,
+            state,
+            platform,
           })
         )
       }
