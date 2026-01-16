@@ -182,12 +182,12 @@ export async function POST(request: Request) {
       }
 
       const desktopTokens = await signInWithPassword(email, password, 'desktop')
-      let webTokens = desktopTokens
-      if (config.webClientId !== config.desktopClientId) {
+      let webTokens = config.webClientId === config.desktopClientId ? desktopTokens : null
+      if (!webTokens && config.webClientId !== config.desktopClientId) {
         try {
           webTokens = await signInWithPassword(email, password, 'web')
         } catch {
-          webTokens = desktopTokens
+          webTokens = null
         }
       }
 
