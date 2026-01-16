@@ -24,8 +24,8 @@ const STAGE_DEFAULTS: Record<string, CloudDefaults> = {
   prod: {
     apiBaseUrl: 'https://4ubla7lekl.execute-api.us-west-2.amazonaws.com',
     region: DEFAULT_REGION,
-    webClientId: '34gim4s3med66knf5hveurom87',
-    desktopClientId: '34gim4s3med66knf5hveurom87',
+    webClientId: '6cirfe7fstgcrimotkj8dhao',
+    desktopClientId: 'ef5k0q9tfu11e186eavcf0re0',
   },
   dev: {
     apiBaseUrl: 'https://y9o3ly11z3.execute-api.us-west-2.amazonaws.com',
