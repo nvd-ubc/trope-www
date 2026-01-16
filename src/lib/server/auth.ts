@@ -9,6 +9,7 @@ import {
   ForgotPasswordCommand,
   ConfirmForgotPasswordCommand,
 } from '@aws-sdk/client-cognito-identity-provider'
+import { __resetAuthConfigForTests, getAuthConfig } from './auth-config'
 
 type AuthClientKind = 'web' | 'desktop'
 
@@ -26,93 +27,14 @@ type AuthSession = {
   expiresAt: number
 }
 
-type AuthConfig = {
-  stage: string
-  isProd: boolean
-  apiBaseUrl: string
-  region: string
-  webClientId: string
-  desktopClientId: string
-  selfSignupEnabled: boolean
-}
-
 const ACCESS_COOKIE = 'trope_access_token'
 const REFRESH_COOKIE = 'trope_refresh_token'
 const ID_COOKIE = 'trope_id_token'
 const EXPIRES_AT_COOKIE = 'trope_access_expires_at'
 
-let cachedConfig: AuthConfig | null = null
 let cachedCognitoClient: CognitoIdentityProviderClient | null = null
 
-const normalizeUrl = (value: string): string => {
-  const trimmed = value.trim()
-  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed
-}
-
-const parseBoolean = (value: string | undefined): boolean | undefined => {
-  if (!value) return undefined
-  const normalized = value.trim().toLowerCase()
-  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true
-  if (['0', 'false', 'no', 'off'].includes(normalized)) return false
-  return undefined
-}
-
-export const getAuthConfig = (): AuthConfig => {
-  if (cachedConfig) return cachedConfig
-
-  const stage =
-    process.env.TROPE_STAGE ||
-    process.env.NEXT_PUBLIC_TROPE_STAGE ||
-    (process.env.NODE_ENV === 'production' ? 'prod' : 'dev')
-
-  const apiBaseUrlRaw =
-    process.env.TROPE_API_URL ||
-    process.env.TROPE_BACKEND_API_URL ||
-    process.env.NEXT_PUBLIC_TROPE_API_URL ||
-    ''
-
-  const region =
-    process.env.TROPE_COGNITO_REGION ||
-    process.env.AWS_REGION ||
-    process.env.AWS_DEFAULT_REGION ||
-    ''
-
-  const webClientId =
-    process.env.TROPE_COGNITO_WEB_CLIENT_ID ||
-    process.env.TROPE_COGNITO_CLIENT_ID ||
-    ''
-
-  const desktopClientId =
-    process.env.TROPE_COGNITO_DESKTOP_CLIENT_ID || webClientId
-
-  if (!apiBaseUrlRaw) {
-    throw new Error('TROPE_API_URL is not configured.')
-  }
-  if (!region) {
-    throw new Error('TROPE_COGNITO_REGION is not configured.')
-  }
-  if (!webClientId) {
-    throw new Error('TROPE_COGNITO_WEB_CLIENT_ID is not configured.')
-  }
-
-  const signupOverride =
-    parseBoolean(process.env.TROPE_SELF_SIGNUP_ENABLED) ??
-    parseBoolean(process.env.NEXT_PUBLIC_TROPE_SELF_SIGNUP_ENABLED)
-
-  const selfSignupEnabled = signupOverride ?? stage !== 'prod'
-
-  cachedConfig = {
-    stage,
-    isProd: stage === 'prod',
-    apiBaseUrl: normalizeUrl(apiBaseUrlRaw),
-    region,
-    webClientId,
-    desktopClientId,
-    selfSignupEnabled,
-  }
-
-  return cachedConfig
-}
+export { __resetAuthConfigForTests, getAuthConfig }
 
 const getCognitoClient = (): CognitoIdentityProviderClient => {
   if (cachedCognitoClient) return cachedCognitoClient
