@@ -1,139 +1,449 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, createContext, useContext, useCallback, ReactNode } from 'react'
+import ChromaText from './chroma-text'
 
-import { Transition } from '@headlessui/react'
-import Particles from './particles'
+// Context for coordinating auto-play across demos
+interface AutoPlayContextType {
+  activeIndex: number
+  isAutoPlaying: boolean
+  setActiveIndex: (index: number) => void
+  pauseAutoPlay: () => void
+  resumeAutoPlay: () => void
+}
 
-export default function Features() {
+const AutoPlayContext = createContext<AutoPlayContextType | null>(null)
 
-  const [tab, setTab] = useState<number>(1)
+// Wrapper component that manages auto-play sequence
+function FeatureDemosContainer({ children }: { children: React.ReactNode }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [isPaused, setIsPaused] = useState(false)
+
+  const pauseAutoPlay = useCallback(() => {
+    setIsPaused(true)
+  }, [])
+
+  const resumeAutoPlay = useCallback(() => {
+    setIsPaused(false)
+  }, [])
+
+  // Auto-advance through demos
+  useEffect(() => {
+    if (!isAutoPlaying || isPaused) return
+
+    const interval = setInterval(() => {
+      setActiveIndex(i => (i + 1) % 3)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [isAutoPlaying, isPaused])
 
   return (
-    <section>
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
+    <AutoPlayContext.Provider value={{ activeIndex, isAutoPlaying, setActiveIndex, pauseAutoPlay, resumeAutoPlay }}>
+      {children}
+    </AutoPlayContext.Provider>
+  )
+}
 
-        <div className="pt-16 pb-12 md:pt-52 md:pb-20">
+// Hook to use auto-play context
+function useAutoPlay(index: number) {
+  const context = useContext(AutoPlayContext)
+  const [isHovered, setIsHovered] = useState(false)
 
-          <div>
+  const isActive = context ? context.activeIndex === index || isHovered : isHovered
 
-            {/* Section content */}
-            <div className="max-w-xl mx-auto md:max-w-none flex flex-col md:flex-row md:space-x-8 lg:space-x-16 xl:space-x-20 space-y-8 space-y-reverse md:space-y-0">
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true)
+    context?.pauseAutoPlay()
+    context?.setActiveIndex(index)
+  }, [context, index])
 
-              {/* Content */}
-              <div className="md:w-7/12 lg:w-1/2 order-1 md:order-none max-md:text-center" data-aos="fade-down">
-                {/* Content #1 */}
-                <div>
-                  <div className="inline-flex font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-3">How Trope Works</div>
-                </div>
-                <h3 className="h3 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-3">From manual workflows to guided automation</h3>
-                <p className="text-lg text-slate-400 mb-8">Capture once, guide forever. Trope transforms your workflows into living documentation that stays fresh, proves lineage, and safely automates repetitive tasks.</p>
-                <div className="mt-8 max-w-xs max-md:mx-auto space-y-2">
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 1 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(1)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M15 2h-2V0h-2v2H9V0H7v2H5V0H3v2H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1ZM2 14V6h12v8H2Z" />
-                    </svg>
-                    <span>Record workflows effortlessly</span>
-                  </button>
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 2 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(2)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M2 6H0V2a2 2 0 0 1 2-2h4v2H2v4ZM16 6h-2V2h-4V0h4a2 2 0 0 1 2 2v4ZM14 16h-4v-2h4v-4h2v4a2 2 0 0 1-2 2ZM6 16H2a2 2 0 0 1-2-2v-4h2v4h4v2Z" />
-                    </svg>
-                    <span>Just-in-time guidance</span>
-                  </button>
-                  <button className={`flex items-center text-sm font-medium text-slate-50 rounded-sm border bg-slate-800/25 w-full px-3 py-2 transition duration-150 ease-in-out hover:opacity-100 ${tab !== 3 ? 'border-slate-700 opacity-50' : 'border-purple-700 shadow-sm shadow-purple-500/25'}`} onClick={() => setTab(3)}>
-                    <svg className="shrink-0 fill-slate-300 mr-3" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                      <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6Zm1-9H7v5h2V5Zm0 6H7v2h2v-2Z" />
-                    </svg>
-                    <span>Safe automation with governance</span>
-                  </button>
-                </div>
-              </div>
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false)
+    context?.resumeAutoPlay()
+  }, [context])
 
-              {/* Image */}
-              <div className="md:w-5/12 lg:w-1/2" data-aos="fade-up" data-aos-delay="100">
-                <div className="relative py-24 -mt-12">
+  return {
+    isActive,
+    isHovered,
+    isAutoPlayActive: context ? context.activeIndex === index && !isHovered : false,
+    hoverProps: {
+      onMouseEnter: handleMouseEnter,
+      onMouseLeave: handleMouseLeave,
+    },
+  }
+}
 
-                  {/* Particles animation */}
-                  <Particles className="absolute inset-0 -z-10" quantity={8} staticity={30} />
+export default function Features() {
+  return (
+    <section id="features" className="py-20 md:py-28 lg:py-36 bg-gradient-to-b from-[#E2E8F0] to-[#F1F5F9] relative overflow-hidden">
+      {/* Subtle background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-[#1861C8]/5 rounded-full blur-[120px]" />
 
-                  <div className="flex items-center justify-center">
-                    <div className="relative w-48 h-48 flex justify-center items-center">
-                      {/* Halo effect */}
-                      <svg className="absolute inset-0 -z-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 will-change-transform pointer-events-none blur-md" width="480" height="480" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <linearGradient id="pulse-a" x1="50%" x2="50%" y1="100%" y2="0%">
-                            <stop offset="0%" stopColor="#A855F7" />
-                            <stop offset="76.382%" stopColor="#FAF5FF" />
-                            <stop offset="100%" stopColor="#6366F1" />
-                          </linearGradient>
-                        </defs>
-                        <g fillRule="evenodd">
-                          <path className="pulse" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                          <path className="pulse pulse-1" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                          <path className="pulse pulse-2" fill="url(#pulse-a)" fillRule="evenodd" d="M240,0 C372.5484,0 480,107.4516 480,240 C480,372.5484 372.5484,480 240,480 C107.4516,480 0,372.5484 0,240 C0,107.4516 107.4516,0 240,0 Z M240,88.8 C156.4944,88.8 88.8,156.4944 88.8,240 C88.8,323.5056 156.4944,391.2 240,391.2 C323.5056,391.2 391.2,323.5056 391.2,240 C391.2,156.4944 323.5056,88.8 240,88.8 Z" />
-                        </g>
-                      </svg>
-                      {/* Grid */}
-                      <div className="absolute inset-0 -z-10 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none w-[500px] h-[500px] rounded-full overflow-hidden [mask-image:_radial-gradient(black,_transparent_60%)]">
-                        <div className="h-[200%] animate-endless">
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(transparent,transparent_48px,var(--color-white)_48px,var(--color-white)_49px)] blur-[2px] opacity-20" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(transparent,transparent_48px,var(--color-purple-500)_48px,var(--color-purple-500)_49px)]" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(90deg,transparent,transparent_48px,var(--color-white)_48px,var(--color-white)_49px)] blur-[2px] opacity-20" />
-                          <div className="absolute inset-0 [background:repeating-linear-gradient(90deg,transparent,transparent_48px,var(--color-purple-500)_48px,var(--color-purple-500)_49px)]" />
-                        </div>
-                      </div>
-                      {/* Icons */}
-                      <Transition
-                        as="div"
-                        show={tab === 1}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >                      
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="23" height="25">
-                            <path fillRule="nonzero" d="M10.55 15.91H.442L14.153.826 12.856 9.91h10.107L9.253 24.991l1.297-9.082Zm.702-8.919L4.963 13.91h7.893l-.703 4.918 6.289-6.918H10.55l.702-4.918Z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                      <Transition
-                        as="div"
-                        show={tab === 2}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >    
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
-                            <path d="M18 14h-2V8h2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4v2H8V4c0-2.2-1.8-4-4-4S0 1.8 0 4s1.8 4 4 4h2v6H4c-2.2 0-4 1.8-4 4s1.8 4 4 4 4-1.8 4-4v-2h6v2c0 2.2 1.8 4 4 4s4-1.8 4-4-1.8-4-4-4ZM16 4c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2h-2V4ZM2 4c0-1.1.9-2 2-2s2 .9 2 2v2H4c-1.1 0-2-.9-2-2Zm4 14c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2h2v2ZM8 8h6v6H8V8Zm10 12c-1.1 0-2-.9-2-2v-2h2c1.1 0 2 .9 2 2s-.9 2-2 2Z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                      <Transition
-                        as="div"
-                        show={tab === 3}
-                        className={`transform transition ease-[cubic-bezier(0.68,-0.3,0.32,1)] data-closed:absolute data-enter:data-closed:-rotate-[60deg] data-leave:data-closed:rotate-[60deg] data-closed:opacity-0 duration-700`}
-                        unmount={false}
-                        appear={true}
-                      >    
-                        <div className="relative flex items-center justify-center w-16 h-16 border border-transparent rounded-2xl shadow-2xl -rotate-[14deg] [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-2xl">
-                          <svg className="relative fill-slate-200" xmlns="http://www.w3.org/2000/svg" width="26" height="14">
-                            <path fillRule="nonzero" d="m10 5.414-8 8L.586 12 10 2.586l6 6 8-8L25.414 2 16 11.414z" />
-                          </svg>
-                        </div>
-                      </Transition>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
+        {/* Section header */}
+        <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
+          <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">How it works</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
+            <ChromaText color="inherit">Living</ChromaText> guides in 3 steps
+          </h2>
+          <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
+            The easiest way to transform tribal knowledge into scalable documentation.
+          </p>
+        </div>
 
+        {/* 3-step sequential layout */}
+        <FeatureDemosContainer>
+          <div className="grid md:grid-cols-3 gap-6 md:gap-4 lg:gap-8 items-start">
+            {/* Step 1: Record */}
+            <StepCard
+              index={0}
+              number={1}
+              title="Record workflow"
+              description="Click record before starting. Trope captures every click and keystroke."
+            >
+              <RecordDemo index={0} />
+            </StepCard>
+
+            {/* Arrow connector */}
+            <div className="hidden md:flex items-center justify-center absolute left-[33%] top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
+              <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </div>
 
-          </div>
+            {/* Step 2: Guide */}
+            <StepCard
+              index={1}
+              number={2}
+              title="Deploy guide"
+              description="Click stop when done. Your workflow becomes a living, interactive guide."
+            >
+              <GuidanceDemo index={1} />
+            </StepCard>
 
-        </div>
+            {/* Arrow connector */}
+            <div className="hidden md:flex items-center justify-center absolute left-[66%] top-1/2 -translate-y-1/2 -translate-x-1/2 z-10">
+              <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+
+            {/* Step 3: Automate */}
+            <StepCard
+              index={2}
+              number={3}
+              title="Get results"
+              description="Your team follows guides, automations run, everything is logged."
+            >
+              <AutomationDemo index={2} />
+            </StepCard>
+          </div>
+        </FeatureDemosContainer>
       </div>
     </section>
+  )
+}
+
+// Step Card component
+interface StepCardProps {
+  index: number
+  number: number
+  title: string
+  description: string
+  children: ReactNode
+}
+
+function StepCard({ index, number, title, description, children }: StepCardProps) {
+  const { isActive, hoverProps } = useAutoPlay(index)
+
+  return (
+    <div {...hoverProps} className="relative">
+      {/* Demo card */}
+      <div
+        className={`relative bg-gradient-to-b from-white to-slate-50 rounded-3xl overflow-hidden border transition-all duration-500 ${
+          isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
+        }`}
+      >
+        {/* Demo area */}
+        <div className="aspect-[4/3] relative">
+          {children}
+        </div>
+      </div>
+
+      {/* Text below */}
+      <div className="mt-6 text-center md:text-left">
+        <div className="flex items-center gap-3 justify-center md:justify-start mb-2">
+          <span className={`text-4xl font-light transition-colors duration-300 ${
+            isActive ? 'text-[#1861C8]' : 'text-slate-300'
+          }`}>
+            {number}
+          </span>
+          <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
+        </div>
+        <p className="text-slate-600 text-sm leading-relaxed max-w-xs mx-auto md:mx-0">
+          {description}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Demo 1: Recording workflow - Floating window with cursor
+function RecordDemo({ index = 0 }: { index?: number }) {
+  const { isActive } = useAutoPlay(index)
+  const [activeStep, setActiveStep] = useState(0)
+  const [cursorPos, setCursorPos] = useState({ x: 30, y: 35 })
+  const [isClicking, setIsClicking] = useState(false)
+
+  const steps = [
+    { x: 30, y: 35 },
+    { x: 50, y: 50 },
+    { x: 40, y: 65 },
+  ]
+
+  useEffect(() => {
+    if (isActive) {
+      setActiveStep(0)
+      setCursorPos(steps[0])
+      setIsClicking(false)
+    }
+  }, [isActive])
+
+  useEffect(() => {
+    if (!isActive) return
+    const interval = setInterval(() => {
+      setActiveStep(s => {
+        const next = (s + 1) % steps.length
+        setCursorPos(steps[next])
+        setTimeout(() => {
+          setIsClicking(true)
+          setTimeout(() => setIsClicking(false), 150)
+        }, 400)
+        return next
+      })
+    }, 1400)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center p-6">
+      {/* Floating window */}
+      <div className="relative w-full max-w-[280px]">
+        {/* Window shadow */}
+        <div className="absolute inset-0 bg-slate-900/10 blur-2xl rounded-2xl transform translate-y-4 scale-95" />
+
+        {/* Main window */}
+        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+          {/* Window header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+              </div>
+              <span className="text-[10px] text-slate-400 ml-2">onboarding.flow</span>
+            </div>
+            <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full ${isActive ? 'bg-red-500/20' : 'bg-slate-100'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-red-500 animate-pulse' : 'bg-slate-400'}`} />
+              <span className={`text-[9px] font-medium ${isActive ? 'text-red-600' : 'text-slate-500'}`}>
+                {isActive ? 'REC' : 'READY'}
+              </span>
+            </div>
+          </div>
+
+          {/* Window content */}
+          <div className="p-4 h-32 relative bg-slate-50">
+            <div className="space-y-2">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
+                    isActive && activeStep === i ? 'bg-[#1861C8]/10 ring-1 ring-[#1861C8]' : 'bg-white'
+                  }`}
+                >
+                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center">
+                    <div className="w-3 h-3 rounded-sm bg-[#1861C8]/30" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="h-1.5 bg-slate-200 rounded w-3/4" />
+                    <div className="h-1 bg-slate-100 rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Animated cursor */}
+            {isActive && (
+              <div
+                className="absolute w-4 h-4 transition-all duration-500 ease-out z-20 pointer-events-none"
+                style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
+              >
+                <svg
+                  className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M4 4l16 8-7 2-2 7z" />
+                </svg>
+                {isClicking && (
+                  <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Demo 2: Just-in-time guidance - Tooltip overlay
+function GuidanceDemo({ index = 1 }: { index?: number }) {
+  const { isActive } = useAutoPlay(index)
+  const [step, setStep] = useState(0)
+
+  const tooltips = [
+    { top: '25%', left: '55%', label: 'Click here to start' },
+    { top: '45%', left: '60%', label: 'Enter customer name' },
+    { top: '70%', left: '30%', label: 'Submit to continue' },
+  ]
+
+  useEffect(() => {
+    if (isActive) {
+      setStep(0)
+    }
+  }, [isActive])
+
+  useEffect(() => {
+    if (!isActive) return
+    const interval = setInterval(() => {
+      setStep(s => (s + 1) % tooltips.length)
+    }, 1800)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center p-6">
+      {/* Floating window */}
+      <div className="relative w-full max-w-[280px]">
+        <div className="absolute inset-0 bg-slate-900/10 blur-2xl rounded-2xl transform translate-y-4 scale-95" />
+
+        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+          {/* Window header */}
+          <div className="flex items-center px-4 py-3 bg-slate-50 border-b border-slate-200">
+            <div className="flex gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+            </div>
+            <span className="text-[10px] text-slate-400 ml-3">Customer Form</span>
+          </div>
+
+          {/* Form content */}
+          <div className="p-4 h-32 relative bg-slate-50">
+            <div className="space-y-3">
+              <div className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 0 ? 'ring-2 ring-[#1861C8]' : ''}`} />
+              <div className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`} />
+              <div className={`h-5 w-20 rounded bg-slate-200 transition-all duration-300 ${isActive && step === 2 ? 'ring-2 ring-[#1861C8]' : ''}`} />
+            </div>
+
+            {/* Floating tooltip */}
+            {isActive && (
+              <div
+                className="absolute z-10 transition-all duration-500 ease-out"
+                style={{ top: tooltips[step].top, left: tooltips[step].left }}
+              >
+                <div className="bg-[#1861C8] text-white px-3 py-1.5 rounded-lg shadow-xl animate-bounce-subtle">
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-bold">
+                      {step + 1}
+                    </div>
+                    <span className="text-[10px] font-medium whitespace-nowrap">{tooltips[step].label}</span>
+                  </div>
+                </div>
+                <div className="w-2.5 h-2.5 bg-[#1861C8] rotate-45 -mt-1 ml-6" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Demo 3: Results/output - Document with notes
+function AutomationDemo({ index = 2 }: { index?: number }) {
+  const { isActive } = useAutoPlay(index)
+  const [visibleLines, setVisibleLines] = useState(0)
+
+  useEffect(() => {
+    if (isActive) {
+      setVisibleLines(0)
+    }
+  }, [isActive])
+
+  useEffect(() => {
+    if (!isActive) return
+    const interval = setInterval(() => {
+      setVisibleLines(v => (v + 1) % 5)
+    }, 600)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center p-6">
+      {/* Floating document */}
+      <div className="relative w-full max-w-[280px]">
+        <div className="absolute inset-0 bg-slate-900/10 blur-2xl rounded-2xl transform translate-y-4 scale-95" />
+
+        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+          {/* Document header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded bg-[#1861C8]/10 flex items-center justify-center">
+                <svg className="w-3 h-3 text-[#1861C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-[10px] text-slate-500">Customer Onboarding Guide</span>
+            </div>
+            {isActive && (
+              <div className="px-2 py-0.5 bg-green-500/20 rounded-full">
+                <span className="text-[9px] text-green-600 font-medium">Live</span>
+              </div>
+            )}
+          </div>
+
+          {/* Document content - Notes/steps */}
+          <div className="p-4 h-32 bg-slate-50">
+            <div className="space-y-2">
+              {['Open CRM dashboard', 'Navigate to Customers', 'Click "Add New"', 'Fill required fields'].map((text, i) => (
+                <div
+                  key={i}
+                  className={`flex items-center gap-2 transition-all duration-300 ${
+                    isActive && i < visibleLines ? 'opacity-100' : 'opacity-20'
+                  }`}
+                >
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-medium ${
+                    isActive && i < visibleLines ? 'bg-[#1861C8] text-white' : 'bg-slate-200 text-slate-400'
+                  }`}>
+                    {i + 1}
+                  </div>
+                  <span className="text-[11px] text-slate-600">{text}</span>
+                  {isActive && i === visibleLines - 1 && (
+                    <svg className="w-3 h-3 text-green-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }

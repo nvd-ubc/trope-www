@@ -1,208 +1,530 @@
-import Image from 'next/image'
-import Particles from './particles'
-import Highlighter, { HighlighterItem } from './highlighter'
+'use client'
 
-import FeatureImg01 from '@public/images/feature-image-01.png'
-import FeatureImg02 from '@public/images/feature-image-02.png'
-import FeatureImg03 from '@public/images/feature-image-03.png'
+import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react'
+import ChromaText from './chroma-text'
+
+// Context for coordinating autoplay across all capability cards
+interface CapabilityAutoPlayContextType {
+  activeCard: number
+  setActiveCard: (index: number) => void
+  pauseAutoPlay: () => void
+  resumeAutoPlay: () => void
+}
+
+const CapabilityAutoPlayContext = createContext<CapabilityAutoPlayContextType | null>(null)
+
+function useCapabilityAutoPlay(cardIndex: number) {
+  const context = useContext(CapabilityAutoPlayContext)
+  const [isHovered, setIsHovered] = useState(false)
+
+  const isActive = context ? context.activeCard === cardIndex || isHovered : false
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true)
+    context?.pauseAutoPlay()
+    context?.setActiveCard(cardIndex)
+  }, [context, cardIndex])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false)
+    context?.resumeAutoPlay()
+  }, [context])
+
+  return {
+    isActive,
+    hoverProps: {
+      onMouseEnter: handleMouseEnter,
+      onMouseLeave: handleMouseLeave,
+    },
+  }
+}
 
 export default function Features02() {
-  return (
-    <section className="relative">
+  const [activeCard, setActiveCard] = useState(0)
+  const [isPaused, setIsPaused] = useState(false)
+  const [isVisible, setIsVisible] = useState(false)
+  const sectionRef = useRef<HTMLElement>(null)
 
-      {/* Particles animation */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-0 -z-10 w-80 h-80 -mt-24 -ml-32">
-        <Particles className="absolute inset-0 -z-10" quantity={6} staticity={30} />    
+  const pauseAutoPlay = useCallback(() => setIsPaused(true), [])
+  const resumeAutoPlay = useCallback(() => setIsPaused(false), [])
+
+  // Observe section visibility
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.2 }
+    )
+    if (sectionRef.current) observer.observe(sectionRef.current)
+    return () => observer.disconnect()
+  }, [])
+
+  // Auto-advance through cards: 0=Desktop, 1=Drift, 2=Audit, 3=Role
+  useEffect(() => {
+    if (!isVisible || isPaused) return
+
+    const interval = setInterval(() => {
+      setActiveCard(c => (c + 1) % 4)
+    }, 4000)
+
+    return () => clearInterval(interval)
+  }, [isVisible, isPaused])
+
+  return (
+    <CapabilityAutoPlayContext.Provider value={{ activeCard, setActiveCard, pauseAutoPlay, resumeAutoPlay }}>
+      <section ref={sectionRef} className="py-20 md:py-28 bg-slate-50 relative overflow-hidden">
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(24, 97, 200, 0.5) 1px, transparent 1px),
+                             linear-gradient(90deg, rgba(24, 97, 200, 0.5) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px'
+          }}
+        />
+
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
+          {/* Section header */}
+          <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
+            <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">Capabilities</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
+              Built for <ChromaText color="inherit">real workflows</ChromaText>
+            </h2>
+            <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
+              Unlike browser-only tools, Trope works where your team actually works.
+            </p>
+          </div>
+
+          {/* Two-column layout with featured capability */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Left - Featured capability: Desktop-first */}
+            <DesktopFirstCard />
+
+            {/* Right - Stacked capabilities */}
+            <div className="grid gap-6">
+              <div className="grid sm:grid-cols-2 gap-6">
+                <DriftDetectionCard />
+                <AuditTrailsCard />
+              </div>
+              <RoleBasedCard />
+            </div>
+          </div>
+        </div>
+      </section>
+    </CapabilityAutoPlayContext.Provider>
+  )
+}
+
+// Desktop-first - Featured card (index 0)
+function DesktopFirstCard() {
+  const { isActive, hoverProps } = useCapabilityAutoPlay(0)
+  const [activeApp, setActiveApp] = useState(0)
+
+  const apps = [
+    { name: 'Microsoft Excel', color: '#217346', icon: (
+      <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+        <path d="M21.17 3H7.83A1.83 1.83 0 006 4.83v14.34A1.83 1.83 0 007.83 21h13.34A1.83 1.83 0 0023 19.17V4.83A1.83 1.83 0 0021.17 3zM17 17h-2v-4h-4v4H9v-4H7v-2h2V7h2v4h4V7h2v4h2v2h-2z"/>
+        <path d="M1 4v16l5-1V5z"/>
+      </svg>
+    )},
+    { name: 'QuickBooks', color: '#2CA01C', icon: (
+      <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+      </svg>
+    )},
+    { name: 'Salesforce', color: '#00A1E0', icon: (
+      <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="currentColor">
+        <circle cx="12" cy="12" r="8"/>
+      </svg>
+    )},
+    { name: 'Web Browser', color: '#1861C8', icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2}>
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+      </svg>
+    )},
+  ]
+
+  // Reset and cycle through apps when this card becomes active
+  useEffect(() => {
+    if (!isActive) {
+      setActiveApp(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setActiveApp(a => (a + 1) % apps.length)
+    }, 800)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div
+      {...hoverProps}
+      className={`group relative bg-white rounded-3xl border p-8 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
+      }`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-3xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#1861C8] to-[#61AFF9] flex items-center justify-center">
+            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <rect x="3" y="4" width="18" height="14" rx="2" />
+              <path d="M3 10h18" />
+              <rect x="6" y="14" width="4" height="2" rx="0.5" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">Desktop-first</h3>
+            <p className="text-slate-500 text-sm">Not just browsers</p>
+          </div>
+        </div>
+        <p className="text-slate-600 text-base mb-8 max-w-sm">
+          Works natively with Excel, QuickBooks, and desktop apps—not just browsers.
+          Record workflows anywhere your team works.
+        </p>
+
+        {/* App grid demo */}
+        <div className="grid grid-cols-4 gap-3">
+          {apps.map((app, i) => (
+            <div key={app.name} className="flex flex-col items-center gap-2">
+              <div
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500 ${
+                  isActive && i === activeApp
+                    ? 'scale-110 ring-2 ring-[#61AFF9] ring-offset-2 ring-offset-white shadow-lg'
+                    : isActive && i < activeApp
+                    ? 'opacity-80'
+                    : !isActive
+                    ? 'opacity-30'
+                    : 'opacity-20'
+                }`}
+                style={{
+                  backgroundColor: app.color,
+                  boxShadow: isActive && i === activeApp ? `0 8px 24px ${app.color}40` : 'none'
+                }}
+              >
+                {app.icon}
+              </div>
+              <span className={`text-[10px] text-center transition-colors duration-300 ${
+                isActive && i === activeApp ? 'text-slate-900' : 'text-slate-400'
+              }`}>
+                {app.name.split(' ')[0]}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Active indicator */}
+        <div className="mt-6 flex items-center gap-2">
+          <div className="flex gap-1">
+            {apps.map((_, i) => (
+              <div
+                key={i}
+                className={`w-8 h-1 rounded-full transition-all duration-300 ${
+                  isActive && i === activeApp ? 'bg-[#1861C8]' : 'bg-slate-200'
+                }`}
+              />
+            ))}
+          </div>
+          <span className="text-xs text-slate-500 ml-2">
+            {isActive ? `Recording: ${apps[activeApp].name}` : 'Hover to preview'}
+          </span>
+        </div>
+
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="pt-16 md:pt-32">
-
-          {/* Section header */}
-          <div className="max-w-3xl mx-auto text-center pb-12 md:pb-20">
-            <h2 className="h2 bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-4">Desktop-First. Web-Ready.</h2>
-            <p className="text-lg text-slate-400">Unlike browser-only tools, Trope works with the desktop apps your team relies on daily—Excel spreadsheets, accounting software, inventory systems—plus all your web applications. One platform for every workflow.</p>
-          </div>
-
-          {/* Highlighted boxes */}
-          <div className="relative pb-12 md:pb-20">
-            {/* Blurred shape */}
-            <div className="absolute bottom-0 -mb-20 left-1/2 -translate-x-1/2 blur-2xl opacity-50 pointer-events-none" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" width="434" height="427">
-                <defs>
-                  <linearGradient id="bs2-a" x1="19.609%" x2="50%" y1="14.544%" y2="100%">
-                    <stop offset="0%" stopColor="#6366F1" />
-                    <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path fill="url(#bs2-a)" fillRule="evenodd" d="m346 898 461 369-284 58z" transform="translate(-346 -898)" />
-              </svg>
-            </div>
-            {/* Grid */}
-            <Highlighter className="grid md:grid-cols-12 gap-6 group">
-              {/* Box #1 */}
-              <div className="md:col-span-12" data-aos="fade-down">
-                <HighlighterItem>
-                  <div className="relative h-full bg-slate-900 rounded-[inherit] z-20 overflow-hidden">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                      {/* Blurred shape */}
-                      <div className="absolute right-0 top-0 blur-2xl" aria-hidden="true">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="342" height="393">
-                          <defs>
-                            <linearGradient id="bs-a" x1="19.609%" x2="50%" y1="14.544%" y2="100%">
-                              <stop offset="0%" stopColor="#6366F1" />
-                              <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                          <path fill="url(#bs-a)" fillRule="evenodd" d="m104 .827 461 369-284 58z" transform="translate(0 -112.827)" opacity=".7" />
-                        </svg>
-                      </div>
-                      {/* Radial gradient */}
-                      <div className="absolute flex items-center justify-center bottom-0 translate-y-1/2 left-1/2 -translate-x-1/2 pointer-events-none -z-10 h-full aspect-square" aria-hidden="true">
-                        <div className="absolute inset-0 translate-z-0 bg-purple-500 rounded-full blur-[120px] opacity-70" />
-                        <div className="absolute w-1/4 h-1/4 translate-z-0 bg-purple-400 rounded-full blur-[40px]" />
-                      </div>
-                      {/* Text */}
-                      <div className="md:max-w-[480px] shrink-0 order-1 md:order-none p-6 pt-0 md:p-8 md:pr-0">
-                        <div className="mb-5">
-                          <div>
-                            <h3 className="inline-flex text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-1">Living Documentation</h3>
-                            <p className="text-slate-400">Unlike static wikis or stale Looms, Trope keeps your workflows fresh with drift detection and automatic updates when apps or documents change.</p>
-                          </div>
-                        </div>
-                        <div>
-                          <a className="btn-sm text-slate-300 hover:text-white transition duration-150 ease-in-out group [background:linear-gradient(var(--color-slate-900),var(--color-slate-900))_padding-box,conic-gradient(var(--color-slate-400),var(--color-slate-700)_25%,var(--color-slate-700)_75%,var(--color-slate-400)_100%)_border-box] relative before:absolute before:inset-0 before:bg-slate-800/30 before:rounded-full before:pointer-events-none" href="#0">
-                            <span className="relative inline-flex items-center">
-                              Learn more <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-                            </span>
-                          </a>
-                        </div>
-                      </div>
-                      {/* Image */}
-                      <div className="relative w-full h-64 md:h-auto overflow-hidden">
-                        <Image className="absolute bottom-0 left-1/2 -translate-x-1/2 mx-auto max-w-none md:relative md:left-0{md}transla{}-x-0" src={FeatureImg01} width="504" height="400" alt="Living documentation that stays fresh with automatic drift detection" />
-                      </div>
-                    </div>
+      {/* Floating app window - peeks from bottom, hidden on mobile */}
+      <div className="hidden lg:block absolute bottom-0 left-0 right-0 h-44 overflow-hidden pointer-events-none">
+        {apps.map((app, i) => (
+          <div
+            key={app.name}
+            className={`absolute left-1/2 -translate-x-1/2 w-[420px] transition-all duration-500 ${
+              isActive && i === activeApp
+                ? 'opacity-100 bottom-0'
+                : 'opacity-0 -bottom-8'
+            }`}
+          >
+            {/* Window chrome */}
+            <div
+              className="rounded-t-2xl border border-b-0 overflow-hidden"
+              style={{
+                borderColor: `${app.color}40`,
+                boxShadow: `0 -8px 40px ${app.color}20`
+              }}
+            >
+              {/* Title bar */}
+              <div
+                className="px-4 py-2.5 flex items-center gap-2"
+                style={{ backgroundColor: app.color }}
+              >
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-white/30" />
+                  <div className="w-3 h-3 rounded-full bg-white/30" />
+                  <div className="w-3 h-3 rounded-full bg-white/30" />
+                </div>
+                <span className="text-xs text-white/80 font-medium ml-2">{app.name}</span>
+              </div>
+              {/* Window content preview */}
+              <div className="bg-slate-50 p-4">
+                <div className="space-y-3">
+                  <div className="flex gap-3">
+                    <div className="w-20 h-4 rounded bg-slate-200" />
+                    <div className="w-32 h-4 rounded bg-slate-200" />
+                    <div className="w-16 h-4 rounded bg-slate-200" />
                   </div>
-                </HighlighterItem>
-              </div>
-              {/* Box #2 */}
-              <div className="md:col-span-7" data-aos="fade-down">
-                <HighlighterItem>
-                  <div className="relative h-full bg-slate-900 rounded-[inherit] z-20 overflow-hidden">
-                    <div className="flex flex-col">
-                      {/* Radial gradient */}
-                      <div className="absolute bottom-0 translate-y-1/2 left-1/2 -translate-x-1/2 pointer-events-none -z-10 w-1/2 aspect-square" aria-hidden="true">
-                        <div className="absolute inset-0 translate-z-0 bg-slate-800 rounded-full blur-[80px]" />
-                      </div>
-                      {/* Text */}
-                      <div className="md:max-w-[480px] shrink-0 order-1 md:order-none p-6 pt-0 md:p-8">
-                        <div>
-                          <h3 className="inline-flex text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-1">In-App Guidance</h3>
-                          <p className="text-slate-400">Guides appear right where you work—subtle overlays, hovercards, and checklists. No more context switching or hunting through documentation.</p>
-                        </div>
-                      </div>
-                      {/* Image */}
-                      <div className="relative w-full h-64 md:h-auto overflow-hidden md:pb-8">
-                        <Image className="absolute bottom-0 left-1/2 -translate-x-1/2 mx-auto max-w-none md:max-w-full md:relative md:left-0 md:translate-x-0" src={FeatureImg02} width={536} height={230} alt="In-app guidance overlays that appear right where your team works" />
-                      </div>
-                    </div>
+                  <div className="flex gap-3">
+                    <div className="w-24 h-4 rounded bg-slate-100" />
+                    <div className="w-20 h-4 rounded bg-slate-100" />
+                    <div className="w-28 h-4 rounded bg-slate-100" />
                   </div>
-                </HighlighterItem>
-              </div>
-              {/* Box #3 */}
-              <div className="md:col-span-5" data-aos="fade-down">
-                <HighlighterItem>
-                  <div className="relative h-full bg-slate-900 rounded-[inherit] z-20 overflow-hidden">
-                    <div className="flex flex-col">
-                      {/* Radial gradient */}
-                      <div className="absolute bottom-0 translate-y-1/2 left-1/2 -translate-x-1/2 pointer-events-none -z-10 w-1/2 aspect-square" aria-hidden="true">
-                        <div className="absolute inset-0 translate-z-0 bg-slate-800 rounded-full blur-[80px]" />
-                      </div>
-                      {/* Text */}
-                      <div className="md:max-w-[480px] shrink-0 order-1 md:order-none p-6 pt-0 md:p-8">
-                        <div>
-                          <h3 className="inline-flex text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-slate-200/60 via-slate-200 to-slate-200/60 pb-1">Safe Automation</h3>
-                          <p className="text-slate-400">Turn low-risk steps into one-click actions while keeping humans in the loop for critical decisions. Every action is logged with full audit trails.</p>
-                        </div>
-                      </div>
-                      {/* Image */}
-                      <div className="relative w-full h-64 md:h-auto overflow-hidden md:pb-8">
-                        <Image className="absolute bottom-0 left-1/2 -translate-x-1/2 mx-auto max-w-none md:max-w-full md:relative md:left-0 md:translate-x-0" src={FeatureImg03} width={230} height={230} alt="Safe automation with human-in-the-loop approval and audit trails" />
-                      </div>
-                    </div>
+                  <div className="flex gap-3">
+                    <div className="w-16 h-4 rounded bg-slate-100" />
+                    <div className="w-36 h-4 rounded bg-slate-100" />
                   </div>
-                </HighlighterItem>
+                </div>
               </div>
-            </Highlighter>
-          </div>
-
-          {/* Features list */}
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M15 2h-2V0h-2v2H9V0H7v2H5V0H3v2H1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1ZM2 14V6h12v8H2Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">Drift Detection</h4>
-              </div>
-              <p className="text-sm text-slate-400">Automatically detect when apps or documents change and flag outdated steps before they cause errors.</p>
-            </div>
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M11 0c1.3 0 2.6.5 3.5 1.5 1 .9 1.5 2.2 1.5 3.5 0 1.3-.5 2.6-1.4 3.5l-1.2 1.2c-.2.2-.5.3-.7.3-.2 0-.5-.1-.7-.3-.4-.4-.4-1 0-1.4l1.1-1.2c.6-.5.9-1.3.9-2.1s-.3-1.6-.9-2.2C12 1.7 10 1.7 8.9 2.8L7.7 4c-.4.4-1 .4-1.4 0-.4-.4-.4-1 0-1.4l1.2-1.1C8.4.5 9.7 0 11 0ZM8.3 12c.4-.4 1-.5 1.4-.1.4.4.4 1 0 1.4l-1.2 1.2C7.6 15.5 6.3 16 5 16c-1.3 0-2.6-.5-3.5-1.5C.5 13.6 0 12.3 0 11c0-1.3.5-2.6 1.5-3.5l1.1-1.2c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4L2.9 8.9c-.6.5-.9 1.3-.9 2.1s.3 1.6.9 2.2c1.1 1.1 3.1 1.1 4.2 0L8.3 12Zm1.1-6.8c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-4.2 4.2c-.2.2-.5.3-.7.3-.2 0-.5-.1-.7-.3-.4-.4-.4-1 0-1.4l4.2-4.2Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">Source-Linked</h4>
-              </div>
-              <p className="text-sm text-slate-400">Every step shows where it came from—with selectors, document anchors, and file hashes for full lineage.</p>
-            </div>
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8Zm0 14c-3.3 0-6-2.7-6-6s2.7-6 6-6 6 2.7 6 6-2.7 6-6 6Zm1-9H7v5h2V5Zm0 6H7v2h2v-2Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">Role-Based Access</h4>
-              </div>
-              <p className="text-sm text-slate-400">Scope workflows and automation permissions by team role to ensure the right people see the right guides.</p>
-            </div>
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M14.3.3c.4-.4 1-.4 1.4 0 .4.4.4 1 0 1.4l-8 8c-.2.2-.4.3-.7.3-.3 0-.5-.1-.7-.3-.4-.4-.4-1 0-1.4l8-8ZM15 7c.6 0 1 .4 1 1 0 4.4-3.6 8-8 8s-8-3.6-8-8 3.6-8 8-8c.6 0 1 .4 1 1s-.4 1-1 1C4.7 2 2 4.7 2 8s2.7 6 6 6 6-2.7 6-6c0-.6.4-1 1-1Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">True Desktop & Web</h4>
-              </div>
-              <p className="text-sm text-slate-400">Native support for Excel, QuickBooks, and other desktop apps—not just browsers. Capture workflows where they actually happen.</p>
-            </div>
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M14 0a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h12Zm0 14V2H2v12h12Zm-3-7H5a1 1 0 1 1 0-2h6a1 1 0 0 1 0 2Zm0 4H5a1 1 0 0 1 0-2h6a1 1 0 0 1 0 2Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">Audit Logs</h4>
-              </div>
-              <p className="text-sm text-slate-400">Immutable run logs capture every automation execution with artifacts for compliance and coaching.</p>
-            </div>
-            {/* Feature */}
-            <div>
-              <div className="flex items-center space-x-2 mb-1">
-                <svg className="shrink-0 fill-slate-300" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                  <path d="M8.75 1h6.5c.7 0 1.25.6 1.25 1.25v11.5c0 .7-.6 1.25-1.25 1.25H.75C.3 15 0 14.7 0 14.25v-12.5C0 1.3.3 1 .75 1h6.5L8 .25c.2-.2.5-.2.75 0ZM15 4H1v10h14V4Z" />
-                </svg>
-                <h4 className="font-medium text-slate-50">Version Control</h4>
-              </div>
-              <p className="text-sm text-slate-400">Track every change to your workflows with versioned steps and rollback capabilities when needed.</p>
             </div>
           </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
+// Drift Detection card (index 1)
+function DriftDetectionCard() {
+  const { isActive, hoverProps } = useCapabilityAutoPlay(1)
+  const [phase, setPhase] = useState<'normal' | 'changing' | 'alert'>('normal')
+
+  useEffect(() => {
+    if (!isActive) {
+      setPhase('normal')
+      return
+    }
+
+    const cycle = () => {
+      setPhase('normal')
+      setTimeout(() => setPhase('changing'), 1000)
+      setTimeout(() => setPhase('alert'), 2000)
+    }
+
+    cycle()
+    const interval = setInterval(cycle, 3500)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div
+      {...hoverProps}
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
+      }`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+
+      <div className="relative z-10">
+        <div className="flex items-start justify-between mb-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/20 to-orange-500/10 flex items-center justify-center">
+            <svg className="w-5 h-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          {isActive && phase === 'alert' && (
+            <div className="px-2 py-0.5 bg-yellow-100 rounded-full animate-scale-in">
+              <span className="text-[10px] text-yellow-700 font-medium">UI Changed</span>
+            </div>
+          )}
+        </div>
+
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Drift detection</h3>
+        <p className="text-slate-600 text-sm mb-4">
+          Auto-flags when apps change and workflows become outdated.
+        </p>
+
+        {/* UI change demo */}
+        <div className="relative h-16 bg-slate-100 rounded-lg border border-slate-200 overflow-hidden">
+          <div className="absolute inset-2 flex gap-2">
+            <div className={`h-full rounded transition-all duration-500 ${
+              !isActive ? 'w-1/3 bg-slate-200' :
+              phase === 'normal' ? 'w-1/3 bg-slate-200' :
+              phase === 'changing' ? 'w-1/2 bg-slate-300' :
+              'w-1/2 bg-[#1861C8]/20 ring-1 ring-yellow-500/50'
+            }`} />
+            <div className={`h-full rounded transition-all duration-500 ${
+              !isActive ? 'w-2/3 bg-slate-200' :
+              phase === 'normal' ? 'w-2/3 bg-slate-200' :
+              phase === 'changing' ? 'w-1/2 bg-red-200' :
+              'w-1/2 bg-red-200 ring-1 ring-yellow-500/50'
+            }`} />
+          </div>
         </div>
       </div>
-    </section>
+    </div>
+  )
+}
+
+// Audit Trails card (index 2)
+function AuditTrailsCard() {
+  const { isActive, hoverProps } = useCapabilityAutoPlay(2)
+  const [logCount, setLogCount] = useState(0)
+
+  const logs = [
+    { action: 'Opened form', time: '10:32 AM', user: 'S' },
+    { action: 'Entered data', time: '10:33 AM', user: 'S' },
+    { action: 'Approved', time: '10:34 AM', user: 'M' },
+  ]
+
+  useEffect(() => {
+    if (!isActive) {
+      setLogCount(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setLogCount(c => (c + 1) % 4)
+    }, 800)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div
+      {...hoverProps}
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
+      }`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+
+      <div className="relative z-10">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/20 to-[#61AFF9]/10 flex items-center justify-center mb-3">
+          <svg className="w-5 h-5 text-[#1861C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Audit trails</h3>
+        <p className="text-slate-600 text-sm mb-4">
+          Every action logged with full lineage.
+        </p>
+
+        {/* Log entries demo */}
+        <div className="space-y-1.5">
+          {logs.map((log, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-300 ${
+                isActive && i < logCount ? 'bg-slate-100 opacity-100' : 'opacity-30'
+              }`}
+            >
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-medium ${
+                isActive && i === logCount - 1 ? 'bg-[#1861C8] text-white' : 'bg-slate-200 text-slate-500'
+              }`}>
+                {log.user}
+              </div>
+              <span className="text-[11px] text-slate-600 flex-1">{log.action}</span>
+              <span className="text-[10px] text-slate-400">{log.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Role-based access card (index 3)
+function RoleBasedCard() {
+  const { isActive, hoverProps } = useCapabilityAutoPlay(3)
+  const [activeRole, setActiveRole] = useState(0)
+
+  const roles = [
+    { name: 'Admin', permissions: ['View', 'Edit', 'Delete', 'Manage'], color: '#61AFF9' },
+    { name: 'Editor', permissions: ['View', 'Edit'], color: '#1861C8' },
+    { name: 'Viewer', permissions: ['View'], color: '#1861C8' },
+  ]
+
+  useEffect(() => {
+    if (!isActive) {
+      setActiveRole(0)
+      return
+    }
+
+    const interval = setInterval(() => {
+      setActiveRole(r => (r + 1) % roles.length)
+    }, 1200)
+    return () => clearInterval(interval)
+  }, [isActive])
+
+  return (
+    <div
+      {...hoverProps}
+      className={`group relative bg-white rounded-2xl border p-5 overflow-hidden transition-all duration-500 shadow-sm ${
+        isActive ? 'border-[#1861C8]/40 shadow-lg shadow-[#1861C8]/10' : 'border-slate-200'
+      }`}
+    >
+      <div className={`absolute inset-0 bg-gradient-to-br from-[#1861C8]/5 to-transparent transition-opacity duration-500 rounded-2xl ${isActive ? 'opacity-100' : 'opacity-0'}`} />
+
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-6">
+        <div className="flex-1">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1861C8]/20 to-[#61AFF9]/10 flex items-center justify-center mb-3">
+            <svg className="w-5 h-5 text-[#1861C8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+          </div>
+
+          <h3 className="text-base font-semibold text-slate-900 mb-1">Role-based access</h3>
+          <p className="text-slate-600 text-sm">
+            Scope workflows and permissions by team role. Control who can view, edit, or automate.
+          </p>
+        </div>
+
+        {/* Role selector */}
+        <div className="flex sm:flex-col gap-2">
+          {roles.map((role, i) => (
+            <div
+              key={role.name}
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-300 ${
+                isActive && i === activeRole
+                  ? 'bg-slate-100 ring-1 ring-[#1861C8]/30'
+                  : 'bg-slate-50'
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300`}
+                style={{
+                  backgroundColor: isActive && i === activeRole ? role.color : '#1861C8',
+                  opacity: isActive ? (i === activeRole ? 1 : 0.3) : 0.2
+                }}
+              >
+                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+              <div className="hidden sm:block">
+                <div className={`text-xs font-medium transition-colors ${
+                  isActive && i === activeRole ? 'text-slate-900' : 'text-slate-400'
+                }`}>
+                  {role.name}
+                </div>
+                <div className="flex gap-1 mt-1">
+                  {['V', 'E', 'D', 'M'].map((p, pi) => (
+                    <div
+                      key={p}
+                      className={`w-4 h-4 rounded text-[8px] flex items-center justify-center font-medium transition-all duration-300 ${
+                        isActive && i === activeRole && pi < role.permissions.length
+                          ? 'bg-[#1861C8]/20 text-[#1861C8]'
+                          : 'bg-slate-100 text-slate-300'
+                      }`}
+                    >
+                      {p}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

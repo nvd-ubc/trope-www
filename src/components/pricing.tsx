@@ -6,414 +6,155 @@ import { CONTACT_EMAIL } from '@/lib/constants'
 export default function Pricing() {
   const [annual, setAnnual] = useState<boolean>(true)
 
+  const plans = [
+    {
+      name: 'Starter',
+      description: 'Perfect for small teams getting started.',
+      price: annual ? 20 : 25,
+      features: [
+        '10 workflows',
+        '5 team members',
+        '1,000 automated steps/mo',
+        'Drift detection',
+        'In-app overlays',
+        'Desktop support',
+      ],
+      cta: 'Talk to Sales',
+      highlighted: false,
+    },
+    {
+      name: 'Growth',
+      description: 'Scale with your growing team.',
+      price: annual ? 24 : 30,
+      features: [
+        '50 workflows',
+        '25 team members',
+        '10,000 automated steps/mo',
+        'Everything in Starter',
+        'Role-based permissions',
+        'Premium support',
+      ],
+      cta: 'Talk to Sales',
+      highlighted: true,
+    },
+    {
+      name: 'Enterprise',
+      description: 'For large organizations.',
+      price: null,
+      features: [
+        'Unlimited workflows',
+        'Unlimited team members',
+        'Custom automation limits',
+        'Everything in Growth',
+        'SSO & SCIM',
+        'Data residency',
+      ],
+      cta: 'Talk to Sales',
+      highlighted: false,
+    },
+  ]
+
   return (
-    <div className="relative">
-      {/* Blurred shape */}
-      <div className="max-md:hidden absolute bottom-0 -mb-20 left-2/3 -translate-x-1/2 blur-2xl opacity-70 pointer-events-none" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" width="434" height="427">
-          <defs>
-            <linearGradient id="bs5-a" x1="19.609%" x2="50%" y1="14.544%" y2="100%">
-              <stop offset="0%" stopColor="#A855F7" />
-              <stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path fill="url(#bs5-a)" fillRule="evenodd" d="m661 736 461 369-284 58z" transform="matrix(1 0 0 -1 -661 1163)" />
-        </svg>
+    <div>
+      {/* Toggle */}
+      <div className="flex justify-center mb-10 md:mb-12">
+        <div className="inline-flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
+          <button
+            className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
+              !annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+            onClick={() => setAnnual(false)}
+          >
+            Monthly
+          </button>
+          <button
+            className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
+              annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
+            }`}
+            onClick={() => setAnnual(true)}
+          >
+            Yearly <span className={`font-medium ml-1 hidden sm:inline ${annual ? 'text-white/80' : 'text-[#1861C8]'}`}>-20%</span>
+          </button>
+        </div>
       </div>
-      {/* Content */}
-      <div className="grid md:grid-cols-4 xl:-mx-6 text-sm [&>div:nth-of-type(-n+4)]:py-6 [&>div:nth-last-of-type(-n+4)]:pb-6 max-md:[&>div:nth-last-of-type(-n+4)]:mb-8 max-md:[&>div:nth-of-type(-n+4):nth-of-type(n+1)]:rounded-t-3xl max-md:[&>div:nth-last-of-type(-n+4)]:rounded-b-3xl md:[&>div:nth-of-type(2)]:rounded-tl-3xl md:[&>div:nth-of-type(4)]:rounded-tr-3xl md:[&>div:nth-last-of-type(3)]:rounded-bl-3xl md:[&>div:nth-last-of-type(1)]:rounded-br-3xl [&>div]:bg-slate-700/20 [&>div:nth-of-type(4n+1)]:bg-transparent max-md:[&>div:nth-of-type(4n+5)]:hidden max-md:[&>div:nth-of-type(4n+2)]:order-1 max-md:[&>div:nth-of-type(4n+3)]:order-2 max-md:[&>div:nth-of-type(4n+4)]:order-3 max-md:md:[&>div:nth-of-type(n)]:mb-0 [&>div:nth-of-type(4n+3)]:relative [&>div:nth-of-type(4n+3)]:before:absolute [&>div:nth-of-type(4n+3)]:before:-inset-px [&>div:nth-of-type(4n+3)]:before:rounded-[inherit] [&>div:nth-of-type(4n+3)]:before:border-x-2 [&>div:nth-of-type(3)]:before:border-t-2 [&>div:nth-last-of-type(2)]:before:border-b-2 [&>div:nth-of-type(4n+3)]:before:border-purple-500 [&>div:nth-of-type(4n+3)]:before:-z-10 [&>div:nth-of-type(4n+3)]:before:pointer-events-none">
-        {/* Pricing toggle */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="pb-5 md:border-b border-slate-800">
-            {/* Toggle switch */}
-            <div className="max-md:text-center">
-              <div className="inline-flex items-center whitespace-nowrap">
-                <div className="text-sm text-slate-500 font-medium mr-2 md:max-lg:hidden">Monthly</div>
-                <div className="relative">
-                  <input type="checkbox" id="toggle" className="peer sr-only" checked={annual} onChange={() => setAnnual(!annual)} />
-                  <label htmlFor="toggle" className="relative flex h-6 w-11 cursor-pointer items-center rounded-full bg-slate-400 px-0.5 outline-slate-400 transition-colors before:h-5 before:w-5 before:rounded-full before:bg-white before:shadow-xs before:transition-transform before:duration-150 peer-checked:bg-purple-500 peer-checked:before:translate-x-full peer-focus-visible:outline peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gray-400 peer-focus-visible:peer-checked:outline-purple-500">
-                    <span className="sr-only">Pay Yearly</span>
-                  </label>
-                </div>
-                <div className="text-sm text-slate-500 font-medium ml-2">Yearly <span className="text-teal-500">(-20%)</span></div>
+
+      {/* Pricing cards */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+        {plans.map((plan, index) => (
+          <div
+            key={index}
+            className={`relative rounded-2xl p-6 transition-colors duration-200 ${
+              plan.highlighted
+                ? 'bg-gradient-to-b from-[#1861C8] to-[#0d4a9e] border border-[#61AFF9]/40'
+                : 'bg-slate-50 border border-slate-200 hover:border-slate-300'
+            }`}
+          >
+            {/* Popular badge */}
+            {plan.highlighted && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-white bg-[#61AFF9] rounded-full">
+                  Most Popular
+                </span>
               </div>
+            )}
+
+            <div className="mb-5">
+              <h3 className={`text-lg font-semibold mb-1 ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
+                {plan.name}
+              </h3>
+              <p className={`text-sm ${plan.highlighted ? 'text-white/70' : 'text-slate-600'}`}>
+                {plan.description}
+              </p>
             </div>
-          </div>
-        </div>
-        {/* Starter price */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="grow pb-4 mb-4 border-b border-slate-800">
-            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Starter</div>
-            <div className="mb-1">
-              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '20' : '25'}</span><span className="text-sm text-slate-600 font-medium">/user/mo</span>
+
+            <div className="mb-6">
+              {plan.price !== null ? (
+                <div className="flex items-baseline">
+                  <span className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
+                    ${plan.price}
+                  </span>
+                  <span className={`ml-1 ${plan.highlighted ? 'text-white/70' : 'text-slate-600'}`}>
+                    /user/mo
+                  </span>
+                </div>
+              ) : (
+                <div className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
+                  Custom
+                </div>
+              )}
             </div>
-            <div className="text-slate-500">Perfect for small teams.</div>
-          </div>
-          <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
-              Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className={`block w-full py-3 px-4 text-center text-sm font-medium rounded-full transition-colors duration-200 mb-6 ${
+                plan.highlighted
+                  ? 'bg-white text-[#1861C8] hover:bg-slate-100'
+                  : 'bg-[#1861C8] text-white hover:bg-[#2171d8]'
+              }`}
+            >
+              {plan.cta}
             </a>
+
+            <ul className="space-y-3">
+              {plan.features.map((feature, featureIndex) => (
+                <li key={featureIndex} className="flex items-start gap-3">
+                  <svg
+                    className={`w-5 h-5 shrink-0 mt-0.5 ${plan.highlighted ? 'text-white' : 'text-[#1861C8]'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className={`text-sm ${plan.highlighted ? 'text-white/80' : 'text-slate-700'}`}>
+                    {feature}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-        {/* Growth price */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="grow pb-4 mb-4 border-b border-slate-800">
-            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Growth</div>
-            <div className="mb-1">
-              <span className="text-lg font-medium text-slate-500">$</span><span className="text-3xl font-bold text-slate-50">{annual ? '24' : '30'}</span><span className="text-sm text-slate-600 font-medium">/user/mo</span>
-            </div>
-            <div className="text-slate-500">Scale with your team.</div>
-          </div>
-          <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-white bg-purple-500 hover:bg-purple-600 w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
-              Talk to Sales <span className="tracking-normal text-purple-300 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-            </a>
-          </div>
-        </div>
-        {/* Enterprise price */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="grow pb-4 mb-4 border-b border-slate-800">
-            <div className="text-base font-medium bg-clip-text text-transparent bg-linear-to-r from-purple-500 to-purple-200 pb-0.5">Enterprise</div>
-            <div className="mb-1">
-              <span className="text-3xl font-bold text-slate-50">Custom</span>
-            </div>
-            <div className="text-slate-500">For large organizations.</div>
-          </div>
-          <div className="pb-4 border-b border-slate-800">
-            <a className="btn-sm text-slate-900 bg-linear-to-r from-white/80 via-white to-white/80 hover:bg-white w-full transition duration-150 ease-in-out group" href={`mailto:${CONTACT_EMAIL}`}>
-              Talk to Sales <span className="tracking-normal text-purple-500 group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
-            </a>
-          </div>
-        </div>
-        {/* # Usage */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4">Usage</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Usage</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Usage</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Usage</div>
-        </div>
-        {/* Workflows */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Workflows</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>10 <span className="md:hidden">Workflows</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>50 <span className="md:hidden">Workflows</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Unlimited <span className="md:hidden">Workflows</span></span>
-          </div>
-        </div>
-        {/* Team Members */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Team Members</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>5 <span className="md:hidden">Team Members</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>25 <span className="md:hidden">Team Members</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Unlimited <span className="md:hidden">Team Members</span></span>
-          </div>
-        </div>
-        {/* Automated Steps/Month */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Automated Steps/Month</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>1,000 <span className="md:hidden">Automated Steps/Month</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>10,000 <span className="md:hidden">Automated Steps/Month</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span>Custom <span className="md:hidden">Automated Steps/Month</span></span>
-          </div>
-        </div>
-        {/* # Features */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4">Features</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Features</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Features</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Features</div>
-        </div>
-        {/* Drift Detection */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Drift Detection</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Drift Detection</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Drift Detection</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Drift Detection</span></span>
-          </div>
-        </div>
-        {/* In-App Overlays */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">In-App Overlays</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">In-App Overlays</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">In-App Overlays</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">In-App Overlays</span></span>
-          </div>
-        </div>
-        {/* Desktop Support */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Desktop Support</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Desktop Support</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Desktop Support</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Desktop Support</span></span>
-          </div>
-        </div>
-        {/* Audit Logs */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Audit Logs</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Audit Logs</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Audit Logs</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Audit Logs</span></span>
-          </div>
-        </div>
-        {/* Role-Based Permissions */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Role-Based Permissions</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Role-Based Permissions</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Role-Based Permissions</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Role-Based Permissions</span></span>
-          </div>
-        </div>
-        {/* SSO & SCIM */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">SSO & SCIM</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">SSO & SCIM</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">SSO & SCIM</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">SSO & SCIM</span></span>
-          </div>
-        </div>
-        {/* Data Residency */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Data Residency</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Data Residency</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Data Residency</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Data Residency</span></span>
-          </div>
-        </div>
-        {/* # Support */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4">Support</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 hidden">Support</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Support</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-50 font-medium mt-4 md:hidden">Support</div>
-        </div>
-        {/* Premium Support */}
-        <div className="px-6 flex flex-col justify-end">
-          <div className="py-2 text-slate-400 border-b border-slate-800">Premium Support</div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center border-b border-slate-800 py-2 text-slate-400 max-md:hidden">
-            <span><span className="md:hidden">Premium Support</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Premium Support</span></span>
-          </div>
-        </div>
-        <div className="px-6 flex flex-col justify-end">
-          <div className="flex items-center h-full border-b border-slate-800 py-2 text-slate-400">
-            <svg className="shrink-0 fill-purple-500 mr-3" xmlns="http://www.w3.org/2000/svg" width="12" height="9">
-              <path d="M10.28.28 3.989 6.575 1.695 4.28A1 1 0 0 0 .28 5.695l3 3a1 1 0 0 0 1.414 0l7-7A1 1 0 0 0 10.28.28Z" />
-            </svg>
-            <span><span className="md:hidden">Premium Support</span></span>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   )
