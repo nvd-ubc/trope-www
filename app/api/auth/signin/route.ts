@@ -15,6 +15,8 @@ const formValue = (formData: FormData, key: string): string => {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+const queryValue = (url: URL, key: string): string => url.searchParams.get(key)?.trim() ?? ''
+
 const defaultDesktopRedirectAllowlist = [
   'trope://auth-callback',
   'http://127.0.0.1:4378/auth-callback',
@@ -49,6 +51,27 @@ const isAllowedDesktopRedirect = (redirectUri: string): boolean => {
   const normalized = normalizeRedirectUri(redirectUri)
   if (!normalized) return false
   return desktopRedirectAllowlist.has(normalized)
+}
+
+const resolveDesktopIntentFromRequest = (request: Request) => {
+  const headerValue = request.headers.get('referer') || request.headers.get('referrer') || ''
+  if (!headerValue) return null
+  try {
+    const url = new URL(headerValue)
+    const state = queryValue(url, 'state')
+    const redirect = queryValue(url, 'redirect')
+    const platform = queryValue(url, 'platform')
+    const client = queryValue(url, 'client')
+    if (client === 'desktop') {
+      return { state, redirect, platform }
+    }
+    if (state && redirect) {
+      return { state, redirect, platform }
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
 const buildErrorRedirect = (request: Request, params: Record<string, string>) => {
@@ -145,12 +168,20 @@ export async function POST(request: Request) {
 
   const email = formValue(formData, 'email')
   const password = formValue(formData, 'password')
-  const state = formValue(formData, 'state')
-  const redirectUri = formValue(formData, 'redirect')
-  const platform = formValue(formData, 'platform') || 'unknown'
+  let state = formValue(formData, 'state')
+  let redirectUri = formValue(formData, 'redirect')
+  let platform = formValue(formData, 'platform') || 'unknown'
   const next = formValue(formData, 'next')
 
   let client = formValue(formData, 'client') === 'desktop' ? 'desktop' : 'web'
+  if (client !== 'desktop' && (!state || !redirectUri)) {
+    const desktopIntent = resolveDesktopIntentFromRequest(request)
+    if (desktopIntent) {
+      state = state || desktopIntent.state
+      redirectUri = redirectUri || desktopIntent.redirect
+      platform = platform === 'unknown' ? desktopIntent.platform || platform : platform
+    }
+  }
   if (client !== 'desktop' && state && redirectUri && isAllowedDesktopRedirect(redirectUri)) {
     client = 'desktop'
   }
