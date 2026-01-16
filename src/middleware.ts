@@ -1,23 +1,19 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// List of routes that should be inaccessible
-const blockedRoutes = [
-  '/about',
-  '/integrations',
-  '/customers',
-  '/changelog',
-  '/signup',
-  '/reset-password',
-]
+const authCookieNames = ['trope_access_token', 'trope_refresh_token']
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Check if the current path matches any blocked route
-  if (blockedRoutes.some(route => pathname.startsWith(route))) {
-    // Redirect to homepage
-    return NextResponse.redirect(new URL('/', request.url))
+  if (pathname.startsWith('/dashboard')) {
+    const hasAuthCookie = authCookieNames.some((name) => request.cookies.get(name)?.value)
+    if (!hasAuthCookie) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/signin'
+      url.searchParams.set('next', pathname)
+      return NextResponse.redirect(url)
+    }
   }
 
   return NextResponse.next()
