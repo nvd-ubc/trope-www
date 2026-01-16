@@ -95,4 +95,14 @@ describe('getAuthConfig', () => {
     assert.equal(config.webClientId, 'web-custom-123')
     assert.equal(config.desktopClientId, 'web-custom-123')
   })
+
+  it('ignores AWS_REGION when resolving Cognito region', () => {
+    process.env.TROPE_STAGE = 'dev'
+    process.env.AWS_REGION = 'us-east-1'
+
+    const api = authModule.default ?? authModule
+    const config = api.getAuthConfig()
+
+    assert.equal(config.region, 'us-west-2')
+  })
 })

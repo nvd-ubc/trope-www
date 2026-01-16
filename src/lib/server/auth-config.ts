@@ -161,8 +161,7 @@ export const getAuthConfig = (): AuthConfig => {
 
   let region =
     normalizeValue(process.env.TROPE_COGNITO_REGION) ||
-    normalizeValue(process.env.AWS_REGION) ||
-    normalizeValue(process.env.AWS_DEFAULT_REGION)
+    normalizeValue(process.env.TROPE_REGION)
 
   let webClientId =
     normalizeValue(process.env.TROPE_COGNITO_WEB_CLIENT_ID) ||
