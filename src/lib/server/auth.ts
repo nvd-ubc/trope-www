@@ -168,9 +168,8 @@ export const confirmForgotPassword = async (params: {
 export const readAuthSession = async (): Promise<AuthSession | null> => {
   const store = await cookies()
   const accessToken = store.get(ACCESS_COOKIE)?.value ?? ''
-  if (!accessToken) return null
-
   const refreshToken = store.get(REFRESH_COOKIE)?.value
+  if (!accessToken && !refreshToken) return null
   const idToken = store.get(ID_COOKIE)?.value
   const expiresAtRaw = store.get(EXPIRES_AT_COOKIE)?.value
   const expiresAt = expiresAtRaw ? Number.parseInt(expiresAtRaw, 10) : 0
@@ -235,7 +234,9 @@ export const getSessionWithRefresh = async (): Promise<{
   if (!session) return null
 
   const now = Date.now()
-  const needsRefresh = session.expiresAt > 0 && session.expiresAt <= now + 30_000
+  const missingAccessToken = !session.accessToken
+  const needsRefresh =
+    missingAccessToken || (session.expiresAt > 0 && session.expiresAt <= now + 30_000)
   if (!needsRefresh) {
     return { session, refreshed: false }
   }
@@ -244,7 +245,12 @@ export const getSessionWithRefresh = async (): Promise<{
     return null
   }
 
-  const refreshedTokens = await refreshTokens(session.refreshToken, 'web')
+  let refreshedTokens: AuthTokens
+  try {
+    refreshedTokens = await refreshTokens(session.refreshToken, 'web')
+  } catch {
+    return null
+  }
   const refreshedSession: AuthSession = {
     accessToken: refreshedTokens.accessToken,
     refreshToken: refreshedTokens.refreshToken,
