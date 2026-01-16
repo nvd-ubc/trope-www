@@ -82,4 +82,17 @@ describe('getAuthConfig', () => {
     assert.equal(config.desktopClientId, '185pu34bemq1tp5lagdgpddt07')
     assert.equal(config.region, 'us-west-2')
   })
+
+  it('defaults desktop client to the web client when only web client is set', () => {
+    process.env.TROPE_STAGE = 'dev'
+    process.env.TROPE_API_URL = 'https://api.custom.example'
+    process.env.TROPE_COGNITO_REGION = 'us-east-1'
+    process.env.TROPE_COGNITO_WEB_CLIENT_ID = 'web-custom-123'
+
+    const api = authModule.default ?? authModule
+    const config = api.getAuthConfig()
+
+    assert.equal(config.webClientId, 'web-custom-123')
+    assert.equal(config.desktopClientId, 'web-custom-123')
+  })
 })

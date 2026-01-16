@@ -184,8 +184,11 @@ export const getAuthConfig = (): AuthConfig => {
     const defaults = stageDefaultsFor(stage)
     apiBaseUrlRaw = apiBaseUrlRaw ?? defaults.apiBaseUrl
     region = region ?? defaults.region
+    const shouldDefaultDesktopClientId = !desktopClientId && !webClientId
     webClientId = webClientId ?? defaults.webClientId
-    desktopClientId = desktopClientId ?? defaults.desktopClientId
+    if (shouldDefaultDesktopClientId) {
+      desktopClientId = desktopClientId ?? defaults.desktopClientId
+    }
   }
 
   if (!apiBaseUrlRaw) {
