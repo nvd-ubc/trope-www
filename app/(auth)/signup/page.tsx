@@ -3,6 +3,8 @@ export const metadata = {
   description: 'Create your free Trope account and start automating workflows with living documentation and in-app guidance.',
 }
 
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import AuthLogo from '../auth-logo'
 

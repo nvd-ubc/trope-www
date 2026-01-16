@@ -3,6 +3,8 @@ export const metadata = {
   description: 'Reset your Trope account password to regain access to your workspace.',
 }
 
+export const dynamic = 'force-dynamic'
+
 import Link from 'next/link'
 import AuthLogo from '../auth-logo'
 
