@@ -10,6 +10,7 @@
     "check": "npm run build && tsc"
   },
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.970.0",
     "@headlessui/react": "^2.2.0",
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
