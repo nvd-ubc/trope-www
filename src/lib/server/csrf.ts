@@ -2,7 +2,6 @@ import 'server-only'
 
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { getAuthConfig } from './auth-config'
 
 export type CsrfFailure = 'origin_missing' | 'origin_invalid' | 'token_missing' | 'token_mismatch'
 
@@ -36,11 +35,10 @@ const buildOriginAllowlist = (): Set<string> => {
 const originAllowlist = buildOriginAllowlist()
 
 const buildCookieOptions = () => {
-  const { isProd } = getAuthConfig()
   return {
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: isProd,
+    secure: process.env.NODE_ENV === 'production',
     path: '/',
     maxAge: CSRF_MAX_AGE,
   }
