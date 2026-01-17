@@ -8,9 +8,15 @@ type SignUpFormProps = {
   selfSignupEnabled: boolean
   error?: string
   requested?: string
+  nextPath?: string
 }
 
-export default function SignUpForm({ selfSignupEnabled, error, requested }: SignUpFormProps) {
+export default function SignUpForm({
+  selfSignupEnabled,
+  error,
+  requested,
+  nextPath,
+}: SignUpFormProps) {
   const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
 
   return (
@@ -92,6 +98,7 @@ export default function SignUpForm({ selfSignupEnabled, error, requested }: Sign
                 </div>
               )}
             </div>
+            <input type="hidden" name="next" value={nextPath ?? ''} />
             <input type="hidden" name="csrf_token" value={csrfToken} />
             <div className="mt-6">
               <button
@@ -106,7 +113,10 @@ export default function SignUpForm({ selfSignupEnabled, error, requested }: Sign
 
         <p className="text-center text-sm text-slate-600 mt-6">
           Already have an account?{' '}
-          <Link className="font-medium text-slate-900 hover:underline" href="/signin">
+          <Link
+            className="font-medium text-slate-900 hover:underline"
+            href={nextPath ? `/signin?next=${encodeURIComponent(nextPath)}` : '/signin'}
+          >
             Sign in
           </Link>
         </p>

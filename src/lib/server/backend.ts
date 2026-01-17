@@ -19,6 +19,13 @@ type ProxyOptions = {
   cache?: RequestCache
 }
 
+type PublicOptions = {
+  method?: string
+  body?: BodyInit | null
+  headers?: HeadersInit
+  cache?: RequestCache
+}
+
 const readJson = async (response: Response) => {
   if (response.status === 204) return null
   const contentType = response.headers.get('content-type') || ''
@@ -111,6 +118,29 @@ export const proxyBackendRequest = async (
 
   if (response.status === 401) {
     clearAuthCookies(next)
+  }
+
+  return next
+}
+
+export const publicBackendRequest = async (
+  path: string,
+  options: PublicOptions = {}
+): Promise<NextResponse> => {
+  const config = getAuthConfig()
+  const response = await fetch(`${config.apiBaseUrl}${path}`, {
+    method: options.method ?? 'GET',
+    headers: options.headers,
+    body: options.body ?? undefined,
+    cache: options.cache ?? 'no-store',
+  })
+
+  const payload = await readJson(response)
+  const next = NextResponse.json(payload ?? {}, { status: response.status })
+
+  const requestId = response.headers.get('x-trope-request-id')
+  if (requestId) {
+    next.headers.set('X-Trope-Request-Id', requestId)
   }
 
   return next

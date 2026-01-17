@@ -109,7 +109,10 @@ export default function SignInForm() {
 
         <p className="text-center text-sm text-slate-600 mt-6">
           Don&apos;t have an account?{' '}
-          <Link className="font-medium text-[#1861C8] hover:text-[#1861C8]/80" href="/signup">
+          <Link
+            className="font-medium text-[#1861C8] hover:text-[#1861C8]/80"
+            href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+          >
             Sign up
           </Link>
         </p>

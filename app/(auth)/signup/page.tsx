@@ -10,6 +10,7 @@ import SignUpForm from './signup-form'
 type SignUpSearchParams = {
   error?: string
   requested?: string
+  next?: string
 }
 
 const toSingle = (value: string | string[] | undefined) =>
@@ -48,6 +49,14 @@ export default function SignUp({
   const selfSignupEnabled = isSelfSignupEnabled()
   const error = toSingle(searchParams?.error)
   const requested = toSingle(searchParams?.requested)
+  const next = toSingle(searchParams?.next)
 
-  return <SignUpForm selfSignupEnabled={selfSignupEnabled} error={error} requested={requested} />
+  return (
+    <SignUpForm
+      selfSignupEnabled={selfSignupEnabled}
+      error={error}
+      requested={requested}
+      nextPath={next}
+    />
+  )
 }

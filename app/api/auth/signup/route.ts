@@ -39,6 +39,7 @@ export async function POST(request: Request) {
   const password = formValue(formData, 'password')
   const name = formValue(formData, 'full_name')
   const company = formValue(formData, 'company')
+  const nextPath = formValue(formData, 'next')
 
   if (!email) {
     return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.'))
@@ -64,6 +65,9 @@ export async function POST(request: Request) {
 
       const url = new URL('/signup', request.url)
       url.searchParams.set('requested', '1')
+      if (nextPath) {
+        url.searchParams.set('next', nextPath)
+      }
       return redirectAfterPost(request, url)
     }
 
@@ -80,6 +84,9 @@ export async function POST(request: Request) {
 
     const url = new URL('/signin', request.url)
     url.searchParams.set('signup', '1')
+    if (nextPath) {
+      url.searchParams.set('next', nextPath)
+    }
     return redirectAfterPost(request, url)
   } catch (error) {
     const message = authErrorMessage(error)
