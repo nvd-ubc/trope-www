@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 type PlanInfo = {
   name: string
@@ -25,37 +26,55 @@ type UsageResponse = {
   completion_tokens: number
 }
 
+type OrgSummary = {
+  org_id: string
+  name: string
+  role: string
+  status: string
+  created_at: string
+}
+
+type OrgsResponse = {
+  orgs: OrgSummary[]
+  personal_org_id?: string | null
+  default_org_id?: string | null
+}
+
 export default function DashboardClient() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [me, setMe] = useState<MeResponse | null>(null)
   const [usage, setUsage] = useState<UsageResponse | null>(null)
+  const [orgs, setOrgs] = useState<OrgsResponse | null>(null)
 
   useEffect(() => {
     let active = true
     const fetchData = async () => {
       try {
-        const [meRes, usageRes] = await Promise.all([
+        const [meRes, usageRes, orgsRes] = await Promise.all([
           fetch('/api/me', { cache: 'no-store' }),
           fetch('/api/usage', { cache: 'no-store' }),
+          fetch('/api/orgs', { cache: 'no-store' }),
         ])
 
-        if (meRes.status === 401 || usageRes.status === 401) {
+        if (meRes.status === 401 || usageRes.status === 401 || orgsRes.status === 401) {
           router.replace('/signin?next=/dashboard')
           return
         }
 
         const mePayload = (await meRes.json().catch(() => null)) as MeResponse | null
         const usagePayload = (await usageRes.json().catch(() => null)) as UsageResponse | null
+        const orgsPayload = (await orgsRes.json().catch(() => null)) as OrgsResponse | null
 
-        if (!meRes.ok || !usageRes.ok) {
+        if (!meRes.ok || !usageRes.ok || !orgsRes.ok) {
           throw new Error('Unable to load dashboard data.')
         }
 
         if (!active) return
         setMe(mePayload)
         setUsage(usagePayload)
+        setOrgs(orgsPayload)
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -87,11 +106,13 @@ export default function DashboardClient() {
     )
   }
 
-  if (!me || !usage) {
+  if (!me || !usage || !orgs) {
     return null
   }
 
   const creditsRemaining = Math.max(0, usage.credits_limit - usage.credits_used)
+  const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
+  const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -108,11 +129,14 @@ export default function DashboardClient() {
           </div>
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-400">Default org</div>
-            <div className="text-slate-900">{me.default_org_id ?? 'Not set'}</div>
+            <div className="text-slate-900">{defaultOrg?.name ?? me.default_org_id ?? 'Not set'}</div>
+            <Link className="text-xs text-[#1861C8] hover:text-[#1861C8]/80" href="/dashboard/workspaces">
+              Manage workspaces
+            </Link>
           </div>
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-400">Personal org</div>
-            <div className="text-slate-900">{me.personal_org_id ?? 'Not set'}</div>
+            <div className="text-slate-900">{personalOrg?.name ?? me.personal_org_id ?? 'Not set'}</div>
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
   confirmForgotPassword,
   forgotPassword,
 } from '@/lib/server/auth'
+import { csrfFormField, validateCsrf } from '@/lib/server/csrf'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -30,6 +31,12 @@ export async function POST(request: Request) {
     formData = await request.formData()
   } catch {
     return redirectAfterPost(request, buildErrorRedirect(request, 'Invalid reset request.'))
+  }
+
+  const csrfToken = formValue(formData, csrfFormField)
+  const csrfFailure = await validateCsrf(request, csrfToken)
+  if (csrfFailure) {
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Session expired. Please refresh and try again.'))
   }
 
   const email = formValue(formData, 'email')

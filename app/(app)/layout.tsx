@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import SignOutForm from './signout-form'
+import WorkspaceSwitcher from './workspace-switcher'
 
 export default function AppLayout({
   children,
@@ -9,14 +11,23 @@ export default function AppLayout({
     <>
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link href="/" className="text-lg font-semibold text-slate-900">
-            Trope
-          </Link>
-          <nav className="flex items-center gap-4 text-sm text-slate-600">
-            <Link className="hover:text-slate-900" href="/dashboard">
-              Dashboard
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-lg font-semibold text-slate-900">
+              Trope
             </Link>
-          </nav>
+            <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex">
+              <Link className="hover:text-slate-900" href="/dashboard">
+                Dashboard
+              </Link>
+              <Link className="hover:text-slate-900" href="/dashboard/workspaces">
+                Workspaces
+              </Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-3">
+            <WorkspaceSwitcher />
+            <SignOutForm />
+          </div>
         </div>
       </header>
       <main className="grow bg-slate-50">

@@ -6,6 +6,7 @@ import {
   setAuthCookies,
   signInWithPassword,
 } from '@/lib/server/auth'
+import { csrfFormField, setCsrfCookie, validateCsrf } from '@/lib/server/csrf'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -186,6 +187,22 @@ export async function POST(request: Request) {
     client = 'desktop'
   }
 
+  const csrfToken = formValue(formData, csrfFormField)
+  const csrfFailure = await validateCsrf(request, csrfToken)
+  if (csrfFailure) {
+    return redirectAfterPost(
+      request,
+      buildErrorRedirect(request, {
+        error: 'Session expired. Please refresh and try again.',
+        client,
+        state,
+        redirect: redirectUri,
+        platform,
+        next,
+      })
+    )
+  }
+
   if (!email || !password) {
     return redirectAfterPost(
       request,
@@ -259,6 +276,7 @@ export async function POST(request: Request) {
       const response = redirectAfterPost(request, completeUrl)
       if (webTokens) {
         setAuthCookies(response, webTokens)
+        setCsrfCookie(response)
       }
       return response
     }
@@ -266,6 +284,7 @@ export async function POST(request: Request) {
     const tokens = await signInWithPassword(email, password, 'web')
     const response = redirectAfterPost(request, new URL(safeRedirectPath(next), request.url))
     setAuthCookies(response, tokens)
+    setCsrfCookie(response)
     return response
   } catch (error) {
     const message = authErrorMessage(error)
