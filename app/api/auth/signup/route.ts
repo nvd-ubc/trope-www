@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         throw new Error('access_request_failed')
       }
 
-      const url = new URL('/signup', request.url)
+      const url = new URL('/request-access', request.url)
       url.searchParams.set('requested', '1')
       if (nextPath) {
         url.searchParams.set('next', nextPath)

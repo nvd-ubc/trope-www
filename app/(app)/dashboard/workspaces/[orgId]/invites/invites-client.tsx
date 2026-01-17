@@ -44,6 +44,7 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
   const [role, setRole] = useState('org_member')
   const [submitting, setSubmitting] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [resentId, setResentId] = useState<string | null>(null)
 
   const loadInvites = async () => {
     const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/invites`, { cache: 'no-store' })
@@ -172,6 +173,33 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
     }
   }
 
+  const handleResend = async (invite: InviteRecord) => {
+    if (!csrfToken) return
+    setSubmitting(true)
+    setError(null)
+    try {
+      const response = await fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/invites/${encodeURIComponent(invite.invite_id)}/resend`,
+        {
+          method: 'POST',
+          headers: {
+            'x-csrf-token': csrfToken,
+          },
+        }
+      )
+      const payload = (await response.json().catch(() => null)) as { message?: string } | null
+      if (!response.ok) {
+        throw new Error(payload?.message || 'Unable to resend invite.')
+      }
+      setResentId(invite.invite_id)
+      setTimeout(() => setResentId(null), 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to resend invite.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const handleCopyLink = async (invite: InviteRecord) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
     const inviteUrl = new URL('/invite', origin)
@@ -241,6 +269,13 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
                       onClick={() => handleCopyLink(invite)}
                     >
                       {copiedId === invite.invite_id ? 'Copied' : 'Copy link'}
+                    </button>
+                    <button
+                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={submitting || !csrfToken}
+                      onClick={() => handleResend(invite)}
+                    >
+                      {resentId === invite.invite_id ? 'Sent' : 'Resend email'}
                     </button>
                     <button
                       className="rounded-full border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:border-rose-300 hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-50"

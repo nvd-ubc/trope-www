@@ -11,12 +11,15 @@ type SignUpFormProps = {
   nextPath?: string
 }
 
-export default function SignUpForm({
-  selfSignupEnabled,
+const SignUpFields = ({
   error,
   requested,
   nextPath,
-}: SignUpFormProps) {
+}: {
+  error?: string
+  requested?: string
+  nextPath?: string
+}) => {
   const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
 
   return (
@@ -24,13 +27,8 @@ export default function SignUpForm({
       <div className="max-w-3xl mx-auto text-center pb-8">
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">
-          {selfSignupEnabled ? 'Create your free account' : 'Request access'}
+          Create your free account
         </h1>
-        {!selfSignupEnabled && (
-          <p className="mt-3 text-sm text-slate-600">
-            Production access is invite-only. We&apos;ll follow up with next steps.
-          </p>
-        )}
       </div>
 
       <div className="max-w-sm mx-auto">
@@ -82,21 +80,19 @@ export default function SignUpForm({
                   required
                 />
               </div>
-              {selfSignupEnabled && (
-                <div>
-                  <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="password">
-                    Password
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
-                    type="password"
-                    autoComplete="on"
-                    required
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="password">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
+                  type="password"
+                  autoComplete="on"
+                  required
+                />
+              </div>
             </div>
             <input type="hidden" name="next" value={nextPath ?? ''} />
             <input type="hidden" name="csrf_token" value={csrfToken} />
@@ -105,7 +101,7 @@ export default function SignUpForm({
                 className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={csrfLoading || !csrfToken}
               >
-                {selfSignupEnabled ? 'Sign Up' : 'Request access'}
+                Sign Up
               </button>
             </div>
           </form>
@@ -123,4 +119,66 @@ export default function SignUpForm({
       </div>
     </>
   )
+}
+
+const SignupDecision = () => {
+  return (
+    <>
+      <div className="max-w-3xl mx-auto text-center pb-8">
+        <AuthLogo />
+        <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Get access to Trope</h1>
+        <p className="mt-3 text-sm text-slate-600">
+          Production access is invite-only. Request access or use an invite link to get started.
+        </p>
+      </div>
+
+      <div className="max-w-md mx-auto space-y-4">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Request access</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Tell us about your team and we&apos;ll follow up with next steps.
+          </p>
+          <Link
+            className="mt-4 inline-flex w-full justify-center rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
+            href="/request-access"
+          >
+            Request access
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Have an invite?</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Use your invite link to accept and join the workspace.
+          </p>
+          <Link
+            className="mt-4 inline-flex w-full justify-center rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300"
+            href="/invite"
+          >
+            Accept invite
+          </Link>
+        </div>
+
+        <div className="text-center text-sm text-slate-600">
+          Already have an account?{' '}
+          <Link className="font-medium text-slate-900 hover:underline" href="/signin">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default function SignUpForm({
+  selfSignupEnabled,
+  error,
+  requested,
+  nextPath,
+}: SignUpFormProps) {
+  if (!selfSignupEnabled) {
+    return <SignupDecision />
+  }
+
+  return <SignUpFields error={error} requested={requested} nextPath={nextPath} />
 }
