@@ -14,8 +14,13 @@ type DesktopCompleteSearchParams = {
 
 const toSingle = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 
-export default function DesktopComplete({ searchParams }: { searchParams?: DesktopCompleteSearchParams }) {
-  const callback = toSingle(searchParams?.callback) ?? ''
+export default async function DesktopComplete({
+  searchParams,
+}: {
+  searchParams?: DesktopCompleteSearchParams | Promise<DesktopCompleteSearchParams>
+}) {
+  const resolvedSearchParams = await Promise.resolve(searchParams)
+  const callback = toSingle(resolvedSearchParams?.callback) ?? ''
 
   return (
     <>
@@ -35,4 +40,3 @@ export default function DesktopComplete({ searchParams }: { searchParams?: Deskt
     </>
   )
 }
-
