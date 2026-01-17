@@ -52,6 +52,7 @@ export default function InviteClient({
   const [accepted, setAccepted] = useState(false)
 
   const invite = inviteData?.payload?.invite
+  const invitePath = `/invite?org_id=${encodeURIComponent(orgId)}&invite_id=${encodeURIComponent(inviteId)}`
 
   useEffect(() => {
     let active = true
@@ -216,13 +217,13 @@ export default function InviteClient({
           <>
             <Link
               className="w-full rounded-full bg-[#1861C8] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#2171d8]"
-              href={`/signin?next=/invite?org_id=${encodeURIComponent(orgId)}&invite_id=${encodeURIComponent(inviteId)}`}
+              href={`/signin?next=${encodeURIComponent(invitePath)}`}
             >
               Sign in to accept
             </Link>
             <Link
               className="w-full rounded-full border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-slate-300"
-              href={`/signup?next=/invite?org_id=${encodeURIComponent(orgId)}&invite_id=${encodeURIComponent(inviteId)}`}
+              href={`/signup?next=${encodeURIComponent(invitePath)}`}
             >
               Create an account
             </Link>
@@ -241,6 +242,17 @@ export default function InviteClient({
             <div className="text-center text-xs text-slate-500">
               Signed in as {authEmail}
             </div>
+            <form action="/api/auth/signout" method="post" className="flex justify-center">
+              <input type="hidden" name="csrf_token" value={csrfToken ?? ''} />
+              <input type="hidden" name="next" value={invitePath} />
+              <button
+                className="text-xs font-medium text-slate-600 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!csrfToken}
+                type="submit"
+              >
+                Wrong account? Sign out and continue
+              </button>
+            </form>
           </>
         )}
 

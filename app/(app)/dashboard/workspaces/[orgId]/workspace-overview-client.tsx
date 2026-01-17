@@ -81,6 +81,8 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
     )
   }
 
+  const canViewAudit = membership.role === 'org_owner' || membership.role === 'org_admin'
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -103,6 +105,14 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
           >
             Invites
           </Link>
+          {canViewAudit && (
+            <Link
+              href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/audit`}
+              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
+            >
+              Audit
+            </Link>
+          )}
           <Link
             href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`}
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"

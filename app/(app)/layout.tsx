@@ -22,6 +22,9 @@ export default function AppLayout({
               <Link className="hover:text-slate-900" href="/dashboard/workspaces">
                 Workspaces
               </Link>
+              <Link className="hover:text-slate-900" href="/dashboard/account">
+                Account
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
