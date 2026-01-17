@@ -102,9 +102,11 @@ export default function WorkspacesClient() {
         },
         body: JSON.stringify({ name: createName.trim() }),
       })
-      const payload = (await response.json().catch(() => null)) as { org?: OrgSummary; default_org_id?: string }
+      const payload = (await response.json().catch(() => null)) as
+        | { org?: OrgSummary; default_org_id?: string; message?: string }
+        | null
       if (!response.ok) {
-        throw new Error(payload?.['message'] || 'Unable to create workspace.')
+        throw new Error(payload?.message || 'Unable to create workspace.')
       }
       if (payload?.org) {
         setOrgs((prev) => [payload.org as OrgSummary, ...prev])
