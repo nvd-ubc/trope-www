@@ -15,12 +15,17 @@ const buildErrorRedirect = (request: Request, message: string) => {
   return url
 }
 
+const redirectAfterPost = (request: Request, url: URL) => {
+  const destination = new URL(url.toString(), request.url)
+  return NextResponse.redirect(destination, 303)
+}
+
 export async function POST(request: Request) {
   let formData: FormData
   try {
     formData = await request.formData()
   } catch {
-    return NextResponse.redirect(buildErrorRedirect(request, 'Invalid sign-up request.'))
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Invalid sign-up request.'))
   }
 
   const email = formValue(formData, 'email')
@@ -29,7 +34,7 @@ export async function POST(request: Request) {
   const company = formValue(formData, 'company')
 
   if (!email) {
-    return NextResponse.redirect(buildErrorRedirect(request, 'Email is required.'))
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.'))
   }
 
   try {
@@ -52,11 +57,11 @@ export async function POST(request: Request) {
 
       const url = new URL('/signup', request.url)
       url.searchParams.set('requested', '1')
-      return NextResponse.redirect(url)
+      return redirectAfterPost(request, url)
     }
 
     if (!password) {
-      return NextResponse.redirect(buildErrorRedirect(request, 'Password is required.'))
+      return redirectAfterPost(request, buildErrorRedirect(request, 'Password is required.'))
     }
 
     await signUp({
@@ -68,9 +73,9 @@ export async function POST(request: Request) {
 
     const url = new URL('/signin', request.url)
     url.searchParams.set('signup', '1')
-    return NextResponse.redirect(url)
+    return redirectAfterPost(request, url)
   } catch (error) {
     const message = authErrorMessage(error)
-    return NextResponse.redirect(buildErrorRedirect(request, message))
+    return redirectAfterPost(request, buildErrorRedirect(request, message))
   }
 }

@@ -15,6 +15,8 @@ const formValue = (formData: FormData, key: string): string => {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+const queryValue = (url: URL, key: string): string => url.searchParams.get(key)?.trim() ?? ''
+
 const defaultDesktopRedirectAllowlist = [
   'trope://auth-callback',
   'http://127.0.0.1:4378/auth-callback',
@@ -49,6 +51,27 @@ const isAllowedDesktopRedirect = (redirectUri: string): boolean => {
   const normalized = normalizeRedirectUri(redirectUri)
   if (!normalized) return false
   return desktopRedirectAllowlist.has(normalized)
+}
+
+const resolveDesktopIntentFromRequest = (request: Request) => {
+  const headerValue = request.headers.get('referer') || request.headers.get('referrer') || ''
+  if (!headerValue) return null
+  try {
+    const url = new URL(headerValue)
+    const state = queryValue(url, 'state')
+    const redirect = queryValue(url, 'redirect')
+    const platform = queryValue(url, 'platform')
+    const client = queryValue(url, 'client')
+    if (client === 'desktop') {
+      return { state, redirect, platform }
+    }
+    if (state && redirect) {
+      return { state, redirect, platform }
+    }
+  } catch {
+    return null
+  }
+  return null
 }
 
 const buildErrorRedirect = (request: Request, params: Record<string, string>) => {
@@ -130,24 +153,42 @@ const buildRedirectWithParams = (raw: string, params: Record<string, string>) =>
   return url
 }
 
+const redirectAfterPost = (request: Request, url: URL) => {
+  const destination = new URL(url.toString(), request.url)
+  return NextResponse.redirect(destination, 303)
+}
+
 export async function POST(request: Request) {
   let formData: FormData
   try {
     formData = await request.formData()
   } catch {
-    return NextResponse.redirect(buildErrorRedirect(request, { error: 'Invalid sign-in request.' }))
+    return redirectAfterPost(request, buildErrorRedirect(request, { error: 'Invalid sign-in request.' }))
   }
 
   const email = formValue(formData, 'email')
   const password = formValue(formData, 'password')
-  const client = formValue(formData, 'client') === 'desktop' ? 'desktop' : 'web'
-  const state = formValue(formData, 'state')
-  const redirectUri = formValue(formData, 'redirect')
-  const platform = formValue(formData, 'platform') || 'unknown'
+  let state = formValue(formData, 'state')
+  let redirectUri = formValue(formData, 'redirect')
+  let platform = formValue(formData, 'platform') || 'unknown'
   const next = formValue(formData, 'next')
 
+  let client = formValue(formData, 'client') === 'desktop' ? 'desktop' : 'web'
+  if (client !== 'desktop' && (!state || !redirectUri)) {
+    const desktopIntent = resolveDesktopIntentFromRequest(request)
+    if (desktopIntent) {
+      state = state || desktopIntent.state
+      redirectUri = redirectUri || desktopIntent.redirect
+      platform = platform === 'unknown' ? desktopIntent.platform || platform : platform
+    }
+  }
+  if (client !== 'desktop' && state && redirectUri && isAllowedDesktopRedirect(redirectUri)) {
+    client = 'desktop'
+  }
+
   if (!email || !password) {
-    return NextResponse.redirect(
+    return redirectAfterPost(
+      request,
       buildErrorRedirect(request, {
         error: 'Email and password are required.',
         client,
@@ -163,7 +204,8 @@ export async function POST(request: Request) {
 
     if (client === 'desktop') {
       if (!state || !redirectUri) {
-        return NextResponse.redirect(
+        return redirectAfterPost(
+          request,
           buildErrorRedirect(request, {
             error: 'Missing desktop sign-in details. Try again from the app.',
           })
@@ -171,7 +213,8 @@ export async function POST(request: Request) {
       }
 
       if (!isAllowedDesktopRedirect(redirectUri)) {
-        return NextResponse.redirect(
+        return redirectAfterPost(
+          request,
           buildErrorRedirect(request, {
             error: 'Invalid desktop redirect. Try again from the app.',
             client,
@@ -210,7 +253,10 @@ export async function POST(request: Request) {
         state,
       })
 
-      const response = NextResponse.redirect(callbackUrl)
+      const completeUrl = new URL('/signin/desktop-complete', request.url)
+      completeUrl.searchParams.set('callback', callbackUrl.toString())
+
+      const response = redirectAfterPost(request, completeUrl)
       if (webTokens) {
         setAuthCookies(response, webTokens)
       }
@@ -218,12 +264,13 @@ export async function POST(request: Request) {
     }
 
     const tokens = await signInWithPassword(email, password, 'web')
-    const response = NextResponse.redirect(new URL(safeRedirectPath(next), request.url))
+    const response = redirectAfterPost(request, new URL(safeRedirectPath(next), request.url))
     setAuthCookies(response, tokens)
     return response
   } catch (error) {
     const message = authErrorMessage(error)
-    return NextResponse.redirect(
+    return redirectAfterPost(
+      request,
       buildErrorRedirect(request, {
         error: message,
         client,

@@ -161,14 +161,15 @@ export const getAuthConfig = (): AuthConfig => {
 
   let region =
     normalizeValue(process.env.TROPE_COGNITO_REGION) ||
-    normalizeValue(process.env.AWS_REGION) ||
-    normalizeValue(process.env.AWS_DEFAULT_REGION)
+    normalizeValue(process.env.TROPE_REGION)
 
   let webClientId =
     normalizeValue(process.env.TROPE_COGNITO_WEB_CLIENT_ID) ||
     normalizeValue(process.env.TROPE_COGNITO_CLIENT_ID)
 
-  let desktopClientId = normalizeValue(process.env.TROPE_COGNITO_DESKTOP_CLIENT_ID)
+  let desktopClientId =
+    normalizeValue(process.env.TROPE_COGNITO_DESKTOP_CLIENT_ID) ||
+    normalizeValue(process.env.TROPE_COGNITO_CLIENT_ID)
 
   if (!apiBaseUrlRaw || !region || !webClientId || !desktopClientId) {
     const cloudDefaults = loadCloudDefaults(stage, region)
@@ -184,11 +185,8 @@ export const getAuthConfig = (): AuthConfig => {
     const defaults = stageDefaultsFor(stage)
     apiBaseUrlRaw = apiBaseUrlRaw ?? defaults.apiBaseUrl
     region = region ?? defaults.region
-    const shouldDefaultDesktopClientId = !desktopClientId && !webClientId
     webClientId = webClientId ?? defaults.webClientId
-    if (shouldDefaultDesktopClientId) {
-      desktopClientId = desktopClientId ?? defaults.desktopClientId
-    }
+    desktopClientId = desktopClientId ?? defaults.desktopClientId
   }
 
   if (!apiBaseUrlRaw) {

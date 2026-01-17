@@ -83,16 +83,39 @@ describe('getAuthConfig', () => {
     assert.equal(config.region, 'us-west-2')
   })
 
-  it('defaults desktop client to the web client when only web client is set', () => {
+  it('defaults both client ids when TROPE_COGNITO_CLIENT_ID is set', () => {
     process.env.TROPE_STAGE = 'dev'
     process.env.TROPE_API_URL = 'https://api.custom.example'
     process.env.TROPE_COGNITO_REGION = 'us-east-1'
+    process.env.TROPE_COGNITO_CLIENT_ID = 'shared-custom-123'
+
+    const api = authModule.default ?? authModule
+    const config = api.getAuthConfig()
+
+    assert.equal(config.webClientId, 'shared-custom-123')
+    assert.equal(config.desktopClientId, 'shared-custom-123')
+  })
+
+  it('uses stage desktop client id when only web client is configured', () => {
+    process.env.TROPE_STAGE = 'dev'
+    process.env.TROPE_API_URL = 'https://api.custom.example'
+    process.env.TROPE_COGNITO_REGION = 'us-west-2'
     process.env.TROPE_COGNITO_WEB_CLIENT_ID = 'web-custom-123'
 
     const api = authModule.default ?? authModule
     const config = api.getAuthConfig()
 
     assert.equal(config.webClientId, 'web-custom-123')
-    assert.equal(config.desktopClientId, 'web-custom-123')
+    assert.equal(config.desktopClientId, '185pu34bemq1tp5lagdgpddt07')
+  })
+
+  it('ignores AWS_REGION when resolving Cognito region', () => {
+    process.env.TROPE_STAGE = 'dev'
+    process.env.AWS_REGION = 'us-east-1'
+
+    const api = authModule.default ?? authModule
+    const config = api.getAuthConfig()
+
+    assert.equal(config.region, 'us-west-2')
   })
 })
