@@ -4,7 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { CONTACT_EMAIL } from '@/lib/constants'
 
-export default function MobileMenu() {
+type MobileMenuProps = {
+  isAuthenticated: boolean
+}
+
+export default function MobileMenu({ isAuthenticated }: MobileMenuProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false)
 
   const trigger = useRef<HTMLButtonElement>(null)
@@ -82,7 +86,12 @@ export default function MobileMenu() {
             <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#pricing">Pricing</Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/signin">Sign in</Link>
+            <Link
+              className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2"
+              href={isAuthenticated ? '/dashboard' : '/signin'}
+            >
+              {isAuthenticated ? 'Dashboard' : 'Sign in'}
+            </Link>
           </li>
           <li>
             <a className="flex font-medium text-sm text-[#1861C8] hover:text-[#1861C8]/80 py-2" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
