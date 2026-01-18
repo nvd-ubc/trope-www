@@ -3,36 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-type OrgListResponse = {
-  orgs: Array<{ org_id: string }>
-  default_org_id?: string | null
-}
-
-let orgListCache: OrgListResponse | null | undefined
-let orgListPromise: Promise<OrgListResponse | null> | null = null
-
-const loadOrgList = async () => {
-  if (orgListCache !== undefined) {
-    return orgListCache
-  }
-  if (!orgListPromise) {
-    orgListPromise = (async () => {
-      try {
-        const response = await fetch('/api/orgs', { cache: 'no-store' })
-        if (!response.ok) return null
-        return (await response.json().catch(() => null)) as OrgListResponse | null
-      } catch {
-        return null
-      } finally {
-        orgListPromise = null
-      }
-    })()
-  }
-  const payload = await orgListPromise
-  orgListCache = payload
-  return payload
-}
+import { loadOrgList, subscribeOrgListUpdates } from './org-list-cache'
 
 const parseActiveOrgId = (pathname: string) => {
   const match = pathname.match(/\/dashboard\/workspaces\/([^/]+)/)
@@ -61,8 +32,12 @@ export default function WorkspaceNavLink({
     }
 
     load()
+    const unsubscribe = subscribeOrgListUpdates(() => {
+      load()
+    })
     return () => {
       active = false
+      unsubscribe()
     }
   }, [])
 

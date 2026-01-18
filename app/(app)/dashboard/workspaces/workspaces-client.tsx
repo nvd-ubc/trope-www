@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { notifyOrgListUpdated } from '../../org-list-cache'
 
 type OrgSummary = {
   org_id: string
@@ -113,6 +114,10 @@ export default function WorkspacesClient() {
       }
       if (payload?.default_org_id) {
         setDefaultOrgId(payload.default_org_id)
+        notifyOrgListUpdated()
+      }
+      if (payload?.org && !payload?.default_org_id) {
+        notifyOrgListUpdated()
       }
       setCreateName('')
     } catch (err) {
@@ -140,6 +145,7 @@ export default function WorkspacesClient() {
         throw new Error(payload?.message || 'Unable to update default workspace.')
       }
       setDefaultOrgId(orgId)
+      notifyOrgListUpdated()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to update default workspace.')
     } finally {

@@ -84,8 +84,12 @@ export default function CommandPalette() {
   }, [pathname, defaultOrgId])
 
   useEffect(() => {
-    if (!isOpen || !activeOrgId) return
+    if (!isOpen) return
     let active = true
+    setWorkflowItems([])
+    setRunItems([])
+    setMemberItems([])
+    if (!activeOrgId) return
 
     const loadDynamicItems = async () => {
       try {
@@ -114,6 +118,9 @@ export default function CommandPalette() {
               description: 'Filtered runs',
             }))
           )
+        } else if (active) {
+          setWorkflowItems([])
+          setRunItems([])
         }
 
         const membersRes = await fetch(`/api/orgs/${encodeURIComponent(activeOrgId)}/members`, {
@@ -139,6 +146,9 @@ export default function CommandPalette() {
         }
       } catch {
         if (!active) return
+        setWorkflowItems([])
+        setRunItems([])
+        setMemberItems([])
       }
     }
 
