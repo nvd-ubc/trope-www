@@ -94,6 +94,12 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
+          >
+            Workflows
+          </Link>
+          <Link
             href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/members`}
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
           >

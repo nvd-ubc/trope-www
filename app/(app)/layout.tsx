@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import SignOutForm from './signout-form'
 import WorkspaceSwitcher from './workspace-switcher'
+import WorkflowsNavLink from './workflows-nav-link'
 
 export default function AppLayout({
   children,
@@ -19,6 +20,7 @@ export default function AppLayout({
               <Link className="hover:text-slate-900" href="/dashboard">
                 Dashboard
               </Link>
+              <WorkflowsNavLink className="hover:text-slate-900" />
               <Link className="hover:text-slate-900" href="/dashboard/workspaces">
                 Workspaces
               </Link>
