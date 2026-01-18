@@ -187,9 +187,8 @@ export const setAuthCookies = (
   tokens: AuthTokens,
   options?: { rememberRefresh?: boolean }
 ): void => {
-  const config = getAuthConfig()
   const expiresAt = Date.now() + tokens.expiresIn * 1000
-  const secure = config.isProd
+  const secure = process.env.NODE_ENV === 'production'
   const base = { httpOnly: true, sameSite: 'lax' as const, secure, path: '/' }
 
   response.cookies.set(ACCESS_COOKIE, tokens.accessToken, {

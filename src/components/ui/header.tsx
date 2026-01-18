@@ -2,8 +2,12 @@ import Link from 'next/link'
 import Logo from './logo'
 import MobileMenu from './mobile-menu'
 import { CONTACT_EMAIL } from '@/lib/constants'
+import { readAuthSession } from '@/lib/server/auth'
 
-export default function Header() {
+export default async function Header() {
+  const session = await readAuthSession()
+  const isAuthenticated = Boolean(session?.accessToken || session?.refreshToken)
+
   return (
     <header className="absolute w-full z-30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -29,7 +33,12 @@ export default function Header() {
           {/* Desktop CTA */}
           <ul className="flex-1 flex justify-end items-center">
             <li>
-              <Link className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out" href="/signin">Sign in</Link>
+              <Link
+                className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out"
+                href={isAuthenticated ? '/dashboard' : '/signin'}
+              >
+                {isAuthenticated ? 'Dashboard' : 'Sign in'}
+              </Link>
             </li>
             <li className="ml-6">
               <a
@@ -42,7 +51,7 @@ export default function Header() {
             </li>
           </ul>
 
-          <MobileMenu />
+          <MobileMenu isAuthenticated={isAuthenticated} />
 
         </div>
       </div>
