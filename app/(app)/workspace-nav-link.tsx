@@ -9,6 +9,31 @@ type OrgListResponse = {
   default_org_id?: string | null
 }
 
+let orgListCache: OrgListResponse | null | undefined
+let orgListPromise: Promise<OrgListResponse | null> | null = null
+
+const loadOrgList = async () => {
+  if (orgListCache !== undefined) {
+    return orgListCache
+  }
+  if (!orgListPromise) {
+    orgListPromise = (async () => {
+      try {
+        const response = await fetch('/api/orgs', { cache: 'no-store' })
+        if (!response.ok) return null
+        return (await response.json().catch(() => null)) as OrgListResponse | null
+      } catch {
+        return null
+      } finally {
+        orgListPromise = null
+      }
+    })()
+  }
+  const payload = await orgListPromise
+  orgListCache = payload
+  return payload
+}
+
 const parseActiveOrgId = (pathname: string) => {
   const match = pathname.match(/\/dashboard\/workspaces\/([^/]+)/)
   return match ? decodeURIComponent(match[1]) : null
@@ -30,15 +55,9 @@ export default function WorkspaceNavLink({
     let active = true
 
     const load = async () => {
-      try {
-        const response = await fetch('/api/orgs', { cache: 'no-store' })
-        if (!response.ok) return
-        const payload = (await response.json().catch(() => null)) as OrgListResponse | null
-        if (!active) return
-        setDefaultOrgId(payload?.default_org_id ?? null)
-      } catch {
-        if (!active) return
-      }
+      const payload = await loadOrgList()
+      if (!active) return
+      setDefaultOrgId(payload?.default_org_id ?? null)
     }
 
     load()
