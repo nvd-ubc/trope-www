@@ -178,6 +178,11 @@ export default function CommandPalette() {
       setIsOpen(false)
       return
     }
+    if (!activeOrgId) {
+      router.push('/dashboard/workspaces')
+      setIsOpen(false)
+      return
+    }
     const base = activeOrgId
       ? `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}`
       : '/dashboard/workspaces'
