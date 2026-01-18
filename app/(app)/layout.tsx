@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import Logo from '@/components/ui/logo'
 import SignOutForm from './signout-form'
 import WorkspaceSwitcher from './workspace-switcher'
-import WorkflowsNavLink from './workflows-nav-link'
+import WorkspaceNavLink from './workspace-nav-link'
+import CommandPalette from './command-palette'
 
 export default function AppLayout({
   children,
@@ -9,37 +11,69 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   return (
-    <>
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="text-lg font-semibold text-slate-900">
-              Trope
+    <div className="min-h-screen bg-[color:var(--trope-surface)] text-slate-900">
+      <CommandPalette />
+      <div className="flex min-h-screen">
+        <aside className="hidden w-64 flex-col border-r border-slate-200/80 bg-white lg:flex">
+          <div className="flex items-center justify-between px-6 py-6">
+            <Logo />
+          </div>
+          <nav className="flex-1 space-y-1 px-4 text-sm text-slate-600">
+            <Link
+              className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+              href="/dashboard"
+            >
+              Dashboard
             </Link>
-            <nav className="hidden items-center gap-4 text-sm text-slate-600 md:flex">
-              <Link className="hover:text-slate-900" href="/dashboard">
-                Dashboard
-              </Link>
-              <WorkflowsNavLink className="hover:text-slate-900" />
-              <Link className="hover:text-slate-900" href="/dashboard/workspaces">
-                Workspaces
-              </Link>
-              <Link className="hover:text-slate-900" href="/dashboard/account">
-                Account
-              </Link>
-            </nav>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="workflows">
+              Workflows
+            </WorkspaceNavLink>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="runs">
+              Runs
+            </WorkspaceNavLink>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="alerts">
+              Alerts
+            </WorkspaceNavLink>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="compliance">
+              Compliance
+            </WorkspaceNavLink>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="members">
+              Members
+            </WorkspaceNavLink>
+            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="settings">
+              Settings
+            </WorkspaceNavLink>
+            <Link
+              className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
+              href="/dashboard/account"
+            >
+              Account
+            </Link>
+          </nav>
+          <div className="px-6 py-6 text-xs text-slate-400">
+            Tip: Press <span className="font-semibold text-slate-600">⌘K</span> to jump around.
           </div>
-          <div className="flex items-center gap-3">
-            <WorkspaceSwitcher />
-            <SignOutForm />
-          </div>
+        </aside>
+        <div className="flex min-h-screen flex-1 flex-col">
+          <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+            <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
+              <div className="flex items-center gap-3">
+                <div className="lg:hidden">
+                  <Logo />
+                </div>
+                <div className="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 sm:flex">
+                  Press ⌘K to search
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <WorkspaceSwitcher />
+                <SignOutForm />
+              </div>
+            </div>
+          </header>
+          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
         </div>
-      </header>
-      <main className="grow bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-          {children}
-        </div>
-      </main>
-    </>
+      </div>
+    </div>
   )
 }

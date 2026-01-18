@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 
 type MemberRecord = {
@@ -39,6 +39,7 @@ const formatDate = (value?: string) => {
 
 export default function MembersClient({ orgId }: { orgId: string }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { token: csrfToken } = useCsrfToken()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,8 +47,16 @@ export default function MembersClient({ orgId }: { orgId: string }) {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [pendingAction, setPendingAction] = useState<string | null>(null)
   const [roleOverrides, setRoleOverrides] = useState<Record<string, string>>({})
+  const queryFromUrl = searchParams.get('query') ?? ''
+  const [query, setQuery] = useState(queryFromUrl)
 
-  const loadMembers = async () => {
+  useEffect(() => {
+    if (queryFromUrl !== query) {
+      setQuery(queryFromUrl)
+    }
+  }, [queryFromUrl, query])
+
+  const loadMembers = useCallback(async () => {
     const [membersRes, meRes] = await Promise.all([
       fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, { cache: 'no-store' }),
       fetch('/api/me', { cache: 'no-store' }),
@@ -69,7 +78,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
     if (mePayload?.sub) {
       setCurrentUserId(mePayload.sub)
     }
-  }
+  }, [orgId, router])
 
   useEffect(() => {
     let active = true
@@ -88,7 +97,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [orgId])
+  }, [loadMembers])
 
   const ownerCount = useMemo(
     () => members.filter((member) => member.role === 'org_owner' && member.status === 'active').length,
@@ -99,6 +108,15 @@ export default function MembersClient({ orgId }: { orgId: string }) {
     () => members.find((member) => member.user_id === currentUserId) ?? null,
     [members, currentUserId]
   )
+
+  const filteredMembers = useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    if (!normalized) return members
+    return members.filter((member) => {
+      const label = `${member.email ?? ''} ${member.display_name ?? ''} ${member.user_id}`.toLowerCase()
+      return label.includes(normalized)
+    })
+  }, [members, query])
 
   const canManage = currentMember?.role === 'org_owner' || currentMember?.role === 'org_admin'
   const canPromoteOwner = currentMember?.role === 'org_owner'
@@ -217,9 +235,24 @@ export default function MembersClient({ orgId }: { orgId: string }) {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-slate-500">{filteredMembers.length} members</div>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Search members"
+          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+        />
+      </div>
+
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="space-y-4">
-          {members.map((member) => {
+          {filteredMembers.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+              No members match this search.
+            </div>
+          )}
+          {filteredMembers.map((member) => {
             const isYou = member.user_id === currentUserId
             const isRemoved = member.status !== 'active'
             const isLastOwner = member.role === 'org_owner' && ownerCount <= 1

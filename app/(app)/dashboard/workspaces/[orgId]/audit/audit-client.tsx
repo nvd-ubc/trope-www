@@ -1,8 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Button from '@/components/ui/button'
+import Card from '@/components/ui/card'
+import Input from '@/components/ui/input'
+import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
 
 type AuditEvent = {
   actor_user_id: string
@@ -19,6 +23,18 @@ type AuditEvent = {
 type AuditResponse = {
   events: AuditEvent[]
   next_cursor?: string | null
+}
+
+type MemberRecord = {
+  user_id: string
+  role: string
+  status: string
+  email?: string
+  display_name?: string
+}
+
+type MembersResponse = {
+  members: MemberRecord[]
 }
 
 const formatDateTime = (value?: string) => {
@@ -50,23 +66,49 @@ const buildResourceLabel = (event: AuditEvent) => {
   return null
 }
 
+const formatMemberLabel = (member: MemberRecord) => {
+  if (member.display_name && member.email) {
+    return `${member.display_name} (${member.email})`
+  }
+  if (member.display_name) return member.display_name
+  if (member.email) return member.email
+  return member.user_id
+}
+
 export default function AuditClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [requestId, setRequestId] = useState<string | null>(null)
   const [forbidden, setForbidden] = useState(false)
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
+  const [memberMap, setMemberMap] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('newest')
 
-  const loadEvents = async (cursor?: string, append = false) => {
-    const query = new URLSearchParams()
-    query.set('limit', '25')
+  const loadMembers = useCallback(async () => {
+    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
+      cache: 'no-store',
+    })
+    if (!response.ok) return
+    const payload = (await response.json().catch(() => null)) as MembersResponse | null
+    const map: Record<string, string> = {}
+    for (const member of payload?.members ?? []) {
+      map[member.user_id] = formatMemberLabel(member)
+    }
+    setMemberMap(map)
+  }, [orgId])
+
+  const loadEvents = useCallback(async (cursor?: string, append = false) => {
+    const queryParams = new URLSearchParams()
+    queryParams.set('limit', '25')
     if (cursor) {
-      query.set('cursor', cursor)
+      queryParams.set('cursor', cursor)
     }
     const response = await fetch(
-      `/api/orgs/${encodeURIComponent(orgId)}/audit?${query.toString()}`,
+      `/api/orgs/${encodeURIComponent(orgId)}/audit?${queryParams.toString()}`,
       { cache: 'no-store' }
     )
 
@@ -83,18 +125,19 @@ export default function AuditClient({ orgId }: { orgId: string }) {
 
     const payload = (await response.json().catch(() => null)) as AuditResponse | null
     if (!response.ok || !payload) {
+      setRequestId(response.headers.get('x-trope-request-id'))
       throw new Error('Unable to load audit log.')
     }
 
     setEvents((prev) => (append ? [...prev, ...(payload.events ?? [])] : payload.events ?? []))
     setNextCursor(payload.next_cursor ?? null)
-  }
+  }, [orgId, router])
 
   useEffect(() => {
     let active = true
     const run = async () => {
       try {
-        await loadEvents()
+        await Promise.all([loadEvents(), loadMembers()])
         if (!active) return
         setLoading(false)
       } catch (err) {
@@ -107,12 +150,13 @@ export default function AuditClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [orgId])
+  }, [loadEvents, loadMembers])
 
   const handleLoadMore = async () => {
     if (!nextCursor) return
     setLoadingMore(true)
     setError(null)
+    setRequestId(null)
     try {
       await loadEvents(nextCursor, true)
     } catch (err) {
@@ -122,15 +166,89 @@ export default function AuditClient({ orgId }: { orgId: string }) {
     }
   }
 
+  const filtered = useMemo(() => {
+    const normalized = query.trim().toLowerCase()
+    const filteredList = events.filter((event) => {
+      if (!normalized) return true
+      const action = event.action.toLowerCase()
+      const actor = (memberMap[event.actor_user_id] ?? event.actor_user_id).toLowerCase()
+      const resource = buildResourceLabel(event)?.toLowerCase() ?? ''
+      return (
+        action.includes(normalized) ||
+        actor.includes(normalized) ||
+        resource.includes(normalized) ||
+        event.actor_user_id.toLowerCase().includes(normalized)
+      )
+    })
+
+    const sorted = [...filteredList]
+    sorted.sort((a, b) => {
+      if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      }
+      if (sortBy === 'action') {
+        return a.action.localeCompare(b.action)
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+    return sorted
+  }, [events, query, memberMap, sortBy])
+
+  const exportCsv = () => {
+    const rows = [
+      ['created_at', 'action', 'actor', 'actor_id', 'resource', 'ip', 'user_agent'],
+      ...filtered.map((event) => [
+        event.created_at,
+        event.action,
+        memberMap[event.actor_user_id] ?? event.actor_user_id,
+        event.actor_user_id,
+        buildResourceLabel(event) ?? '',
+        event.ip ?? '',
+        event.user_agent ?? '',
+      ]),
+    ]
+    const csv = rows
+      .map((row) => row.map((value) => `"${String(value).replace(/\"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `trope-audit-${orgId}.csv`)
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const copyRequestId = async () => {
+    if (!requestId) return
+    try {
+      await navigator.clipboard.writeText(requestId)
+    } catch {
+      // ignore
+    }
+  }
+
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading audit log…</div>
+    return <Card className="p-6 text-sm text-slate-600">Loading audit log…</Card>
   }
 
   if (error && events.length === 0) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
         {error}
-      </div>
+        {requestId && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+            <span>Request ID: {requestId}</span>
+            <button
+              onClick={copyRequestId}
+              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
+            >
+              Copy
+            </button>
+          </div>
+        )}
+      </Card>
     )
   }
 
@@ -140,99 +258,127 @@ export default function AuditClient({ orgId }: { orgId: string }) {
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Audit log</h1>
           <p className="mt-1 text-sm text-slate-600">
-            Track membership changes, invite actions, and workspace updates.
+            Track membership changes, invite actions, and workflow governance updates.
           </p>
         </div>
         <Link
           href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80"
+          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
         >
           Back to workspace
         </Link>
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error}
-        </div>
+          {requestId && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+              <span>Request ID: {requestId}</span>
+              <button
+                onClick={copyRequestId}
+                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
+              >
+                Copy
+              </button>
+            </div>
+          )}
+        </Card>
       )}
 
       {forbidden && events.length === 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <Card className="border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
           You need admin access to view audit events.
-        </div>
+        </Card>
       )}
 
-      <div className="space-y-4">
-        {events.length === 0 && !forbidden && (
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
-            No audit events yet.
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm text-slate-500">{filtered.length} events</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value)}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="action">Action A–Z</option>
+          </select>
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search actions, actors, resources"
+            className="w-72"
+          />
+          <Button variant="outline" size="sm" onClick={exportCsv}>
+            Export CSV
+          </Button>
+        </div>
+      </div>
+
+      <Card className="overflow-hidden">
+        {events.length === 0 && !forbidden ? (
+          <div className="p-6 text-sm text-slate-500">No audit events yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableHeaderCell>Timestamp</TableHeaderCell>
+                  <TableHeaderCell>Action</TableHeaderCell>
+                  <TableHeaderCell>Actor</TableHeaderCell>
+                  <TableHeaderCell>Resource</TableHeaderCell>
+                  <TableHeaderCell>IP</TableHeaderCell>
+                  <TableHeaderCell>User agent</TableHeaderCell>
+                </TableRow>
+              </TableHead>
+              <tbody>
+                {filtered.map((event, index) => {
+                  const resourceLabel = buildResourceLabel(event)
+                  const actorLabel = memberMap[event.actor_user_id] ?? event.actor_user_id
+                  return (
+                    <TableRow key={`${event.created_at}-${event.action}-${index}`}>
+                      <TableCell>{formatDateTime(event.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm font-semibold text-slate-900">
+                          {formatAction(event.action)}
+                        </div>
+                        {event.metadata && Object.keys(event.metadata).length > 0 && (
+                          <div className="mt-1 text-xs text-slate-500">
+                            {Object.entries(event.metadata)
+                              .map(([key, value]) => `${key}: ${value}`)
+                              .join(' · ')}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-slate-700">{actorLabel}</div>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(event.actor_user_id)}
+                          className="mt-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
+                        >
+                          Copy ID
+                        </button>
+                      </TableCell>
+                      <TableCell>{resourceLabel ?? '—'}</TableCell>
+                      <TableCell>{event.ip ?? '—'}</TableCell>
+                      <TableCell className="max-w-[220px] truncate text-xs text-slate-500">
+                        {event.user_agent ?? '—'}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </tbody>
+            </Table>
           </div>
         )}
-        {events.map((event, index) => {
-          const resourceLabel = buildResourceLabel(event)
-          return (
-            <div
-              key={`${event.created_at}-${event.action}-${index}`}
-              className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-slate-900">
-                    {formatAction(event.action)}
-                  </div>
-                  <div className="text-xs text-slate-500">{formatDateTime(event.created_at)}</div>
-                </div>
-                {resourceLabel && (
-                  <div className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-600">
-                    {resourceLabel}
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 grid gap-2 text-xs text-slate-600">
-                <div>
-                  <span className="font-medium text-slate-700">Actor</span>: {event.actor_user_id}
-                </div>
-                {event.ip && (
-                  <div>
-                    <span className="font-medium text-slate-700">IP</span>: {event.ip}
-                  </div>
-                )}
-                {event.user_agent && (
-                  <div>
-                    <span className="font-medium text-slate-700">User agent</span>: {event.user_agent}
-                  </div>
-                )}
-              </div>
-
-              {event.metadata && Object.keys(event.metadata).length > 0 && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Metadata</div>
-                  <div className="mt-2 grid gap-2 text-xs text-slate-600">
-                    {Object.entries(event.metadata).map(([key, value]) => (
-                      <div key={key} className="flex flex-wrap justify-between gap-2">
-                        <span className="font-medium text-slate-700">{key}</span>
-                        <span className="text-slate-600">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      </Card>
 
       {nextCursor && !forbidden && (
         <div className="flex justify-center">
-          <button
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
-            onClick={handleLoadMore}
-            disabled={loadingMore}
-          >
+          <Button variant="outline" size="md" onClick={handleLoadMore} disabled={loadingMore}>
             {loadingMore ? 'Loading…' : 'Load more'}
-          </button>
+          </Button>
         </div>
       )}
     </div>

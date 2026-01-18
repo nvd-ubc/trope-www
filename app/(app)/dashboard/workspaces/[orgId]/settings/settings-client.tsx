@@ -10,6 +10,9 @@ type OrgProfile = {
   name: string
   created_at: string
   created_by: string
+  run_retention_days?: number | null
+  alert_digest_enabled?: boolean | null
+  alert_digest_hour_utc?: number | null
 }
 
 type OrgMembership = {
@@ -45,11 +48,15 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
   const { token: csrfToken } = useCsrfToken()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [requestId, setRequestId] = useState<string | null>(null)
   const [org, setOrg] = useState<OrgProfile | null>(null)
   const [membership, setMembership] = useState<OrgMembership | null>(null)
   const [owners, setOwners] = useState<MemberRecord[]>([])
   const [ownersError, setOwnersError] = useState<string | null>(null)
   const [name, setName] = useState('')
+  const [runRetentionDays, setRunRetentionDays] = useState('')
+  const [alertDigestEnabled, setAlertDigestEnabled] = useState(false)
+  const [alertDigestHour, setAlertDigestHour] = useState('9')
   const [saving, setSaving] = useState(false)
   const [supportError, setSupportError] = useState<string | null>(null)
   const [supportLoading, setSupportLoading] = useState(false)
@@ -75,10 +82,20 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
     })
   }
 
+  const copyRequestId = async () => {
+    if (!requestId) return
+    try {
+      await navigator.clipboard.writeText(requestId)
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     let active = true
     const run = async () => {
       try {
+        setRequestId(null)
         setOwners([])
         setOwnersError(null)
         setSupportToken(null)
@@ -97,6 +114,17 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
         if (!active) return
         setOrg(payload.org)
         setName(payload.org?.name ?? '')
+        setRunRetentionDays(
+          typeof payload.org?.run_retention_days === 'number'
+            ? String(payload.org.run_retention_days)
+            : ''
+        )
+        setAlertDigestEnabled(payload.org?.alert_digest_enabled ?? false)
+        setAlertDigestHour(
+          typeof payload.org?.alert_digest_hour_utc === 'number'
+            ? String(payload.org.alert_digest_hour_utc)
+            : '9'
+        )
         setMembership(payload.membership ?? null)
 
         if (payload.membership?.role === 'org_owner' || payload.membership?.role === 'org_admin') {
@@ -146,8 +174,17 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
       setError('Workspace name is required.')
       return
     }
+    const retentionValue = Number.parseInt(runRetentionDays, 10)
+    const retentionDays =
+      Number.isFinite(retentionValue) && retentionValue > 0 ? retentionValue : null
+    const digestHourValue = Number.parseInt(alertDigestHour, 10)
+    const digestHour =
+      Number.isFinite(digestHourValue) && digestHourValue >= 0 && digestHourValue <= 23
+        ? digestHourValue
+        : null
     setSaving(true)
     setError(null)
+    setRequestId(null)
     try {
       const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}`, {
         method: 'PATCH',
@@ -155,10 +192,16 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
           'content-type': 'application/json',
           'x-csrf-token': csrfToken,
         },
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          run_retention_days: retentionDays,
+          alert_digest_enabled: alertDigestEnabled,
+          alert_digest_hour_utc: alertDigestEnabled ? digestHour : null,
+        }),
       })
       const payload = (await response.json().catch(() => null)) as OrgProfileResponse | null
       if (!response.ok) {
+        setRequestId(response.headers.get('x-trope-request-id'))
         const message = (payload as unknown as { message?: string })?.message
         throw new Error(message || 'Unable to update workspace.')
       }
@@ -254,6 +297,8 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
     return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading settings…</div>
   }
 
+  const digestHourOptions = Array.from({ length: 24 }, (_, idx) => idx)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -272,6 +317,17 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
       {error && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
           {error}
+          {requestId && (
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+              <span>Request ID: {requestId}</span>
+              <button
+                onClick={copyRequestId}
+                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
+              >
+                Copy
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -295,6 +351,67 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
         </form>
         {!isAdmin && (
           <p className="mt-3 text-xs text-slate-500">Admin access is required to rename a workspace.</p>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <h2 className="text-base font-semibold text-slate-900">Workflow defaults</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Configure retention and alert cadence for workflow reliability reporting.
+        </p>
+        <form className="mt-4 space-y-4" onSubmit={handleSave}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="space-y-2 text-sm text-slate-700">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Run retention (days)
+              </span>
+              <input
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+                value={runRetentionDays}
+                onChange={(event) => setRunRetentionDays(event.target.value)}
+                placeholder="e.g. 90"
+                disabled={!isAdmin}
+              />
+            </label>
+            <label className="space-y-2 text-sm text-slate-700">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Alert digest hour (UTC)
+              </span>
+              <select
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+                value={alertDigestHour}
+                onChange={(event) => setAlertDigestHour(event.target.value)}
+                disabled={!isAdmin || !alertDigestEnabled}
+              >
+                {digestHourOptions.map((hour) => (
+                  <option key={hour} value={hour}>
+                    {hour.toString().padStart(2, '0')}:00
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={alertDigestEnabled}
+              onChange={(event) => setAlertDigestEnabled(event.target.checked)}
+              disabled={!isAdmin}
+            />
+            Enable daily alert digest
+          </label>
+
+          <button
+            className="rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={saving || !csrfToken || !isAdmin}
+            type="submit"
+          >
+            {saving ? 'Saving…' : 'Save defaults'}
+          </button>
+        </form>
+        {!isAdmin && (
+          <p className="mt-3 text-xs text-slate-500">Admin access is required to update defaults.</p>
         )}
       </div>
 

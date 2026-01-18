@@ -148,6 +148,12 @@
   looks the same as it did with Tailwind CSS v3.
 */
 @layer base {
+  :root {
+    --trope-accent: #1861c8;
+    --trope-accent-soft: #61aff9;
+    --trope-surface: #f8fafc;
+  }
+
   *,
   ::after,
   ::before,

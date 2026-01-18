@@ -29,3 +29,30 @@ export async function DELETE(
     { method: 'DELETE' }
   )
 }
+
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ orgId: string; workflowId: string }> }
+) {
+  const csrfFailure = await validateCsrf(request)
+  if (csrfFailure) {
+    return csrfErrorResponse(csrfFailure)
+  }
+
+  let payload: unknown
+  try {
+    payload = await request.json()
+  } catch {
+    payload = {}
+  }
+
+  const { orgId, workflowId } = await context.params
+  return proxyBackendRequest(
+    `/v1/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload ?? {}),
+    }
+  )
+}
