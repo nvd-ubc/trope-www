@@ -175,7 +175,7 @@ export default function WorkspacesClient() {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="text-sm font-semibold text-slate-900">
-              {org.name || org.org_id}
+              {org.name || 'Workspace'}
             </div>
             {isDefault && (
               <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700">

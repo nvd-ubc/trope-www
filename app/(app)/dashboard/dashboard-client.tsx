@@ -411,7 +411,7 @@ export default function DashboardClient() {
           <div className="mt-4 space-y-3 text-sm text-slate-600">
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Signed in as</div>
-              <div className="text-slate-900">{me.email ?? me.sub}</div>
+              <div className="text-slate-900">{me.email ?? 'Unknown account'}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Plan</div>
@@ -428,7 +428,9 @@ export default function DashboardClient() {
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Personal workspace</div>
-              <div className="text-slate-900">{personalOrg?.name ?? me.personal_org_id ?? 'Not set'}</div>
+              <div className="text-slate-900">
+                {personalOrg?.name ?? (me.personal_org_id ? 'Personal workspace' : 'Not set')}
+              </div>
             </div>
           </div>
         </div>
@@ -470,7 +472,7 @@ export default function DashboardClient() {
                 className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:border-slate-300"
               >
                 <div>
-                  <div className="font-semibold text-slate-900">{invite.org_name || invite.org_id}</div>
+                  <div className="font-semibold text-slate-900">{invite.org_name || 'Workspace'}</div>
                   <div className="text-xs text-slate-500">
                     Role {invite.role.replace('org_', '')}
                   </div>

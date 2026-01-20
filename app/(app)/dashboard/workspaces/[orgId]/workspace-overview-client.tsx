@@ -275,7 +275,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{org.name || org.org_id}</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">{org.name || 'Workspace'}</h1>
           <p className="mt-1 text-sm text-slate-600">
             Created {formatDate(org.created_at)} · Role {membership.role.replace('org_', '')}
           </p>
@@ -458,8 +458,8 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         <h2 className="text-base font-semibold text-slate-900">Workspace summary</h2>
         <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Workspace ID</div>
-            <div className="text-slate-900">{org.org_id}</div>
+            <div className="text-xs uppercase tracking-wide text-slate-400">Workspace</div>
+            <div className="text-slate-900">{org.name || 'Workspace'}</div>
           </div>
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-400">Role</div>
