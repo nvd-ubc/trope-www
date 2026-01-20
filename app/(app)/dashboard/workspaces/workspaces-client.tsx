@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
@@ -37,8 +37,9 @@ export default function WorkspacesClient() {
   const [personalOrgId, setPersonalOrgId] = useState<string | null>(null)
   const [createName, setCreateName] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
-  const loadOrgs = async () => {
+  const loadOrgs = useCallback(async () => {
     const response = await fetch('/api/orgs', { cache: 'no-store' })
     if (response.status === 401) {
       router.replace('/signin?next=/dashboard/workspaces')
@@ -51,7 +52,7 @@ export default function WorkspacesClient() {
     setOrgs(payload.orgs ?? [])
     setDefaultOrgId(payload.default_org_id ?? null)
     setPersonalOrgId(payload.personal_org_id ?? null)
-  }
+  }, [router])
 
   useEffect(() => {
     let active = true
@@ -70,17 +71,22 @@ export default function WorkspacesClient() {
     return () => {
       active = false
     }
-  }, [])
+  }, [loadOrgs])
 
-  const sortedOrgs = useMemo(() => {
-    const list = [...orgs]
+  const teamOrgs = useMemo(() => {
+    const list = orgs.filter((org) => org.org_id !== personalOrgId)
     list.sort((a, b) => {
       if (a.org_id === defaultOrgId) return -1
       if (b.org_id === defaultOrgId) return 1
       return (a.name || a.org_id).localeCompare(b.name || b.org_id)
     })
     return list
-  }, [orgs, defaultOrgId])
+  }, [orgs, personalOrgId, defaultOrgId])
+
+  const personalOrg = useMemo(
+    () => orgs.find((org) => org.org_id === personalOrgId) ?? null,
+    [orgs, personalOrgId]
+  )
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -119,6 +125,9 @@ export default function WorkspacesClient() {
       if (payload?.org && !payload?.default_org_id) {
         notifyOrgListUpdated()
       }
+      if (payload?.org && payload?.default_org_id === payload.org.org_id) {
+        setNotice(`Default workspace updated to ${payload.org.name || 'your new workspace'}.`)
+      }
       setCreateName('')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to create workspace.')
@@ -146,11 +155,61 @@ export default function WorkspacesClient() {
       }
       setDefaultOrgId(orgId)
       notifyOrgListUpdated()
+      const orgName = orgs.find((org) => org.org_id === orgId)?.name
+      setNotice(`Default workspace updated to ${orgName || 'selected workspace'}.`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to update default workspace.')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const renderOrgCard = (org: OrgSummary) => {
+    const isDefault = org.org_id === defaultOrgId
+    const isPersonal = org.org_id === personalOrgId
+    return (
+      <div
+        key={org.org_id}
+        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4"
+      >
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="text-sm font-semibold text-slate-900">
+              {org.name || org.org_id}
+            </div>
+            {isDefault && (
+              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                Default
+              </span>
+            )}
+            {isPersonal && (
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                Personal
+              </span>
+            )}
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+              {org.role.replace('org_', '')}
+            </span>
+          </div>
+          <div className="text-xs text-slate-500">Created {formatDate(org.created_at)}</div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(org.org_id)}`}
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
+          >
+            Open
+          </Link>
+          <button
+            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isDefault || submitting || !csrfToken}
+            onClick={() => handleMakeDefault(org.org_id)}
+          >
+            Make default
+          </button>
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -160,6 +219,11 @@ export default function WorkspacesClient() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="space-y-4">
+        {notice && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {notice}
+          </div>
+        )}
         {error && (
           <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
             {error}
@@ -181,59 +245,32 @@ export default function WorkspacesClient() {
             </Link>
           </div>
 
-          <div className="mt-6 space-y-3">
-            {sortedOrgs.length === 0 && (
+          <div className="mt-6 space-y-6">
+            {orgs.length === 0 && (
               <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
                 No workspaces yet. Create one to get started.
               </div>
             )}
-            {sortedOrgs.map((org) => {
-              const isDefault = org.org_id === defaultOrgId
-              const isPersonal = org.org_id === personalOrgId
-              return (
-                <div
-                  key={org.org_id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4"
-                >
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="text-sm font-semibold text-slate-900">
-                        {org.name || org.org_id}
-                      </div>
-                      {isDefault && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700">
-                          Default
-                        </span>
-                      )}
-                      {isPersonal && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                          Personal
-                        </span>
-                      )}
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                        {org.role.replace('org_', '')}
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-500">Created {formatDate(org.created_at)}</div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/dashboard/workspaces/${encodeURIComponent(org.org_id)}`}
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
-                    >
-                      Open
-                    </Link>
-                    <button
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={isDefault || submitting || !csrfToken}
-                      onClick={() => handleMakeDefault(org.org_id)}
-                    >
-                      Make default
-                    </button>
-                  </div>
+
+            {teamOrgs.length > 0 && (
+              <div className="space-y-3">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  Team workspaces
                 </div>
-              )
-            })}
+                {teamOrgs.map(renderOrgCard)}
+              </div>
+            )}
+
+            {personalOrg && (
+              <div className="space-y-3">
+                {teamOrgs.length > 0 && (
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    Personal workspace
+                  </div>
+                )}
+                {renderOrgCard(personalOrg)}
+              </div>
+            )}
           </div>
         </div>
       </div>

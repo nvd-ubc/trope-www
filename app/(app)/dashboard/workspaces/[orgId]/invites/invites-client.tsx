@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
@@ -20,6 +20,10 @@ type InviteRecord = {
 
 type InvitesResponse = {
   invites: InviteRecord[]
+  email_delivery?: {
+    enabled: boolean
+    reason?: string | null
+  }
 }
 
 const roleOptions = [
@@ -34,6 +38,14 @@ const formatDate = (value?: string | number) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const formatInviteEmailReason = (reason?: string | null) => {
+  if (!reason) return 'Invite email was not sent. Copy the link instead.'
+  if (reason === 'disabled') return 'Invite email delivery is disabled. Copy the link instead.'
+  if (reason === 'missing_config') return 'Invite email is not configured. Copy the link instead.'
+  if (reason === 'failed') return 'Invite email failed to send. Copy the link instead.'
+  return `Invite email not sent (${reason}). Copy the link instead.`
+}
+
 export default function InvitesClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const { token: csrfToken } = useCsrfToken()
@@ -45,8 +57,10 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
   const [submitting, setSubmitting] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [resentId, setResentId] = useState<string | null>(null)
+  const [emailDelivery, setEmailDelivery] = useState<InvitesResponse['email_delivery'] | null>(null)
+  const [emailStatus, setEmailStatus] = useState<{ tone: 'success' | 'warning'; message: string } | null>(null)
 
-  const loadInvites = async () => {
+  const loadInvites = useCallback(async () => {
     const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/invites`, { cache: 'no-store' })
     if (response.status === 401) {
       router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/invites`)
@@ -57,7 +71,8 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
       throw new Error('Unable to load invites.')
     }
     setInvites(payload.invites ?? [])
-  }
+    setEmailDelivery(payload.email_delivery ?? null)
+  }, [orgId, router])
 
   useEffect(() => {
     let active = true
@@ -76,7 +91,7 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [orgId])
+  }, [loadInvites, orgId])
 
   const pendingInvites = useMemo(() => {
     const now = Date.now() / 1000
@@ -102,6 +117,8 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
     [invites]
   )
 
+  const emailDisabled = emailDelivery?.enabled === false
+
   const handleCreateInvite = async (event: React.FormEvent) => {
     event.preventDefault()
     if (!csrfToken) return
@@ -121,12 +138,21 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
         },
         body: JSON.stringify({ email: email.trim(), role }),
       })
-      const payload = (await response.json().catch(() => null)) as { invite?: InviteRecord; message?: string } | null
+      const payload = (await response.json().catch(() => null)) as
+        | { invite?: InviteRecord; message?: string; email_sent?: boolean; reason?: string | null }
+        | null
       if (!response.ok) {
         throw new Error(payload?.message || 'Unable to create invite.')
       }
       if (payload?.invite) {
         setInvites((prev) => [payload.invite as InviteRecord, ...prev])
+      }
+      if (payload?.email_sent === false) {
+        setEmailStatus({ tone: 'warning', message: formatInviteEmailReason(payload?.reason) })
+        setTimeout(() => setEmailStatus(null), 4000)
+      } else if (payload?.email_sent === true) {
+        setEmailStatus({ tone: 'success', message: 'Invite email sent.' })
+        setTimeout(() => setEmailStatus(null), 3000)
       }
       setEmail('')
       setRole('org_member')
@@ -187,12 +213,21 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
           },
         }
       )
-      const payload = (await response.json().catch(() => null)) as { message?: string } | null
+      const payload = (await response.json().catch(() => null)) as
+        | { message?: string; email_sent?: boolean; reason?: string | null }
+        | null
       if (!response.ok) {
         throw new Error(payload?.message || 'Unable to resend invite.')
       }
       setResentId(invite.invite_id)
       setTimeout(() => setResentId(null), 2000)
+      if (payload?.email_sent === false) {
+        setEmailStatus({ tone: 'warning', message: formatInviteEmailReason(payload?.reason) })
+        setTimeout(() => setEmailStatus(null), 4000)
+      } else if (payload?.email_sent === true) {
+        setEmailStatus({ tone: 'success', message: 'Invite email sent.' })
+        setTimeout(() => setEmailStatus(null), 3000)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to resend invite.')
     } finally {
@@ -241,6 +276,22 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
           {error}
         </div>
       )}
+      {emailStatus && (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            emailStatus.tone === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border-amber-200 bg-amber-50 text-amber-800'
+          }`}
+        >
+          {emailStatus.message}
+        </div>
+      )}
+      {emailDelivery && emailDelivery.enabled === false && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {formatInviteEmailReason(emailDelivery.reason)}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <div className="space-y-6">
@@ -265,17 +316,25 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
-                      className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
+                      className={
+                        emailDisabled
+                          ? 'rounded-full bg-[#1861C8] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#2171d8]'
+                          : 'rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900'
+                      }
                       onClick={() => handleCopyLink(invite)}
                     >
                       {copiedId === invite.invite_id ? 'Copied' : 'Copy link'}
                     </button>
                     <button
                       className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={submitting || !csrfToken}
+                      disabled={submitting || !csrfToken || emailDisabled}
                       onClick={() => handleResend(invite)}
                     >
-                      {resentId === invite.invite_id ? 'Sent' : 'Resend email'}
+                      {emailDisabled
+                        ? 'Email disabled'
+                        : resentId === invite.invite_id
+                          ? 'Sent'
+                          : 'Resend email'}
                     </button>
                     <button
                       className="rounded-full border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:border-rose-300 hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
@@ -345,6 +404,11 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
             <p className="mt-1 text-sm text-slate-600">
               Send a secure link and onboard them to this workspace.
             </p>
+            {emailDisabled && (
+              <p className="mt-2 text-xs text-amber-700">
+                Invite email delivery is disabled. Use “Copy link” after creating the invite.
+              </p>
+            )}
             <form className="mt-4 space-y-3" onSubmit={handleCreateInvite}>
               <input
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"

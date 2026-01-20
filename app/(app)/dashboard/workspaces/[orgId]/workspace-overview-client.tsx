@@ -12,6 +12,9 @@ type OrgProfile = {
   name: string
   created_at?: string
   created_by?: string
+  run_retention_days?: number | null
+  alert_digest_enabled?: boolean | null
+  alert_digest_hour_utc?: number | null
 }
 
 type OrgMembership = {
@@ -25,6 +28,22 @@ type OrgMembership = {
 type OrgProfileResponse = {
   org: OrgProfile
   membership: OrgMembership
+}
+
+type OrgMembersResponse = {
+  members: OrgMembership[]
+}
+
+type OrgInviteRecord = {
+  invite_id: string
+  email: string
+  role: string
+  status: string
+  created_at: string
+}
+
+type OrgInvitesResponse = {
+  invites: OrgInviteRecord[]
 }
 
 type WorkflowDefinition = {
@@ -93,6 +112,8 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   const [membership, setMembership] = useState<OrgMembership | null>(null)
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([])
   const [alerts, setAlerts] = useState<WorkflowAlert[]>([])
+  const [members, setMembers] = useState<OrgMembership[]>([])
+  const [invites, setInvites] = useState<OrgInviteRecord[]>([])
 
   const copyRequestId = async () => {
     if (!requestId) return
@@ -109,10 +130,12 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
     const load = async () => {
       try {
         setRequestId(null)
-        const [orgRes, workflowsRes, alertsRes] = await Promise.all([
+        const [orgRes, workflowsRes, alertsRes, membersRes, invitesRes] = await Promise.all([
           fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
           fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, { cache: 'no-store' }),
           fetch(`/api/orgs/${encodeURIComponent(orgId)}/alerts?status=open`, { cache: 'no-store' }),
+          fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, { cache: 'no-store' }),
+          fetch(`/api/orgs/${encodeURIComponent(orgId)}/invites`, { cache: 'no-store' }),
         ])
 
         if (orgRes.status === 401 || workflowsRes.status === 401 || alertsRes.status === 401) {
@@ -123,11 +146,19 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         const fallbackRequestId =
           orgRes.headers.get('x-trope-request-id') ||
           workflowsRes.headers.get('x-trope-request-id') ||
-          alertsRes.headers.get('x-trope-request-id')
+          alertsRes.headers.get('x-trope-request-id') ||
+          membersRes.headers.get('x-trope-request-id') ||
+          invitesRes.headers.get('x-trope-request-id')
 
         const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
         const workflowsPayload = (await workflowsRes.json().catch(() => null)) as WorkflowListResponse | null
         const alertsPayload = (await alertsRes.json().catch(() => null)) as AlertsResponse | null
+        const membersPayload = membersRes.ok
+          ? ((await membersRes.json().catch(() => null)) as OrgMembersResponse | null)
+          : null
+        const invitesPayload = invitesRes.ok
+          ? ((await invitesRes.json().catch(() => null)) as OrgInvitesResponse | null)
+          : null
 
         if (!orgRes.ok || !orgPayload) {
           setRequestId(fallbackRequestId)
@@ -139,6 +170,8 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         setMembership(orgPayload.membership)
         setWorkflows(workflowsPayload?.workflows ?? [])
         setAlerts(alertsPayload?.alerts ?? [])
+        setMembers(membersPayload?.members ?? [])
+        setInvites(invitesPayload?.invites ?? [])
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -230,6 +263,13 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   }
 
   const canViewAudit = membership.role === 'org_owner' || membership.role === 'org_admin'
+  const activeMembersCount = members.filter((member) => member.status === 'active').length
+  const hasInviteOrMember = activeMembersCount >= 2 || invites.length > 0
+  const defaultsReviewed =
+    typeof org.run_retention_days === 'number'
+    || typeof org.alert_digest_enabled === 'boolean'
+    || typeof org.alert_digest_hour_utc === 'number'
+  const showSetupPanel = canViewAudit && (!hasInviteOrMember || !defaultsReviewed)
 
   return (
     <div className="space-y-6">
@@ -266,6 +306,52 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
           </Link>
         </div>
       </div>
+
+      {showSetupPanel && (
+        <Card className="p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">New workspace setup</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Complete the basics so teammates can join and support can help when needed.
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 space-y-3">
+            {!hasInviteOrMember && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Invite teammates</div>
+                  <div className="text-xs text-slate-500">Create at least one invite to get started.</div>
+                </div>
+                <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/invites`}>
+                  <Button variant="secondary" size="sm">Invite</Button>
+                </Link>
+              </div>
+            )}
+            {!defaultsReviewed && (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+                <div>
+                  <div className="text-sm font-semibold text-slate-900">Set defaults</div>
+                  <div className="text-xs text-slate-500">Review retention and digest settings.</div>
+                </div>
+                <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`}>
+                  <Button variant="secondary" size="sm">Open settings</Button>
+                </Link>
+              </div>
+            )}
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3">
+              <div>
+                <div className="text-sm font-semibold text-slate-900">Generate support token (optional)</div>
+                <div className="text-xs text-slate-500">Enable time-bound read-only support access.</div>
+              </div>
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`}>
+                <Button variant="outline" size="sm">Generate</Button>
+              </Link>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="p-6">
