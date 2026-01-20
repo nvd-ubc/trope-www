@@ -17,6 +17,7 @@ export type InvitePageData = {
       created_at: string
       expires_at?: number | null
       invited_email_hint?: string | null
+      invited_email?: string | null
     }
     error?: string
     message?: string
@@ -25,6 +26,7 @@ export type InvitePageData = {
 
 type MeResponse = {
   email?: string | null
+  default_org_id?: string | null
 }
 
 const formatDate = (value?: number | null) => {
@@ -33,6 +35,8 @@ const formatDate = (value?: number | null) => {
   if (Number.isNaN(date.getTime())) return 'Unknown'
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
+
+const desktopDownloadUrl = process.env.NEXT_PUBLIC_TROPE_DESKTOP_DOWNLOAD_URL || '/download'
 
 export default function InviteClient({
   orgId,
@@ -46,12 +50,17 @@ export default function InviteClient({
   const router = useRouter()
   const { token: csrfToken } = useCsrfToken()
   const [authEmail, setAuthEmail] = useState<string | null>(null)
+  const [defaultOrgId, setDefaultOrgId] = useState<string | null>(null)
   const [authChecked, setAuthChecked] = useState(false)
   const [accepting, setAccepting] = useState(false)
   const [acceptError, setAcceptError] = useState<string | null>(null)
   const [accepted, setAccepted] = useState(false)
+  const [showDefaultPrompt, setShowDefaultPrompt] = useState(true)
+  const [settingDefault, setSettingDefault] = useState(false)
+  const [defaultError, setDefaultError] = useState<string | null>(null)
 
   const invite = inviteData?.payload?.invite
+  const invitedEmailDisplay = invite?.invited_email ?? invite?.invited_email_hint ?? null
   const invitePath = `/invite?org_id=${encodeURIComponent(orgId)}&invite_id=${encodeURIComponent(inviteId)}`
 
   useEffect(() => {
@@ -67,6 +76,7 @@ export default function InviteClient({
         const payload = (await response.json().catch(() => null)) as MeResponse | null
         if (!active) return
         setAuthEmail(payload?.email ?? null)
+        setDefaultOrgId(payload?.default_org_id ?? null)
         setAuthChecked(true)
       } catch {
         if (!active) return
@@ -98,7 +108,10 @@ export default function InviteClient({
         return
       }
       if (!response.ok) {
-        const message = payload?.message || 'Unable to accept invite.'
+        let message = payload?.message || 'Unable to accept invite.'
+        if (response.status === 403 && message.toLowerCase().includes('verified')) {
+          message = 'Verify your email before accepting this invite. Check your inbox for the verification email, then try again.'
+        }
         throw new Error(message)
       }
       setAccepted(true)
@@ -106,6 +119,32 @@ export default function InviteClient({
       setAcceptError(err instanceof Error ? err.message : 'Unable to accept invite.')
     } finally {
       setAccepting(false)
+    }
+  }
+
+  const handleMakeDefault = async () => {
+    if (!csrfToken || !orgId) return
+    setSettingDefault(true)
+    setDefaultError(null)
+    try {
+      const response = await fetch('/api/me/default-org', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({ org_id: orgId }),
+      })
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { message?: string } | null
+        throw new Error(payload?.message || 'Unable to set default workspace.')
+      }
+      setDefaultOrgId(orgId)
+      setShowDefaultPrompt(false)
+    } catch (err) {
+      setDefaultError(err instanceof Error ? err.message : 'Unable to set default workspace.')
+    } finally {
+      setSettingDefault(false)
     }
   }
 
@@ -186,9 +225,9 @@ export default function InviteClient({
         <p className="mt-3 text-sm text-slate-600">
           Role: {invite.role.replace('org_', '')} · Expires {formatDate(invite.expires_at)}
         </p>
-        {invite.invited_email_hint && (
+        {invitedEmailDisplay && (
           <p className="mt-2 text-xs text-slate-500">
-            Invited as {invite.invited_email_hint}
+            Invited as {invitedEmailDisplay}
           </p>
         )}
       </div>
@@ -257,12 +296,56 @@ export default function InviteClient({
         )}
 
         {accepted && (
-          <Link
-            className="w-full rounded-full bg-[#1861C8] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#2171d8]"
-            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          >
-            Go to workspace
-          </Link>
+          <>
+            {defaultOrgId === orgId && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                This workspace is now your default.
+              </div>
+            )}
+            {defaultOrgId !== orgId && showDefaultPrompt && (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <div className="font-semibold text-slate-900">
+                  Make {invite.org_name} your default workspace?
+                </div>
+                <p className="mt-1 text-xs text-slate-600">
+                  Desktop apps use your default workspace.
+                </p>
+                {defaultError && (
+                  <p className="mt-2 text-xs text-rose-600">{defaultError}</p>
+                )}
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    className="w-full rounded-full bg-[#1861C8] px-4 py-2 text-center text-xs font-semibold text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={handleMakeDefault}
+                    disabled={settingDefault || !csrfToken}
+                  >
+                    {settingDefault ? 'Setting default…' : 'Make default workspace'}
+                  </button>
+                  <button
+                    className="w-full rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-slate-300"
+                    onClick={() => setShowDefaultPrompt(false)}
+                    type="button"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </div>
+            )}
+            <Link
+              className="w-full rounded-full bg-[#1861C8] px-4 py-2 text-center text-sm font-semibold text-white hover:bg-[#2171d8]"
+              href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+            >
+              Go to workspace
+            </Link>
+            <a
+              className="w-full rounded-full border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-slate-300"
+              href={desktopDownloadUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              Download desktop app
+            </a>
+          </>
         )}
       </div>
     </div>

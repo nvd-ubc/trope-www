@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { authErrorMessage, getAuthConfig, signUp } from '@/lib/server/auth'
+import { authErrorMessage, signUp } from '@/lib/server/auth'
 import { csrfFormField, validateCsrf } from '@/lib/server/csrf'
 
 export const runtime = 'nodejs'
@@ -19,6 +19,14 @@ const buildErrorRedirect = (request: Request, message: string) => {
 const redirectAfterPost = (request: Request, url: URL) => {
   const destination = new URL(url.toString(), request.url)
   return NextResponse.redirect(destination, 303)
+}
+
+const isSignupNotApproved = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') return false
+  const record = error as { name?: string; message?: string }
+  if (record.name === 'NotAuthorizedException') return true
+  const message = record.message?.toLowerCase() ?? ''
+  return message.includes('not authorized') || message.includes('not authorised')
 }
 
 export async function POST(request: Request) {
@@ -46,31 +54,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const config = getAuthConfig()
-
-    if (!config.selfSignupEnabled) {
-      const response = await fetch(`${config.apiBaseUrl}/v1/access-requests`, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          name: name || undefined,
-          company: company || undefined,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('access_request_failed')
-      }
-
-      const url = new URL('/request-access', request.url)
-      url.searchParams.set('requested', '1')
-      if (nextPath) {
-        url.searchParams.set('next', nextPath)
-      }
-      return redirectAfterPost(request, url)
-    }
-
     if (!password) {
       return redirectAfterPost(request, buildErrorRedirect(request, 'Password is required.'))
     }
@@ -89,6 +72,15 @@ export async function POST(request: Request) {
     }
     return redirectAfterPost(request, url)
   } catch (error) {
+    if (isSignupNotApproved(error)) {
+      const url = new URL('/signup', request.url)
+      url.searchParams.set('blocked', '1')
+      url.searchParams.set('email', email)
+      if (nextPath) {
+        url.searchParams.set('next', nextPath)
+      }
+      return redirectAfterPost(request, url)
+    }
     const message = authErrorMessage(error)
     return redirectAfterPost(request, buildErrorRedirect(request, message))
   }

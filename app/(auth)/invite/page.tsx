@@ -26,6 +26,7 @@ type InvitePayload = {
     created_at: string
     expires_at?: number | null
     invited_email_hint?: string | null
+    invited_email?: string | null
   }
   error?: string
   message?: string
