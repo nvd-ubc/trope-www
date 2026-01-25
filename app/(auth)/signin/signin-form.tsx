@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import AuthLogo from '../auth-logo'
+import { useCsrfToken } from '@/lib/client/use-csrf-token'
 
 const queryValue = (params: URLSearchParams, key: string): string => params.get(key)?.trim() ?? ''
 
 export default function SignInForm() {
   const searchParams = useSearchParams()
+  const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
 
   const error = queryValue(searchParams, 'error')
   const redirect = queryValue(searchParams, 'redirect')
@@ -92,9 +94,13 @@ export default function SignInForm() {
             ) : (
               <input type="hidden" name="next" value={next} />
             )}
+            <input type="hidden" name="csrf_token" value={csrfToken} />
 
             <div className="mt-6">
-              <button className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition">
+              <button
+                className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={csrfLoading || !csrfToken}
+              >
                 Sign In
               </button>
             </div>
@@ -103,7 +109,10 @@ export default function SignInForm() {
 
         <p className="text-center text-sm text-slate-600 mt-6">
           Don&apos;t have an account?{' '}
-          <Link className="font-medium text-[#1861C8] hover:text-[#1861C8]/80" href="/signup">
+          <Link
+            className="font-medium text-[#1861C8] hover:text-[#1861C8]/80"
+            href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
+          >
             Sign up
           </Link>
         </p>
@@ -111,4 +120,3 @@ export default function SignInForm() {
     </>
   )
 }
-
