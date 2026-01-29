@@ -14,6 +14,25 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
+	async redirects() {
+		return [
+			{
+				source: "/customers",
+				destination: "/use-cases",
+				permanent: true,
+			},
+			{
+				source: "/integrations",
+				destination: "/resources",
+				permanent: true,
+			},
+			{
+				source: "/changelog",
+				destination: "/release-notes",
+				permanent: true,
+			},
+		];
+	},
 };
 
 export default nextConfig;
