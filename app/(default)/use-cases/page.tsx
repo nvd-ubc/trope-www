@@ -38,7 +38,7 @@ export default function UseCasesPage() {
                     </h2>
                     <p className="mt-2 text-sm text-slate-600">{useCase.summary}</p>
                   </div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">{useCase.category}</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-400 text-right self-end">{useCase.category}</span>
                 </div>
 
                 <div className="mt-5 flex-1">
