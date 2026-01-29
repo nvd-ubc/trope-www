@@ -1,8 +1,12 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { CONTACT_EMAIL } from '@/lib/constants'
+import { CONTACT_EMAIL, PRESS_EMAIL, SALES_CALL_URL, SUPPORT_EMAIL } from '@/lib/constants'
 
 export default function Footer() {
+  const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
+  const supportHref = `mailto:${SUPPORT_EMAIL}`
+  const pressHref = `mailto:${PRESS_EMAIL}`
+
   return (
     <footer className="bg-slate-100">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -30,7 +34,7 @@ export default function Footer() {
                 </Link>
               </div>
               <p className="text-sm text-slate-500">
-                Record once, guide forever.
+                Capture desktop workflows once, deliver confident guidance everywhere.
               </p>
             </div>
 
@@ -39,10 +43,41 @@ export default function Footer() {
               <h6 className="text-sm text-slate-700 font-medium mb-3">Product</h6>
               <ul className="text-sm space-y-2">
                 <li>
-                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/#features">Features</Link>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/#features">Overview</Link>
                 </li>
                 <li>
-                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/#pricing">Pricing</Link>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/use-cases">Use cases</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/security">Security</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/download">Download</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/roi">ROI calculator</Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Links - Resources */}
+            <div className="col-span-1 sm:col-span-4 lg:col-span-2">
+              <h6 className="text-sm text-slate-700 font-medium mb-3">Resources</h6>
+              <ul className="text-sm space-y-2">
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/resources">Resource hub</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/docs">Docs</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/support">Support</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/release-notes">Release notes</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/status">Status</Link>
                 </li>
               </ul>
             </div>
@@ -52,7 +87,19 @@ export default function Footer() {
               <h6 className="text-sm text-slate-700 font-medium mb-3">Company</h6>
               <ul className="text-sm space-y-2">
                 <li>
-                  <a className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href={`mailto:${CONTACT_EMAIL}`}>Contact</a>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/about">About</Link>
+                </li>
+                <li>
+                  <Link className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href="/request-access">Request access</Link>
+                </li>
+                <li>
+                  <a className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href={salesHref}>Book a call</a>
+                </li>
+                <li>
+                  <a className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href={pressHref}>Press</a>
+                </li>
+                <li>
+                  <a className="text-slate-500 hover:text-[#1861C8] transition-colors duration-200" href={supportHref}>Support inbox</a>
                 </li>
               </ul>
             </div>
