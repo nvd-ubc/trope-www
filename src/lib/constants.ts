@@ -1,10 +1,10 @@
 // Site-wide constants
 
 // Contact information
-export const CONTACT_EMAIL = 'sales@trope.ai'
-export const SUPPORT_EMAIL = 'support@trope.ai'
-export const PRESS_EMAIL = 'press@trope.ai'
-export const SECURITY_EMAIL = 'security@trope.ai'
+export const CONTACT_EMAIL = 'matthew@trope.ai'
+export const SUPPORT_EMAIL = 'matthew@trope.ai'
+export const PRESS_EMAIL = 'matthew@trope.ai'
+export const SECURITY_EMAIL = 'matthew@trope.ai'
 
 // Download URLs (override in env for private beta distribution)
 export const DOWNLOAD_MAC_URL =

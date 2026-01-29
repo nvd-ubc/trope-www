@@ -34,7 +34,7 @@ export default function DownloadPage() {
               <p className="mt-3 text-sm text-slate-600">
                 Capture workflows across desktop apps and web browsers with guided overlays.
               </p>
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 {macAvailable ? (
                   <a
                     className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
@@ -50,7 +50,7 @@ export default function DownloadPage() {
                     Request access
                   </Link>
                 )}
-                <Link className="text-sm text-slate-600 hover:text-slate-900" href="/get-started">
+                <Link className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900" href="/get-started">
                   Installation help →
                 </Link>
               </div>
@@ -64,7 +64,7 @@ export default function DownloadPage() {
               <p className="mt-3 text-sm text-slate-600">
                 Record, guide, and review desktop workflows with full run history.
               </p>
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-5 flex flex-wrap items-center gap-3">
                 {windowsAvailable ? (
                   <a
                     className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
@@ -80,7 +80,7 @@ export default function DownloadPage() {
                     Request access
                   </Link>
                 )}
-                <Link className="text-sm text-slate-600 hover:text-slate-900" href="/get-started">
+                <Link className="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900" href="/get-started">
                   Installation help →
                 </Link>
               </div>

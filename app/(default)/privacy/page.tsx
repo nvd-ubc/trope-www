@@ -193,7 +193,7 @@ export default function PrivacyPolicy() {
                 <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">How to Contact Us</h2>
 
                 <p className="text-slate-600 mb-6">
-                  If you have any questions or comments about this Privacy Policy, our privacy practices, or if you would like to exercise your rights with respect to your personal information, please email us at <a href="mailto:privacy@trope.ai" className="text-[#1861C8] hover:underline">privacy@trope.ai</a>
+                  If you have any questions or comments about this Privacy Policy, our privacy practices, or if you would like to exercise your rights with respect to your personal information, please email us at <a href="mailto:matthew@trope.ai" className="text-[#1861C8] hover:underline">matthew@trope.ai</a>
                 </p>
               </div>
             </article>

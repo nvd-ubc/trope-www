@@ -28,7 +28,7 @@ export default function Features03() {
               />
               <div className="border-t border-slate-200" />
               <StatItem
-                value="30-50%"
+                value="50%"
                 label="Fewer errors"
                 description="Target outcome: reduce rework by embedding best-practice steps."
               />

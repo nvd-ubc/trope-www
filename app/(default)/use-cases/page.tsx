@@ -25,20 +25,23 @@ export default function UseCasesPage() {
 
           <div className="mt-12 grid gap-6 lg:grid-cols-2">
             {USE_CASES.map((useCase) => (
-              <Link
+              <div
                 key={useCase.slug}
-                href={`/use-cases/${useCase.slug}`}
-                className="group bg-white rounded-3xl border border-slate-200 p-6 shadow-sm transition hover:border-slate-300"
+                className="group flex h-full flex-col bg-white rounded-3xl border border-slate-200 p-6 shadow-sm transition hover:border-slate-300"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-semibold text-slate-900 group-hover:text-[#1861C8]">{useCase.title}</h2>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      <Link className="group-hover:text-[#1861C8]" href={`/use-cases/${useCase.slug}`}>
+                        {useCase.title}
+                      </Link>
+                    </h2>
                     <p className="mt-2 text-sm text-slate-600">{useCase.summary}</p>
                   </div>
                   <span className="text-xs uppercase tracking-wide text-slate-400">Operations</span>
                 </div>
 
-                <div className="mt-5">
+                <div className="mt-5 flex-1">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Outcomes</p>
                   <ul className="mt-3 space-y-2 text-sm text-slate-600">
                     {useCase.outcomes.map((outcome) => (
@@ -51,10 +54,12 @@ export default function UseCasesPage() {
                 </div>
 
                 <div className="mt-6 flex items-center justify-between">
-                  <span className="text-sm font-medium text-[#1861C8]">View workflow examples →</span>
-                  <span className="text-xs text-slate-500 group-hover:text-slate-700">Get started</span>
+                  <Link className="text-sm font-medium text-[#1861C8]" href={`/use-cases/${useCase.slug}`}>
+                    View workflow examples →
+                  </Link>
+                  <span className="text-xs text-slate-500 group-hover:text-slate-700">Pilot ready</span>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
 

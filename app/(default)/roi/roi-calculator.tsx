@@ -136,7 +136,7 @@ export default function RoiCalculator() {
           <div className="text-xs uppercase tracking-wide text-slate-400">Monthly impact</div>
           <div className="mt-3 flex items-end gap-4 h-28">
             {chartData.map((item) => (
-              <div key={item.label} className="flex-1">
+              <div key={item.label} className="flex-1 flex h-full flex-col justify-end">
                 <div
                   className={`w-full rounded-xl ${item.color}`}
                   style={{ height: `${Math.max(12, Math.round((item.value / chartMax) * 100))}%` }}
