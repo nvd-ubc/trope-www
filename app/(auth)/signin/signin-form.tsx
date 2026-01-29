@@ -63,17 +63,9 @@ export default function SignInForm() {
                 />
               </div>
               <div>
-                <div className="flex justify-between">
-                  <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="password">
-                    Password
-                  </label>
-                  <Link
-                    className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
-                    href="/reset-password"
-                  >
-                    Forgot?
-                  </Link>
-                </div>
+                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="password">
+                  Password
+                </label>
                 <input
                   id="password"
                   name="password"
@@ -82,6 +74,14 @@ export default function SignInForm() {
                   autoComplete="on"
                   required
                 />
+                <div className="mt-2 flex justify-end">
+                  <Link
+                    className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
+                    href="/reset-password"
+                  >
+                    Forgot?
+                  </Link>
+                </div>
               </div>
             </div>
 
