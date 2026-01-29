@@ -43,10 +43,10 @@ export const USE_CASES: UseCase[] = [
       'Give leaders a clear view of progress and ownership.',
     ],
     workflows: [
-      'Pull trial balance from ERP → reconcile in spreadsheet → attach evidence in close tool.',
-      'Post journal entries in ERP → route approvals in workflow system → update close checklist.',
-      'Match intercompany activity across ERP + shared drive artifacts → flag variances.',
-      'Run variance review in reporting tool → log exceptions in issue tracker.',
+      'Trial balance reconciliation: open ERP → export trial balance CSV → open reconciliation workbook → import data → map accounts → resolve mismatches → save workbook → upload evidence to close tool → mark task complete.',
+      'Journal entry posting: open close checklist → create JE in ERP → attach supporting docs from shared drive → submit approval in workflow tool → wait for approval → post JE → update close checklist status.',
+      'Intercompany matching: export intercompany statements from ERP → open matching workbook → reconcile by entity → flag variances > threshold → create exception ticket → attach variance report → record resolution in close system.',
+      'Variance review: open reporting dashboard → filter high-variance accounts → drill into transactions → annotate root cause in exception log → update close narrative → notify controller in chat/email.',
     ],
     metrics: [
       'Time from day 1 to first close draft.',
@@ -67,10 +67,10 @@ export const USE_CASES: UseCase[] = [
       'Retain process knowledge when experts are unavailable.',
     ],
     workflows: [
-      'Create vendor in ERP → verify tax docs in document system → update procurement portal.',
-      'Process order exception in desktop tool → confirm with inventory system → escalate via ticket.',
-      'Provision account in admin console → assign roles in identity tool → log in CRM.',
-      'Run daily ops checklist across desktop + web tools → record completion in shared tracker.',
+      'Vendor setup: create vendor record in ERP → verify W-9/contract in document system → validate bank details in payment portal → assign vendor category → enable in procurement portal → log completion in ops tracker.',
+      'Order exception handling: open order in desktop ops tool → verify inventory in warehouse system → check shipping status in carrier portal → update customer ticket → escalate to manager if SLA breach.',
+      'Account provisioning: open admin console → create user → assign role groups in identity provider → add to team in ticketing system → set access in CRM → confirm via test login.',
+      'Daily ops checklist: open operations dashboard → run compliance checklist in desktop app → verify SLA queue in support tool → update shared tracker → post completion note in team channel.',
     ],
     metrics: [
       'Time to first independent workflow run.',
@@ -91,10 +91,10 @@ export const USE_CASES: UseCase[] = [
       'Capture run logs for QA and coaching.',
     ],
     workflows: [
-      'Verify customer in CRM → update billing tool → document resolution in ticketing system.',
-      'Process refund in commerce admin → confirm in payment tool → send confirmation email.',
-      'Troubleshoot device in remote tool → follow KB steps → log outcome in ticket.',
-      'Handle regulated workflow → capture approvals → attach run history to case.',
+      'Account update: verify customer in CRM → confirm entitlement in admin console → update billing tool → document changes in ticket → send confirmation email.',
+      'Refund workflow: open ticket → validate purchase in commerce admin → process refund in payment tool → update accounting note → close ticket with audit trail.',
+      'Device troubleshooting: launch remote support tool → run diagnostics → follow KB steps → apply fix in desktop app → verify resolution → log steps in ticket.',
+      'Regulated case handling: review case checklist → capture approvals in workflow system → execute steps in desktop apps → attach run history → finalize compliance note.',
     ],
     metrics: [
       'First-contact resolution rate.',
@@ -115,10 +115,10 @@ export const USE_CASES: UseCase[] = [
       'Make handoffs between SDR, AE, and CS reliable.',
     ],
     workflows: [
-      'Advance opportunity stage in CRM → update forecast sheet → notify CS in shared channel.',
-      'Build quote in CPQ → sync to billing → verify in finance system.',
-      'Renewal workflow: review usage dashboard → update opportunity → send contract for e-sign.',
-      'Reassign territory in CRM → sync to marketing automation → confirm routing rules.',
+      'Opportunity stage update: review activity in CRM → update stage + close date → adjust forecast sheet → log reason in notes → notify CS + finance in shared channel.',
+      'Quote-to-cash: build quote in CPQ → generate approval request → sync to billing system → verify tax settings in finance tool → send quote for e-sign.',
+      'Renewal prep: review product usage dashboard → update renewal opportunity → create contract in CLM → send for e-sign → log renewal status in CRM.',
+      'Territory changes: update territory rules in CRM → sync to marketing automation → verify routing in assignment tool → alert SDR managers → spot-check lead flow.',
     ],
     metrics: [
       'Percent of opportunities updated on time.',
