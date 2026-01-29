@@ -343,6 +343,12 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
   }, [isActive])
 
   useEffect(() => {
+    if (!isActive || step === 0) {
+      setTypedCount(0)
+    }
+  }, [isActive, step])
+
+  useEffect(() => {
     if (!isActive) return
     const interval = setInterval(() => {
       setStep(s => (s + 1) % tooltipLabels.length)
@@ -384,8 +390,8 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
     const clickOffTimer = setTimeout(() => setIsClicking(false), clickOffDelay)
     let typingTimer: ReturnType<typeof setTimeout> | null = null
     let typingInterval: ReturnType<typeof setInterval> | null = null
-    setTypedCount(0)
     if (step === 1) {
+      setTypedCount(0)
       typingTimer = setTimeout(() => {
         let count = 0
         typingInterval = setInterval(() => {
@@ -434,12 +440,12 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
                 ref={(el) => { fieldRefs.current[1] = el }}
                 className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 relative ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`}
               >
-                {isActive && step === 1 && (
+                {isActive && typedCount > 0 && (
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {Array.from({ length: typedCount }).map((_, i) => (
                       <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-500" />
                     ))}
-                    {typedCount < 8 && (
+                    {step === 1 && typedCount < 8 && (
                       <span className="w-[2px] h-3 bg-slate-400 animate-pulse" />
                     )}
                   </div>
