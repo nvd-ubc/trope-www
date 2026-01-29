@@ -24,19 +24,19 @@ export default function Features03() {
               <StatItem
                 value="2-3x"
                 label="Faster onboarding"
-                description="Target outcome: shorten ramp time with guided, repeatable runs."
+                description="Reduce time to proficiency by turning expert procedures into guided runs that new hires can follow confidently."
               />
               <div className="border-t border-slate-200" />
               <StatItem
                 value="50%"
                 label="Fewer errors"
-                description="Target outcome: reduce rework by embedding best-practice steps."
+                description="Lower rework and exceptions by guiding operators through validated steps, checks, and required approvals."
               />
               <div className="border-t border-slate-200" />
               <StatItem
                 value="100%"
                 label="Run visibility"
-                description="Every workflow execution is logged for audits, coaching, and accountability."
+                description="Keep a clear record of each run so teams can audit critical work, coach consistently, and improve workflows over time."
               />
             </div>
           </div>
