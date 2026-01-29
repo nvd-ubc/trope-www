@@ -30,8 +30,18 @@ export const metadata = {
     default: 'Trope - Record once. Guide forever.',
     template: '%s | Trope'
   },
-  description: 'Trope records any workflow once—then delivers living, just-in-time guides for browser and desktop. Transform tribal knowledge into scalable processes.',
-  keywords: ['workflow documentation', 'process documentation', 'SOP software', 'knowledge management', 'workflow recording', 'employee training', 'living documentation', 'drift detection', 'desktop workflow'],
+  description:
+    'Trope captures desktop workflows and delivers guided runs so teams can onboard faster, reduce errors, and scale operations.',
+  keywords: [
+    'workflow guidance',
+    'desktop workflows',
+    'process documentation',
+    'SOP software',
+    'operations enablement',
+    'workflow recording',
+    'employee training',
+    'knowledge management',
+  ],
   authors: [{ name: 'Trope' }],
   creator: 'Trope',
   publisher: 'Trope',
@@ -41,18 +51,18 @@ export const metadata = {
     url: 'https://trope.ai',
     siteName: 'Trope',
     title: 'Trope - Record once. Guide forever.',
-    description: 'Transform tribal knowledge into living guides. Record workflows once, guide your team forever.',
+    description: 'Capture workflows once and deliver guided runs across desktop and web tools.',
     images: [{
       url: '/images/og-image.jpg',
       width: 1200,
       height: 630,
-      alt: 'Trope - Workflow Documentation Platform'
+      alt: 'Trope - Desktop workflow guidance'
     }]
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Trope - Record once. Guide forever.',
-    description: 'Transform tribal knowledge into living guides. Record workflows once, guide your team forever.',
+    description: 'Capture workflows once and deliver guided runs across desktop and web tools.',
     images: ['/images/og-image.jpg'],
   },
   robots: {
