@@ -343,27 +343,10 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
   }, [isActive])
 
   useEffect(() => {
-    if (!isActive || step !== 1) {
-      setTypedCount(0)
-      return
-    }
-    let count = 0
-    setTypedCount(0)
-    const interval = setInterval(() => {
-      count = Math.min(8, count + 1)
-      setTypedCount(count)
-      if (count >= 8) {
-        clearInterval(interval)
-      }
-    }, 120)
-    return () => clearInterval(interval)
-  }, [isActive, step])
-
-  useEffect(() => {
     if (!isActive) return
     const interval = setInterval(() => {
       setStep(s => (s + 1) % tooltipLabels.length)
-    }, 1800)
+    }, 2600)
     return () => clearInterval(interval)
   }, [isActive])
 
@@ -393,15 +376,33 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
     const moveDelay = 180
     const clickOnDelay = 720
     const clickOffDelay = 860
+    const typingStartDelay = clickOffDelay + 160
     const moveTimer = setTimeout(() => {
       setCursorPos({ left: cursorLeft, top: cursorTop })
     }, moveDelay)
     const clickOnTimer = setTimeout(() => setIsClicking(true), clickOnDelay)
     const clickOffTimer = setTimeout(() => setIsClicking(false), clickOffDelay)
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
+    let typingInterval: ReturnType<typeof setInterval> | null = null
+    setTypedCount(0)
+    if (step === 1) {
+      typingTimer = setTimeout(() => {
+        let count = 0
+        typingInterval = setInterval(() => {
+          count = Math.min(8, count + 1)
+          setTypedCount(count)
+          if (count >= 8 && typingInterval) {
+            clearInterval(typingInterval)
+          }
+        }, 120)
+      }, typingStartDelay)
+    }
     return () => {
       clearTimeout(moveTimer)
       clearTimeout(clickOnTimer)
       clearTimeout(clickOffTimer)
+      if (typingTimer) clearTimeout(typingTimer)
+      if (typingInterval) clearInterval(typingInterval)
     }
   }, [isActive, step])
 
