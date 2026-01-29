@@ -708,7 +708,15 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-6 text-sm text-slate-500">
-            No workflows yet. Publish a guide from the desktop app to populate the library.
+            <p>No workflows yet. Publish a guide from the desktop app to populate the library.</p>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/download">
+                Download desktop app
+              </Link>
+              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/get-started">
+                Getting started
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">

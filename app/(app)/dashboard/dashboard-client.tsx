@@ -135,9 +135,10 @@ export default function DashboardClient() {
   const creditsRemaining = Math.max(0, usage.credits_limit - usage.credits_used)
   const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
   const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
+  const workspaceBase = defaultOrg?.org_id ? `/dashboard/workspaces/${defaultOrg.org_id}` : '/dashboard/workspaces'
 
   return (
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-base font-semibold text-slate-900">Account</h2>
@@ -161,6 +162,31 @@ export default function DashboardClient() {
               <div className="text-xs uppercase tracking-wide text-slate-400">Personal org</div>
               <div className="text-slate-900">{personalOrg?.name ?? me.personal_org_id ?? 'Not set'}</div>
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">Next steps</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            Keep your pilot moving by capturing workflows and inviting your team.
+          </p>
+          <div className="mt-4 space-y-3 text-sm text-slate-600">
+            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href="/download">
+              <span>Download the desktop app</span>
+              <span className="text-xs text-slate-400">macOS / Windows</span>
+            </Link>
+            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/workflows`}>
+              <span>Record your first workflow</span>
+              <span className="text-xs text-slate-400">Workflows</span>
+            </Link>
+            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/members`}>
+              <span>Invite teammates</span>
+              <span className="text-xs text-slate-400">Members</span>
+            </Link>
+            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/runs`}>
+              <span>Review run history</span>
+              <span className="text-xs text-slate-400">Runs</span>
+            </Link>
           </div>
         </div>
       </div>
