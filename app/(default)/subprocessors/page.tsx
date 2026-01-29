@@ -12,7 +12,7 @@ export default function Subprocessors() {
             <article>
               <header className="mb-8 text-center">
                 <h1 className="text-4xl md:text-5xl font-bold text-slate-900 pb-4">Trope Subprocessors</h1>
-                <p className="text-slate-500">Current as of November 11, 2025</p>
+                <p className="text-slate-500">Current as of January 29, 2026</p>
               </header>
 
               <div className="prose max-w-none">
@@ -38,16 +38,6 @@ export default function Subprocessors() {
                         <td className="py-3 px-4">
                           <a href="https://aws.amazon.com" target="_blank" rel="noopener noreferrer" className="text-[#1861C8] hover:underline">
                             aws.amazon.com
-                          </a>
-                        </td>
-                      </tr>
-                      <tr className="border-b border-slate-200">
-                        <td className="py-3 px-4">Anthropic</td>
-                        <td className="py-3 px-4">AI language model services</td>
-                        <td className="py-3 px-4">United States</td>
-                        <td className="py-3 px-4">
-                          <a href="https://anthropic.com" target="_blank" rel="noopener noreferrer" className="text-[#1861C8] hover:underline">
-                            anthropic.com
                           </a>
                         </td>
                       </tr>

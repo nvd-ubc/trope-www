@@ -79,6 +79,10 @@ export default function Faqs() {
       answer: (
         <>
           Trope captures workflow context only with explicit permissions and stores artifacts per workspace. Review our{' '}
+          <a href="/security" className="text-[#1861C8] hover:underline">
+            Security page
+          </a>{' '}
+          and our{' '}
           <a href="/subprocessors" className="text-[#1861C8] hover:underline">
             subprocessors page
           </a>{' '}
