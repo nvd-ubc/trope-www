@@ -65,9 +65,9 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
 
           <div className="mt-10 grid gap-6 lg:grid-cols-2">
             <div className="rounded-3xl border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-slate-900">Workflow targets</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Example workflows</h2>
               <p className="mt-2 text-sm text-slate-600">
-                Start with high-frequency, high-impact workflows. Capture once, then guide every run.
+                Cross-application paths where consistency and auditability matter most.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 {useCase.workflows.map((workflow) => (
