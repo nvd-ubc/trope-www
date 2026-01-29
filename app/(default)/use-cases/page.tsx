@@ -1,7 +1,7 @@
 export const metadata = {
   title: 'Use Cases - Trope',
   description:
-    'Explore how Trope helps finance, IT, customer success, compliance, and operations teams capture and scale critical desktop workflows.',
+    'Explore how Trope helps finance, IT, healthcare, nonprofit, and operations teams capture and scale critical desktop workflows.',
 }
 
 import Link from 'next/link'

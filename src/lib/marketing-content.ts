@@ -755,6 +755,137 @@ export const USE_CASES: UseCase[] = [
       'Exception rate per 1,000 shipments.',
     ],
   },
+  {
+    slug: 'healthcare-intake',
+    title: 'Healthcare intake & referrals',
+    category: 'Healthcare',
+    summary:
+      'Standardize patient intake, insurance verification, and referral workflows across EHR, clearinghouse, and scheduling tools.',
+    hero:
+      'Keep intake consistent and compliant while reducing handoff errors.',
+    outcomes: [
+      'Reduce intake cycle time and missing data.',
+      'Increase referral throughput with fewer rework loops.',
+      'Maintain a clear audit trail for compliance.',
+    ],
+    workflows: [
+      {
+        title: 'New patient intake with insurance verification',
+        systems: ['EHR', 'Eligibility portal', 'Document intake', 'Scheduling'],
+        steps: [
+          'Open the intake queue in the EHR.',
+          'Select the new patient record and review demographics.',
+          'Open the document intake portal and download intake forms.',
+          'Verify required fields and update missing details in the EHR.',
+          'Open the eligibility portal and run insurance verification.',
+          'Capture the eligibility response and upload to the EHR.',
+          'Enter insurance plan details and effective dates.',
+          'Create the initial appointment in the scheduling system.',
+          'Send the appointment confirmation to the patient.',
+          'Mark the intake task complete in the EHR.',
+        ],
+      },
+      {
+        title: 'Referral processing and scheduling',
+        systems: ['Referral inbox', 'EHR', 'Scheduling', 'Fax/portal'],
+        steps: [
+          'Open the referral inbox and select the new referral.',
+          'Verify referral details and required documentation.',
+          'Open the EHR and create a referral record.',
+          'Attach the referral document to the patient chart.',
+          'Confirm insurance coverage for the referral type.',
+          'Open the scheduling system and locate available slots.',
+          'Schedule the referral appointment.',
+          'Send confirmation to the referring provider via portal/fax.',
+          'Update referral status to Scheduled in the EHR.',
+        ],
+      },
+      {
+        title: 'Prior authorization request',
+        systems: ['EHR', 'Payer portal', 'Document store'],
+        steps: [
+          'Open the patient chart in the EHR.',
+          'Navigate to the authorization request workflow.',
+          'Gather required clinical notes and export as PDF.',
+          'Open the payer portal and start a new prior auth.',
+          'Enter procedure codes and patient details.',
+          'Upload clinical notes and supporting documents.',
+          'Submit the authorization request.',
+          'Record the auth reference number in the EHR.',
+          'Set a follow-up task for authorization status.',
+        ],
+      },
+    ],
+    metrics: [
+      'Intake completion time.',
+      'Percentage of referrals scheduled within SLA.',
+      'Prior auth turnaround time.',
+    ],
+  },
+  {
+    slug: 'nonprofit-grant-management',
+    title: 'Nonprofit grant management',
+    category: 'Nonprofit',
+    summary:
+      'Coordinate grant applications, reporting, and fund tracking across donor CRM, finance, and document tools.',
+    hero:
+      'Make grant workflows consistent so impact reporting is never a scramble.',
+    outcomes: [
+      'Reduce time spent compiling grant reports.',
+      'Keep grant data consistent across systems.',
+      'Improve on-time submission rates.',
+    ],
+    workflows: [
+      {
+        title: 'Grant application submission',
+        systems: ['Donor CRM', 'Document templates', 'Submission portal', 'Budget spreadsheet'],
+        steps: [
+          'Open the grant opportunity in the donor CRM.',
+          'Review eligibility criteria and submission deadline.',
+          'Open the grant template in the document system.',
+          'Populate program narrative sections.',
+          'Open the budget spreadsheet and update the line items.',
+          'Export the final budget as PDF.',
+          'Open the submission portal and start a new application.',
+          'Upload the narrative and budget attachments.',
+          'Complete required fields and validate the checklist.',
+          'Submit the application and save the confirmation receipt.',
+          'Log the submission status in the donor CRM.',
+        ],
+      },
+      {
+        title: 'Grant reporting and compliance',
+        systems: ['Donor CRM', 'Finance system', 'Impact tracker', 'Document system'],
+        steps: [
+          'Open the grant record and reporting schedule.',
+          'Export expenditure data from the finance system.',
+          'Open the impact tracker and export outcome metrics.',
+          'Compile the report in the document system.',
+          'Attach expenditure and impact exports.',
+          'Review the report against the grant checklist.',
+          'Submit the report via the donor portal.',
+          'Log submission and upload receipts to the CRM.',
+        ],
+      },
+      {
+        title: 'Restricted fund reconciliation',
+        systems: ['Finance system', 'Spreadsheet', 'Grant tracker'],
+        steps: [
+          'Export restricted fund transactions from finance.',
+          'Open the reconciliation spreadsheet and import transactions.',
+          'Match expenses to grant restrictions.',
+          'Flag any out-of-scope expenses for review.',
+          'Update the grant tracker with remaining balances.',
+          'Share the reconciliation summary with program leads.',
+        ],
+      },
+    ],
+    metrics: [
+      'On-time grant submission rate.',
+      'Reporting cycle time.',
+      'Variance between restricted funds and actual spend.',
+    ],
+  },
 ]
 
 export const RESOURCES: Resource[] = [
