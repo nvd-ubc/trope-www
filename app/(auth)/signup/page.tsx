@@ -1,6 +1,6 @@
 export const metadata = {
   title: 'Sign Up',
-  description: 'Create your free Trope account and start automating workflows with living documentation and in-app guidance.',
+  description: 'Request access or accept an invite to join the Trope closed beta.',
 }
 
 export const dynamic = 'force-dynamic'

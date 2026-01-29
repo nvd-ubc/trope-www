@@ -27,7 +27,7 @@ const SignUpFields = ({
       <div className="max-w-3xl mx-auto text-center pb-8">
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">
-          Create your free account
+          Create your Trope account
         </h1>
       </div>
 
@@ -128,7 +128,7 @@ const SignupDecision = () => {
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Get access to Trope</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Production access is invite-only. Request access or use an invite link to get started.
+          Trope is in closed beta. Request access or use an invite link to get started.
         </p>
       </div>
 

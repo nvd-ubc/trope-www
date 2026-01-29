@@ -2,7 +2,7 @@ import RequestAccessForm from './request-access-form'
 
 export const metadata = {
   title: 'Request Access',
-  description: 'Request access to Trope Cloud and join the waitlist.',
+  description: 'Request access to the Trope closed beta for guided desktop workflows.',
 }
 
 export const dynamic = 'force-dynamic'

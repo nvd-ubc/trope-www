@@ -18,7 +18,7 @@ export default function RequestAccessForm({ error, requested }: RequestAccessFor
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Request access</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Production access is invite-only. Tell us a bit about your team and we&apos;ll follow up.
+          Trope is in closed beta for B2B teams. Tell us about your workflows and we&apos;ll follow up.
         </p>
       </div>
 
@@ -47,6 +47,27 @@ export default function RequestAccessForm({ error, requested }: RequestAccessFor
                 />
               </div>
               <div>
+                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="team-size">
+                  Team size
+                </label>
+                <select
+                  id="team-size"
+                  name="team_size"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
+                  defaultValue=""
+                  required
+                >
+                  <option value="" disabled>
+                    Select team size
+                  </option>
+                  <option value="1-10">1-10</option>
+                  <option value="11-50">11-50</option>
+                  <option value="51-200">51-200</option>
+                  <option value="201-1000">201-1000</option>
+                  <option value="1000+">1000+</option>
+                </select>
+              </div>
+              <div>
                 <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="full-name">
                   Full Name
                 </label>
@@ -73,15 +94,27 @@ export default function RequestAccessForm({ error, requested }: RequestAccessFor
                 />
               </div>
               <div>
+                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="tools">
+                  Primary tools
+                </label>
+                <input
+                  id="tools"
+                  name="tools"
+                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
+                  type="text"
+                  placeholder="Excel, NetSuite, Salesforce..."
+                />
+              </div>
+              <div>
                 <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="note">
-                  What are you hoping to automate?
+                  Which workflows should we start with?
                 </label>
                 <textarea
                   id="note"
                   name="note"
                   className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
                   rows={3}
-                  placeholder="Onboarding, audits, internal SOPs…"
+                  placeholder="Onboarding, reconciliations, audits, customer updates…"
                 />
               </div>
             </div>
