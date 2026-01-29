@@ -28,7 +28,10 @@ export default function DownloadPage() {
           <div className="mt-10 grid gap-6 lg:grid-cols-2">
             <div className="rounded-3xl border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-slate-900">macOS</h2>
+                <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
+                  <AppleIcon className="h-5 w-5 text-slate-900" />
+                  <span>macOS</span>
+                </h2>
                 <span className="text-xs uppercase tracking-wide text-slate-400">Apple Silicon + Intel</span>
               </div>
               <p className="mt-3 text-sm text-slate-600">
@@ -58,7 +61,10 @@ export default function DownloadPage() {
 
             <div className="rounded-3xl border border-slate-200 bg-white p-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-slate-900">Windows</h2>
+                <h2 className="inline-flex items-center gap-2 text-xl font-semibold text-slate-900">
+                  <WindowsIcon className="h-5 w-5 text-slate-900" />
+                  <span>Windows</span>
+                </h2>
                 <span className="text-xs uppercase tracking-wide text-slate-400">Windows 11+</span>
               </div>
               <p className="mt-3 text-sm text-slate-600">
@@ -110,5 +116,35 @@ export default function DownloadPage() {
         </div>
       </div>
     </section>
+  )
+}
+
+function AppleIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M16.5 13.4c-.02-2.2 1.8-3.3 1.88-3.36-1.03-1.5-2.63-1.7-3.19-1.72-1.35-.14-2.64.8-3.33.8-.7 0-1.77-.78-2.92-.76-1.5.02-2.9.88-3.67 2.24-1.57 2.72-.4 6.76 1.12 8.96.75 1.08 1.63 2.3 2.8 2.26 1.12-.04 1.55-.73 2.91-.73 1.35 0 1.74.73 2.93.71 1.2-.02 1.96-1.09 2.7-2.18.86-1.26 1.22-2.48 1.24-2.54-.03-.01-2.37-.91-2.39-3.64Z" />
+      <path d="M14.3 4.2c.62-.76 1.04-1.82.93-2.88-.9.04-1.99.6-2.63 1.36-.58.67-1.08 1.77-.94 2.81 1 .08 2-.5 2.64-1.29Z" />
+    </svg>
+  )
+}
+
+function WindowsIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M3 4h8v8H3V4Z" />
+      <path d="M13 4h8v8h-8V4Z" />
+      <path d="M3 14h8v8H3v-8Z" />
+      <path d="M13 14h8v8h-8v-8Z" />
+    </svg>
   )
 }
