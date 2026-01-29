@@ -1045,7 +1045,18 @@ export const RESOURCES: Resource[] = [
       {
         heading: 'Why workflows drift',
         body:
-          'UI changes, tool migrations, and undocumented shortcuts slowly erode consistency. Drift shows up as rework, escalations, and unreliable training.',
+          'UI changes, tool migrations, and undocumented shortcuts slowly erode consistency. Drift shows up as rework, escalations, and unreliable training. The best teams treat drift as an expected maintenance cost, not a surprise failure.',
+      },
+      {
+        heading: 'What drift looks like in practice',
+        body:
+          'Drift is usually not a big break. It is a series of small mismatches between how a workflow was captured and how it is performed today. Common symptoms include workarounds, skipped steps, and inconsistent outcomes across operators.',
+        bullets: [
+          'Operators take a different path than the documented steps.',
+          'A previously stable step now requires a manual search or extra clicks.',
+          'Approvals and evidence collection happen, but the order varies.',
+          'Escalations increase because exceptions are handled ad hoc.',
+        ],
       },
       {
         heading: 'Detect changes early',
@@ -1058,9 +1069,49 @@ export const RESOURCES: Resource[] = [
         ],
       },
       {
+        heading: 'Set a drift response SLA',
+        body:
+          'Define what happens when drift is detected. For high-impact workflows, decide how quickly the guide should be corrected, who can approve changes, and how you communicate updates to operators.',
+        bullets: [
+          'Severity levels (minor UI change vs blocking failure).',
+          'Response time targets per severity.',
+          'Approval process for regulated or high-risk steps.',
+        ],
+      },
+      {
+        heading: 'Build a capture and review loop',
+        body:
+          'Drift is easier to manage when you have a lightweight loop: capture when something changes, review quickly, and publish an updated version. Keep the loop short so fixes happen while context is fresh.',
+        bullets: [
+          'Re-capture only the affected portion of a workflow when possible.',
+          'Have an SME review updates with a short checklist.',
+          'Validate by running the workflow with a non-expert operator.',
+        ],
+      },
+      {
+        heading: 'Communicate updates without disruption',
+        body:
+          'Operators need to trust that the workflow is current. Announce updates with clear intent (what changed, why it changed, and what operators should do differently), and keep old links or copies from lingering.',
+        bullets: [
+          'Use a short change log for each updated workflow.',
+          'Notify the teams that run the workflow most often.',
+          'Deprecate outdated versions and remove stale bookmarks.',
+        ],
+      },
+      {
+        heading: 'Measure drift so it stays manageable',
+        body:
+          'A simple set of metrics makes drift visible. Track how often workflows need updates, where exceptions occur, and how long it takes to publish a fix. This helps you prioritize maintenance time and prevent repeat issues.',
+        bullets: [
+          'Time from drift report to updated workflow published.',
+          'Exception rate per workflow and per step.',
+          'Number of versions per quarter for critical workflows.',
+        ],
+      },
+      {
         heading: 'Close the loop',
         body:
-          'Capture a fresh recording for changed screens, update the guide, and notify teams through shared libraries or workspace updates.',
+          'Capture a fresh recording for changed screens, update the guide, and notify teams through your shared workflow library. Drift becomes manageable when updates are routine and ownership is clear.',
       },
     ],
   },
@@ -1073,6 +1124,16 @@ export const RESOURCES: Resource[] = [
     readTime: '8 min read',
     audience: 'Enablement',
     sections: [
+      {
+        heading: 'Start with a clear pilot goal',
+        body:
+          'A good onboarding pilot is not "ship software". It is a short, focused effort to prove that guided workflows reduce ramp time and improve consistency. Define success criteria up front so the rollout stays practical.',
+        bullets: [
+          'Pick a target team and a start date.',
+          'Define what "trained" means (speed, accuracy, escalation rate).',
+          'Decide how you will measure adoption in the first month.',
+        ],
+      },
       {
         heading: 'Pilot workflow selection',
         body:
@@ -1089,9 +1150,59 @@ export const RESOURCES: Resource[] = [
           'Document expected inputs, approvals, and success criteria before recording. This ensures the guide reflects the true process, not just the path taken on a good day.',
       },
       {
+        heading: 'Recording best practices',
+        body:
+          'Strong recordings reduce downstream rework. Record in a stable environment, avoid sensitive data when possible, and aim for a clear, repeatable path. Treat workflow capture like writing internal documentation.',
+        bullets: [
+          'Use test accounts or masked data when available.',
+          'Pause or stop capture around secrets (passwords, MFA codes, API keys).',
+          'Keep window layouts consistent and remove distractions.',
+        ],
+      },
+      {
+        heading: 'Review and QA before broad rollout',
+        body:
+          'Before sharing a workflow widely, validate it with someone who did not record it. This is the fastest way to catch missing context, ambiguous steps, and brittle navigation.',
+        bullets: [
+          'Have an SME validate correctness.',
+          'Have a novice validate clarity.',
+          'Confirm expected evidence and approvals are included.',
+        ],
+      },
+      {
         heading: 'Launch communication',
         body:
           'Share the "why" along with the workflow. Make it clear that guidance replaces shadowing and gives every operator a consistent safety net.',
+      },
+      {
+        heading: 'Enablement plan for the first two weeks',
+        body:
+          'Treat the first two weeks as an enablement sprint: a small amount of structure goes a long way. Provide a clear starting point, office hours for questions, and a feedback channel for issues.',
+        bullets: [
+          'Short kickoff training (15 to 30 minutes).',
+          'Office hours or a Slack channel for questions.',
+          'A simple intake form for workflow issues and updates.',
+        ],
+      },
+      {
+        heading: 'Governance and ongoing maintenance',
+        body:
+          'Rollout is the beginning, not the end. Assign owners, set review cadences for critical workflows, and build a lightweight process for updates so workflows do not drift.',
+        bullets: [
+          'Assign workflow owners and backups.',
+          'Set a cadence for review (monthly or quarterly).',
+          'Use run feedback to prioritize updates.',
+        ],
+      },
+      {
+        heading: 'Metrics to track',
+        body:
+          'Use a few simple metrics to show impact and guide iteration. Focus on adoption, speed, quality, and confidence. A pilot is successful when it is repeatable and scalable.',
+        bullets: [
+          'Time to proficiency for new hires.',
+          'Exception and escalation rate during runs.',
+          'Workflow completion rate and time per run.',
+        ],
       },
     ],
   },
@@ -1105,9 +1216,24 @@ export const RESOURCES: Resource[] = [
     audience: 'Finance + Ops',
     sections: [
       {
+        heading: 'Start with a baseline',
+        body:
+          'Pick a small set of workflows and establish today\'s baseline: how long they take, how often they run, how often they fail, and what rework costs. Even rough estimates are useful if you are consistent.',
+        bullets: [
+          'Weekly runs per workflow.',
+          'Average time per run (and variance by operator).',
+          'Exception rate and escalation rate.',
+        ],
+      },
+      {
         heading: 'Estimate time saved',
         body:
           'Start with weekly runs per workflow, average duration, and the percent of time you expect to save with guided steps.',
+      },
+      {
+        heading: 'Add ramp time improvement',
+        body:
+          'Guided workflows often have their biggest impact during onboarding. Estimate the number of new hires per quarter and how long it takes them to reach full proficiency today, then model how much of that ramp can be accelerated with consistent guidance.',
       },
       {
         heading: 'Account for quality',
@@ -1115,9 +1241,29 @@ export const RESOURCES: Resource[] = [
           'Factor in the cost of errors, rework, and escalations. Even small reductions in mistakes often outweigh raw time savings.',
       },
       {
+        heading: 'Include compliance and evidence costs when relevant',
+        body:
+          'In regulated or finance-heavy workflows, the cost of missing evidence or skipping an approval can be large. If this applies, include the time spent collecting evidence and the cost of audit exceptions in your model.',
+      },
+      {
         heading: 'Compare to investment',
         body:
           'Use pilot results to project annual savings and prioritize the workflows to scale next.',
+      },
+      {
+        heading: 'Run a quick sensitivity check',
+        body:
+          'Model outcomes across a few scenarios (conservative, expected, aggressive). This helps you avoid overfitting to optimistic assumptions and shows which variables matter most.',
+        bullets: [
+          'Time saved per run (percentage).',
+          'Reduction in exception rate.',
+          'Adoption rate across the target team.',
+        ],
+      },
+      {
+        heading: 'Validate with a pilot',
+        body:
+          'Use a short pilot to turn assumptions into measured results. Track run time, completion rate, and exception handling with and without guidance, then update the model using real data.',
       },
     ],
   },
