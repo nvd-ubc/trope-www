@@ -8,15 +8,15 @@ export default function FAQSchema() {
         "name": "What is Trope?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope is a workflow documentation platform that records any workflow once, then delivers living, just-in-time guides for browser and desktop applications."
+          "text": "Trope is a desktop workflow guidance platform that captures workflows once and delivers guided runs inside the tools your team already uses."
         }
       },
       {
         "@type": "Question",
-        "name": "How does Trope pricing work?",
+        "name": "Is Trope available publicly?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope uses simple per-user pricing starting at $20/user/month with annual billing. You only pay for active users and can scale as your team grows."
+          "text": "Trope is currently in closed beta for B2B teams. Request access or use an invite link to join a workspace."
         }
       },
       {
@@ -24,15 +24,23 @@ export default function FAQSchema() {
         "name": "What platforms does Trope support?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope works on both browser-based and desktop applications across Windows, macOS, and web platforms."
+          "text": "Trope supports desktop apps on macOS and Windows, plus browser-based tools used by operations teams."
         }
       },
       {
         "@type": "Question",
-        "name": "How does drift detection work?",
+        "name": "How does workflow guidance work?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope automatically detects when workflows or processes change in your applications, alerting you when your documentation or automation needs updating to stay current."
+          "text": "Teams record a workflow once, Trope generates a guided playbook, and each run is tracked so teams can review outcomes and improve the process."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How is access managed?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Access is scoped to workspaces and invites, with admin roles controlling who can view or run workflows."
         }
       }
     ]

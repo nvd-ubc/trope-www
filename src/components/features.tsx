@@ -86,10 +86,10 @@ export default function Features() {
         <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
           <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">How it works</p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
-            <ChromaText color="inherit">Living</ChromaText> guides in 3 steps
+            Guided workflows in <ChromaText color="inherit">three steps</ChromaText>
           </h2>
           <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
-            The easiest way to transform tribal knowledge into scalable documentation.
+            Capture once, publish guidance, and keep every run consistent across desktop and web tools.
           </p>
         </div>
 
@@ -100,8 +100,8 @@ export default function Features() {
             <StepCard
               index={0}
               number={1}
-              title="Record workflow"
-              description="Click record before starting. Trope captures every click and keystroke."
+              title="Capture the workflow"
+              description="Record a real workflow across desktop apps and web tools, including context and screenshots."
             >
               <RecordDemo index={0} />
             </StepCard>
@@ -117,8 +117,8 @@ export default function Features() {
             <StepCard
               index={1}
               number={2}
-              title="Deploy guide"
-              description="Click stop when done. Your workflow becomes a living, interactive guide."
+              title="Publish the guide"
+              description="Turn the recording into a guided playbook your team can follow inside their tools."
             >
               <GuidanceDemo index={1} />
             </StepCard>
@@ -134,8 +134,8 @@ export default function Features() {
             <StepCard
               index={2}
               number={3}
-              title="Get results"
-              description="Your team follows guides, automations run, everything is logged."
+              title="Run and improve"
+              description="Track every run, gather feedback, and keep workflows current as tools evolve."
             >
               <AutomationDemo index={2} />
             </StepCard>

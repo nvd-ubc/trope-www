@@ -6,8 +6,8 @@ export default function SchemaMarkup() {
     "@type": "Organization",
     "name": "Trope",
     "url": "https://trope.ai",
-    "logo": "https://trope.ai/images/logo.svg",
-    "description": "Trope records any workflow once—then delivers living, just-in-time guides for browser and desktop. Transform tribal knowledge into scalable processes.",
+    "logo": "https://trope.ai/logo/trope_logomark_dark.svg",
+    "description": "Trope captures desktop workflows and delivers guided runs so B2B teams can onboard faster and scale operations.",
     "email": CONTACT_EMAIL,
     "address": {
       "@type": "PostalAddress",
@@ -20,28 +20,14 @@ export default function SchemaMarkup() {
     "@type": "SoftwareApplication",
     "name": "Trope",
     "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Windows, macOS, Web",
-    "offers": {
-      "@type": "AggregateOffer",
-      "priceCurrency": "USD",
-      "lowPrice": "20",
-      "highPrice": "30",
-      "priceSpecification": {
-        "@type": "UnitPriceSpecification",
-        "price": "20",
-        "priceCurrency": "USD",
-        "unitText": "user per month"
-      }
-    },
-    "description": "Workflow documentation software that transforms tribal knowledge into living guides with drift detection. Record once, guide forever.",
+    "operatingSystem": "Windows, macOS",
+    "description": "Desktop workflow guidance software that captures workflows once and delivers guided runs inside the tools teams already use.",
     "featureList": [
-      "Workflow Recording",
-      "Living Documentation",
-      "In-App Guidance",
-      "Drift Detection",
-      "One-Click Automation",
-      "Audit Trails",
-      "Desktop & Browser Support"
+      "Desktop workflow capture",
+      "Guided workflow runs",
+      "Workspace sharing",
+      "Run history and audit logs",
+      "Desktop and web coverage"
     ]
   }
 

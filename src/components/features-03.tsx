@@ -17,26 +17,26 @@ export default function Features03() {
           {/* Right - Stats */}
           <div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Built for <ChromaText color="inherit">scale</ChromaText>
+              Built for <ChromaText color="inherit">operational scale</ChromaText>
             </h2>
 
             <div className="space-y-8">
               <StatItem
-                value="10x"
-                label="Faster onboarding"
-                description="New team members get up to speed in days, not weeks. Interactive guides replace shadowing sessions."
+                value="Faster"
+                label="Onboarding"
+                description="Interactive guides replace shadowing so new team members ramp quickly."
               />
               <div className="border-t border-slate-200" />
               <StatItem
-                value="85%"
-                label="Reduction in support tickets"
-                description="Self-serve documentation means fewer interruptions. Your experts stay focused on high-value work."
+                value="Fewer"
+                label="Escalations"
+                description="Guided steps reduce handoffs and keep experts focused on high-value work."
               />
               <div className="border-t border-slate-200" />
               <StatItem
-                value="100%"
-                label="Action traceability"
-                description="Every workflow execution logged with full audit trail. Know who did what, when, and why."
+                value="Clear"
+                label="Run history"
+                description="Every workflow execution is logged so you can review outcomes and accountability."
               />
             </div>
           </div>
@@ -86,11 +86,11 @@ function TranscriptDemo() {
   const ref = useRef<HTMLDivElement>(null)
 
   const messages = [
-    { speaker: 'Sarah', time: '10:32 AM', text: 'Hi, this is Sarah from Acme Corp.' },
-    { speaker: 'You', time: '10:32 AM', text: 'Hello Sarah, how can I help?' },
-    { speaker: 'Sarah', time: '10:33 AM', text: 'I need to update our billing info.' },
-    { speaker: 'You', time: '10:33 AM', text: 'Sure, let me pull up your account.' },
-    { speaker: 'Sarah', time: '10:34 AM', text: 'The new card ends in 4242.' },
+    { speaker: 'Agent', time: '10:32 AM', text: 'Opened invoice reconciliation workflow.' },
+    { speaker: 'Guide', time: '10:32 AM', text: 'Step 1: Export current ledger entries.' },
+    { speaker: 'Agent', time: '10:33 AM', text: 'Imported ledger into Q3 workbook.' },
+    { speaker: 'Guide', time: '10:34 AM', text: 'Step 2: Validate variance thresholds.' },
+    { speaker: 'Agent', time: '10:35 AM', text: 'Submitted reconciliation for approval.' },
   ]
 
   useEffect(() => {
@@ -125,8 +125,8 @@ function TranscriptDemo() {
         <div className="px-6 py-4 border-b border-slate-200">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-xs text-slate-400 mb-1">Thursday, Oct 24 • Recorded</div>
-              <h3 className="text-lg font-semibold text-slate-900">Customer Support Call</h3>
+              <div className="text-xs text-slate-400 mb-1">Thursday, Jan 23 • Workflow run</div>
+              <h3 className="text-lg font-semibold text-slate-900">Invoice Reconciliation</h3>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
@@ -141,8 +141,8 @@ function TranscriptDemo() {
         {/* Tabs */}
         <div className="px-6 py-3 border-b border-slate-200 flex gap-4">
           <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Summary</button>
-          <button className="text-xs text-slate-900 font-medium border-b-2 border-[#1861C8] pb-1">Transcript</button>
-          <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Actions</button>
+          <button className="text-xs text-slate-900 font-medium border-b-2 border-[#1861C8] pb-1">Run log</button>
+          <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Outputs</button>
         </div>
 
         {/* Transcript */}
@@ -171,7 +171,7 @@ function TranscriptDemo() {
         <div className="px-6 py-4 bg-slate-100 border-t border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500" />
-            <span className="text-[11px] text-slate-500">Workflow captured</span>
+            <span className="text-[11px] text-slate-500">Workflow run complete</span>
           </div>
           <div className="text-[11px] text-slate-500">
             {activeMessage} of {messages.length} interactions

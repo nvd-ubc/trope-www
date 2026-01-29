@@ -63,36 +63,36 @@ export default function Faqs() {
 
   const faqs = [
     {
-      question: "Does Trope work with desktop apps like Excel?",
-      answer: "Yes! Unlike browser-only tools, Trope is desktop-first. It works natively with Excel, QuickBooks, and other desktop applications on both macOS and Windows—plus all your web apps."
+      question: "Which apps does Trope support?",
+      answer: "Trope is desktop-first and works with macOS and Windows apps like Excel and QuickBooks, plus web-based tools. It’s built for the real mix of systems your teams already use."
     },
     {
-      question: "How is Trope different from Scribe or Tango?",
-      answer: "While Scribe and Tango create static guides, Trope creates living workflows that stay fresh. We detect when apps change, provide just-in-time guidance, and let you graduate safe steps into one-click automations."
+      question: "Is Trope available publicly?",
+      answer: "Not yet. Trope is in closed beta for B2B teams. Request access or use an invite link to join a workspace."
     },
     {
-      question: "What is drift detection?",
-      answer: "Drift detection automatically identifies when applications or documents change—like a UI update or a moved spreadsheet column—and flags outdated workflow steps before they cause errors."
+      question: "How does workflow guidance work?",
+      answer: "You record a real workflow, Trope generates a guided playbook, and your team follows in-app overlays during each run. Every run is logged for visibility and improvement."
     },
     {
       question: "Is my data secure?",
       answer: (
         <>
-          Absolutely. Trope uses end-to-end encryption for all workflow data. We're in the process of obtaining SOC2 compliance. Review our{' '}
+          Trope captures workflow context only with explicit permissions and stores artifacts per workspace. Review our{' '}
           <a href="/subprocessors" className="text-[#1861C8] hover:underline">
             subprocessors page
           </a>{' '}
-          for details.
+          for details and reach out with any security questions.
         </>
       )
     },
     {
-      question: "Who is Trope built for?",
-      answer: "Trope is ideal for teams with repeatable workflows—finance teams doing monthly closes, support teams handling data entry, IT help desks, and RevOps teams."
+      question: "Can teams share workflows with each other?",
+      answer: "Yes. Workflows live in shared workspaces and can be distributed via run links when needed. Admins control who can access each workflow."
     },
     {
-      question: "How does automation work?",
-      answer: "Trope takes a human-in-the-loop approach. Record a workflow, guide your team with overlays, then promote low-risk steps to one-click automations. Critical steps always require approval."
+      question: "What does onboarding look like?",
+      answer: "We help you pick pilot workflows, capture them with your SMEs, then roll out guided runs to the team. Most pilots take a few weeks to validate impact."
     }
   ]
 

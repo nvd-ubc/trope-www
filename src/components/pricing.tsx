@@ -1,83 +1,58 @@
-'use client'
-
-import { useState } from 'react'
-import { CONTACT_EMAIL } from '@/lib/constants'
+import { CONTACT_EMAIL, SALES_CALL_URL } from '@/lib/constants'
 
 export default function Pricing() {
-  const [annual, setAnnual] = useState<boolean>(true)
+  const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
 
   const plans = [
     {
-      name: 'Starter',
-      description: 'Perfect for small teams getting started.',
-      price: annual ? 20 : 25,
+      name: 'Pilot',
+      description: 'Launch a closed beta with one team and prove value fast.',
+      price: 'Request access',
       features: [
-        '10 workflows',
-        '5 team members',
-        '1,000 automated steps/mo',
-        'Drift detection',
-        'In-app overlays',
-        'Desktop support',
+        'Guided workflow capture + run',
+        'Invite-only workspace access',
+        'Shared workflow library',
+        'Run history summaries',
+        'Desktop + web coverage',
       ],
-      cta: 'Talk to Sales',
+      cta: 'Request access',
+      href: '/request-access',
       highlighted: false,
     },
     {
       name: 'Growth',
-      description: 'Scale with your growing team.',
-      price: annual ? 24 : 30,
+      description: 'Scale guidance across departments with admin visibility.',
+      price: 'Talk to sales',
       features: [
-        '50 workflows',
-        '25 team members',
-        '10,000 automated steps/mo',
-        'Everything in Starter',
-        'Role-based permissions',
-        'Premium support',
+        'Workspace admin roles',
+        'Workflow owners + review cadence',
+        'Run quality feedback loops',
+        'Shareable workflow links',
+        'Onboarding + enablement support',
       ],
-      cta: 'Talk to Sales',
+      cta: 'Book a call',
+      href: salesHref,
       highlighted: true,
     },
     {
       name: 'Enterprise',
-      description: 'For large organizations.',
-      price: null,
+      description: 'Governance, compliance, and rollout support at scale.',
+      price: 'Talk to sales',
       features: [
-        'Unlimited workflows',
-        'Unlimited team members',
-        'Custom automation limits',
-        'Everything in Growth',
-        'SSO & SCIM',
-        'Data residency',
+        'Custom workflow governance',
+        'Audit exports and reporting',
+        'Advanced onboarding planning',
+        'Priority support & SLAs',
+        'Dedicated success team',
       ],
-      cta: 'Talk to Sales',
+      cta: 'Talk to sales',
+      href: salesHref,
       highlighted: false,
     },
   ]
 
   return (
     <div>
-      {/* Toggle */}
-      <div className="flex justify-center mb-10 md:mb-12">
-        <div className="inline-flex items-center bg-slate-100 rounded-full p-1 border border-slate-200">
-          <button
-            className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
-              !annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
-            }`}
-            onClick={() => setAnnual(false)}
-          >
-            Monthly
-          </button>
-          <button
-            className={`px-4 sm:px-5 py-2.5 text-sm font-medium rounded-full transition-colors duration-200 ${
-              annual ? 'bg-[#1861C8] text-white' : 'text-slate-600 hover:text-slate-900'
-            }`}
-            onClick={() => setAnnual(true)}
-          >
-            Yearly <span className={`font-medium ml-1 hidden sm:inline ${annual ? 'text-white/80' : 'text-[#1861C8]'}`}>-20%</span>
-          </button>
-        </div>
-      </div>
-
       {/* Pricing cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
         {plans.map((plan, index) => (
@@ -108,24 +83,13 @@ export default function Pricing() {
             </div>
 
             <div className="mb-6">
-              {plan.price !== null ? (
-                <div className="flex items-baseline">
-                  <span className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
-                    ${plan.price}
-                  </span>
-                  <span className={`ml-1 ${plan.highlighted ? 'text-white/70' : 'text-slate-600'}`}>
-                    /user/mo
-                  </span>
-                </div>
-              ) : (
-                <div className={`text-3xl md:text-4xl font-bold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
-                  Custom
-                </div>
-              )}
+              <div className={`text-xl md:text-2xl font-semibold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
+                {plan.price}
+              </div>
             </div>
 
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href={plan.href}
               className={`block w-full py-3 px-4 text-center text-sm font-medium rounded-full transition-colors duration-200 mb-6 ${
                 plan.highlighted
                   ? 'bg-white text-[#1861C8] hover:bg-slate-100'
