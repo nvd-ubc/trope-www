@@ -63,16 +63,17 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6 h-fit">
-              <h2 className="text-lg font-semibold text-slate-900">Metrics to watch</h2>
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 h-fit shadow-sm lg:sticky lg:top-28">
+              <p className="text-xs uppercase tracking-wide text-slate-400">Metrics to watch</p>
+              <h2 className="mt-2 text-lg font-semibold text-slate-900">Pilot validation signals</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Use these signals to validate your pilot and prioritize what to scale next.
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              <ul className="mt-4 space-y-3 text-sm text-slate-600">
                 {useCase.metrics.map((metric) => (
                   <li key={metric} className="flex items-start gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-300" />
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
                     <span>{metric}</span>
                   </li>
                 ))}
@@ -86,7 +87,7 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
               </p>
               <div className="mt-6 grid gap-6">
                 {useCase.workflows.map((workflow) => (
-                  <div key={workflow.title} className="rounded-3xl border border-slate-200 bg-white p-6">
+                  <div key={workflow.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h3 className="text-base font-semibold text-slate-900">{workflow.title}</h3>
@@ -94,24 +95,24 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
                           {workflow.systems.map((system) => (
                             <span
                               key={system}
-                              className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500"
+                              className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium uppercase tracking-wide text-slate-500"
                             >
                               {system}
                             </span>
                           ))}
                         </div>
                       </div>
-                      <span className="text-xs uppercase tracking-wide text-slate-400">
+                      <span className="text-[11px] uppercase tracking-wide text-slate-400">
                         {workflow.steps.length} steps
                       </span>
                     </div>
-                    <ol className="mt-5 space-y-3 text-sm text-slate-600">
+                    <ol className="mt-5 space-y-4 border-l border-slate-200 pl-6 text-sm text-slate-600">
                       {workflow.steps.map((step, index) => (
-                        <li key={`${workflow.title}-${index}`} className="flex gap-3">
-                          <span className="w-7 text-xs font-semibold text-slate-400 tabular-nums">
-                            {String(index + 1).padStart(2, '0')}
+                        <li key={`${workflow.title}-${index}`} className="relative flex gap-3">
+                          <span className="absolute -left-3 top-0 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 bg-white text-[11px] font-semibold text-slate-500 tabular-nums">
+                            {index + 1}
                           </span>
-                          <span>{step}</span>
+                          <span className="pl-4">{step}</span>
                         </li>
                       ))}
                     </ol>
