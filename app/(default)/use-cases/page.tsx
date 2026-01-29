@@ -27,9 +27,9 @@ export default function UseCasesPage() {
             {USE_CASES.map((useCase) => (
               <div
                 key={useCase.slug}
-                className="group flex h-full flex-col bg-white rounded-3xl border border-slate-200 p-6 shadow-sm transition hover:border-slate-300"
+                className="group relative flex h-full flex-col bg-white rounded-3xl border border-slate-200 p-6 shadow-sm transition hover:border-slate-300"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
                   <div>
                     <h2 className="text-xl font-semibold text-slate-900">
                       <Link className="group-hover:text-[#1861C8]" href={`/use-cases/${useCase.slug}`}>
@@ -38,8 +38,10 @@ export default function UseCasesPage() {
                     </h2>
                     <p className="mt-2 text-sm text-slate-600">{useCase.summary}</p>
                   </div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400 text-right self-end">{useCase.category}</span>
                 </div>
+                <span className="absolute right-6 top-6 text-xs uppercase tracking-wide text-slate-400 text-right">
+                  {useCase.category}
+                </span>
 
                 <div className="mt-5 flex-1">
                   <p className="text-xs uppercase tracking-wide text-slate-400">Outcomes</p>
