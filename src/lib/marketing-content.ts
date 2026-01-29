@@ -1126,24 +1126,111 @@ export const RESOURCES: Resource[] = [
     title: 'Security overview for desktop guidance',
     category: 'Brief',
     summary:
-      'How Trope separates on-device capture from cloud processing and keeps permissions explicit.',
+      'A practical overview of how Trope keeps capture permissioned, workspaces isolated, and workflow runs auditable.',
     readTime: '7 min read',
     audience: 'Security + IT',
     sections: [
       {
+        heading: 'What Trope is (and why security matters)',
+        body:
+          'Trope helps teams capture and run guided workflows inside the desktop apps they already use. Because workflows can include sensitive screens (customer records, finance tools, internal systems), we treat security and access control as product features, not an afterthought. This brief explains Trope\'s security approach at a high level: permissioned capture on the desktop, isolated workspaces in Trope Cloud, and strong accountability through run history and logs.',
+      },
+      {
         heading: 'Permissioned capture',
         body:
-          'Desktop capture is gated by explicit user permissions. The agent only sees what a user authorizes.',
+          'Desktop capture is gated by explicit user permissions. Trope is designed so capture is user-initiated and can be stopped at any time, and the desktop agent only sees what a user has authorized through OS-level permissions. In other words: Trope does not silently run in the background - capture starts when a user starts it.',
+      },
+      {
+        heading: 'Data minimization for sensitive workflows',
+        body:
+          'Trope is designed to capture what you need to make a workflow usable - not to indiscriminately collect a user\'s desktop. Teams get the best security outcomes when they pair Trope\'s explicit capture model with clear internal guidelines: record only approved workflows, use test or masked data when possible, and pause or stop capture around secrets. This keeps workflow assets focused on UI steps and reduces the chance that highly sensitive information becomes part of a shared guide.',
+        bullets: [
+          'Prefer test environments or test accounts for recordings when possible.',
+          'Avoid recording secrets (passwords, MFA codes, API keys) whenever feasible.',
+        ],
+      },
+      {
+        heading: 'Local-first handling of workflow artifacts',
+        body:
+          'Workflow recordings are created on the user\'s machine first. That raw capture remains protected by your existing endpoint posture (device encryption, MDM/EDR policies, managed OS updates) before anything is uploaded. In practice, this lets teams define clear capture guidelines - what is appropriate to record, what to avoid, and which workflows should be handled by a smaller trusted group.',
       },
       {
         heading: 'Cloud isolation',
         body:
-          'Trope Cloud stores workflow assets per workspace and scopes access through org membership and invites.',
+          'Trope Cloud stores workflow assets per workspace and scopes access through org membership and invites. This workspace model is designed to keep collaboration simple for teams while reducing the risk of accidental cross-team or cross-customer access. Workspace admins manage membership, and sharing can be scoped to what the situation requires.',
+        bullets: [
+          'Invite-based membership and admin-managed access.',
+          'Optional sharing through scoped, time-bound workflow links.',
+        ],
+      },
+      {
+        heading: 'Clear boundary between capture and cloud processing',
+        body:
+          'Trope intentionally separates on-device capture from cloud processing. The desktop side is the privileged boundary for interacting with the operating system, while the cloud side focuses on storing workspace assets, generating guidance, and coordinating access. This split helps minimize what the cloud can see by default and makes it easier for security teams to reason about where sensitive data may exist. When automation actions are enabled, they run within an active session and under explicit user-granted capabilities on the endpoint - not as unattended background access.',
       },
       {
         heading: 'Auditability',
         body:
-          'Each run produces a log with timestamps, actors, and outcomes - supporting review and compliance workflows.',
+          'Each workflow run produces structured metadata that supports review, QA, and compliance needs. Teams can answer basic questions like who ran a workflow, when it was run, and whether it completed successfully - without relying on tribal knowledge or informal screen recordings. Over time, run history and feedback help keep high-impact workflows current.',
+      },
+      {
+        heading: 'Retention, deletion, and offboarding',
+        body:
+          'Trope is built for business workflows, which means teams need predictable lifecycle controls. We retain customer data only as long as needed to provide the service and to meet operational and legal obligations. When employees change roles or leave, workspace admins can remove membership so users lose access to workspace assets. As part of a security review, we can align on retention expectations for workflow artifacts and discuss deletion and offboarding workflows.',
+      },
+      {
+        heading: 'Encryption and data protection',
+        body:
+          'Trope uses industry-standard encryption to protect data in transit and at rest. This applies to workflow artifacts, generated guides, and operational logs. We also follow least-privilege principles for internal access so routine operations do not require broad visibility into customer content. If your security program requires it, we can document our encryption posture and access workflows at a level suitable for vendor review without exposing sensitive implementation details.',
+      },
+      {
+        heading: 'Operational security and incident response',
+        body:
+          'Security also depends on how a service is operated day to day. Trope maintains operational logging and monitoring so we can track service health, investigate issues, and respond quickly. When something goes wrong, we follow an incident response process to contain impact, restore service, and drive remediation. For security-sensitive customers, we can align on communication expectations, security points of contact, and escalation paths during procurement. We also treat operational hygiene (reviewed access, change control, and defense-in-depth) as part of the product lifecycle, not an afterthought.',
+      },
+      {
+        heading: 'Authentication and access governance',
+        body:
+          'Trope is designed for controlled access at the workspace level. Authentication establishes identity, and authorization enforces what each user can do within a workspace. On desktop, Trope relies on OS-provided secure storage to protect authentication material, and workspace admins can control invites and membership as teams change.',
+      },
+      {
+        heading: 'AI processing and third-party providers',
+        body:
+          'Some Trope features rely on AI to turn captured artifacts into usable guidance. When we use third-party AI providers, we do so under agreements that restrict how customer data can be used, and we limit sharing to what is necessary to operate the service. We do not permit AI providers to use your data to train models for other customers, and for strict compliance needs we can discuss provider and region constraints.',
+      },
+      {
+        heading: 'Canadian data residency (for those who need it)',
+        body:
+          'Some organizations require Canada-only data residency for storage and processing. Trope supports a Canada region approach for eligible customers, with the goal of keeping Canadian tenants pinned to Canadian endpoints and in-country processing. We define the scope clearly (storage, processing, and provider choices) so you can evaluate it against your policy. If your compliance program has specific interpretations (for example, around global CDNs or DNS), we will document the end-to-end behavior and available options so you can make an informed decision.',
+        bullets: [
+          'Region-pinned storage and processing for Canada-resident workspaces.',
+          'Residency guardrails to prevent accidental cross-region handling.',
+        ],
+      },
+      {
+        heading: 'SOC 2 readiness and security reviews',
+        body:
+          'Trope is building toward SOC 2. We have completed a SOC 2 readiness assessment (January 22, 2026) based on code and documentation review, and we use it to prioritize hardening and evidence collection. A readiness assessment is not an auditor-issued SOC 2 report, but it gives security teams a concrete view of control coverage and what documentation is available today, including gaps and remediation plans. We can share the assessment under NDA and support standard security questionnaires and customer security reviews. When an auditor-issued SOC 2 report is available, we will provide it through the same process.',
+      },
+      {
+        heading: 'What we can share during procurement',
+        body:
+          'Most security reviews go faster when you have concrete artifacts. Trope can provide a security review package tailored to your deployment, including a high-level data flow overview, an AI data-handling overview for applicable features, and residency posture where relevant. If you have a standard vendor questionnaire, we are happy to complete it and walk through your threat model with your security team.',
+        bullets: [
+          'High-level architecture and data flow overview.',
+          'SOC 2 readiness assessment (January 22, 2026) under NDA.',
+          'Canadian data residency posture and boundary description (if applicable).',
+        ],
+      },
+      {
+        heading: 'Practical guidance for a safe rollout',
+        body:
+          'Trope is most effective when security expectations are explicit from day one. Start with a small pilot workspace, define capture do\'s and don\'ts, and assign workflow ownership so guides stay current. Trope\'s permissioned capture, workspace access controls, and auditability are designed to fit into standard enterprise rollout practices - from a small enablement pilot to a broader operations deployment. When collaborating outside the core team, use scoped, time-bound sharing.',
+        bullets: [
+          'Start with a limited set of workflows and a trusted pilot group.',
+          'Document capture guidelines (for example, avoid recording secrets or MFA codes).',
+          'Assign workflow owners and a review cadence for critical processes.',
+        ],
       },
     ],
   },

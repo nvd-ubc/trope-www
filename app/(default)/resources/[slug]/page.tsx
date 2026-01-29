@@ -56,26 +56,29 @@ export default async function ResourceDetail({ params }: { params: Promise<Param
             <p className="mt-4 text-lg text-slate-600">{resource.summary}</p>
           </div>
 
-          <div className="mt-10 space-y-8">
-            {resource.sections.map((section) => (
-              <div key={section.heading} className="rounded-3xl border border-slate-200 bg-white p-6">
-                <h2 className="text-xl font-semibold text-slate-900">{section.heading}</h2>
-                <p className="mt-3 text-sm text-slate-600">{section.body}</p>
+          <div className="mt-10">
+            {resource.sections.map((section, index) => (
+              <section
+                key={section.heading}
+                className={index === 0 ? undefined : 'mt-10 border-t border-slate-200 pt-10'}
+              >
+                <h2 className="text-2xl font-semibold text-slate-900">{section.heading}</h2>
+                <p className="mt-3 text-sm leading-relaxed text-slate-600 sm:text-base">{section.body}</p>
                 {section.bullets && (
-                  <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <ul className="mt-4 space-y-2 text-sm text-slate-600 sm:text-base">
                     {section.bullets.map((bullet) => (
-                      <li key={bullet} className="flex items-start gap-2">
-                        <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
+                      <li key={bullet} className="flex items-start gap-3">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#1861C8]" />
                         <span>{bullet}</span>
                       </li>
                     ))}
                   </ul>
                 )}
-              </div>
+              </section>
             ))}
           </div>
 
-          <div className="mt-12 rounded-3xl border border-slate-200 bg-white px-6 py-8">
+          <div className="mt-12 border-t border-slate-200 pt-10">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <h3 className="text-xl font-semibold text-slate-900">Want help applying this?</h3>
