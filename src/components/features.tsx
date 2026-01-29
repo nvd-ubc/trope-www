@@ -214,10 +214,6 @@ function RecordDemo({ index = 0 }: { index?: number }) {
     const interval = setInterval(() => {
       setActiveStep(s => {
         const next = (s + 1) % steps.length
-        setTimeout(() => {
-          setIsClicking(true)
-          setTimeout(() => setIsClicking(false), 150)
-        }, 400)
         return next
       })
     }, 1400)
@@ -234,8 +230,17 @@ function RecordDemo({ index = 0 }: { index?: number }) {
     const target = icon ?? row
     const targetRect = target.getBoundingClientRect()
     const x = ((targetRect.left - containerRect.left) + targetRect.width * 0.5) / containerRect.width * 100
-    const y = ((targetRect.top - containerRect.top) + targetRect.height * 0.5) / containerRect.height * 100
+    const baseY = (targetRect.top - containerRect.top) + targetRect.height * 0.5
+    const yOffset = activeStep === steps.length - 1 ? 10 : 0
+    const y = (Math.max(0, baseY - yOffset) / containerRect.height) * 100
     setCursorPos({ x, y })
+    setIsClicking(false)
+    const clickDelay = 560
+    const clickTimer = setTimeout(() => {
+      setIsClicking(true)
+      setTimeout(() => setIsClicking(false), 150)
+    }, clickDelay)
+    return () => clearTimeout(clickTimer)
   }, [activeStep, isActive])
 
   return (
@@ -321,6 +326,7 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
   const [radarPos, setRadarPos] = useState({ left: 0, top: 0 })
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 })
   const [isClicking, setIsClicking] = useState(false)
+  const [typedCount, setTypedCount] = useState(0)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const fieldRefs = useRef<(HTMLDivElement | null)[]>([])
 
@@ -335,6 +341,23 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
       setStep(0)
     }
   }, [isActive])
+
+  useEffect(() => {
+    if (!isActive || step !== 1) {
+      setTypedCount(0)
+      return
+    }
+    let count = 0
+    setTypedCount(0)
+    const interval = setInterval(() => {
+      count = Math.min(8, count + 1)
+      setTypedCount(count)
+      if (count >= 8) {
+        clearInterval(interval)
+      }
+    }, 120)
+    return () => clearInterval(interval)
+  }, [isActive, step])
 
   useEffect(() => {
     if (!isActive) return
@@ -368,8 +391,8 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
       left: tooltipLeft,
     })
     const moveDelay = 180
-    const clickOnDelay = 420
-    const clickOffDelay = 560
+    const clickOnDelay = 720
+    const clickOffDelay = 860
     const moveTimer = setTimeout(() => {
       setCursorPos({ left: cursorLeft, top: cursorTop })
     }, moveDelay)
@@ -408,8 +431,19 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
               />
               <div
                 ref={(el) => { fieldRefs.current[1] = el }}
-                className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`}
-              />
+                className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 relative ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`}
+              >
+                {isActive && step === 1 && (
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {Array.from({ length: typedCount }).map((_, i) => (
+                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                    ))}
+                    {typedCount < 8 && (
+                      <span className="w-[2px] h-3 bg-slate-400 animate-pulse" />
+                    )}
+                  </div>
+                )}
+              </div>
               <div
                 ref={(el) => { fieldRefs.current[2] = el }}
                 className={`h-5 w-20 rounded bg-slate-200 transition-all duration-300 ${isActive && step === 2 ? 'ring-2 ring-[#1861C8]' : ''}`}
