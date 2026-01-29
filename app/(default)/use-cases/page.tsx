@@ -1,7 +1,7 @@
 export const metadata = {
   title: 'Use Cases - Trope',
   description:
-    'Explore how Trope helps operations, finance, support, and RevOps teams capture and scale critical desktop workflows.',
+    'Explore how Trope helps finance, IT, customer success, compliance, and operations teams capture and scale critical desktop workflows.',
 }
 
 import Link from 'next/link'
@@ -19,7 +19,7 @@ export default function UseCasesPage() {
             </h1>
             <p className="text-lg text-slate-600">
               Trope works where your team works—desktop apps, web tools, and legacy systems. Pick a use case to see how
-              guided workflows reduce ramp time, errors, and rework.
+              guided workflows reduce ramp time, errors, and rework across every department.
             </p>
           </div>
 
@@ -38,7 +38,7 @@ export default function UseCasesPage() {
                     </h2>
                     <p className="mt-2 text-sm text-slate-600">{useCase.summary}</p>
                   </div>
-                  <span className="text-xs uppercase tracking-wide text-slate-400">Operations</span>
+                  <span className="text-xs uppercase tracking-wide text-slate-400">{useCase.category}</span>
                 </div>
 
                 <div className="mt-5 flex-1">

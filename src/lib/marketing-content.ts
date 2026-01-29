@@ -1,6 +1,7 @@
 export type UseCase = {
   slug: string
   title: string
+  category: string
   summary: string
   hero: string
   outcomes: string[]
@@ -37,6 +38,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'finance-close',
     title: 'Finance close workflows',
+    category: 'Finance',
     summary:
       'Capture month-end close steps across ERP, Excel, and approval systems so every close run is consistent, auditable, and repeatable.',
     hero:
@@ -135,6 +137,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'operations-onboarding',
     title: 'Operations onboarding',
+    category: 'Operations',
     summary:
       'Replace shadowing with in-app guidance for back-office teams working in legacy desktop tools and web portals.',
     hero:
@@ -223,6 +226,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'support-desk',
     title: 'Support & service desk',
+    category: 'Customer Support',
     summary:
       'Deliver consistent, high-quality resolutions by guiding agents through multi-system procedures.',
     hero:
@@ -304,6 +308,7 @@ export const USE_CASES: UseCase[] = [
   {
     slug: 'revops-hygiene',
     title: 'RevOps data hygiene',
+    category: 'Revenue Ops',
     summary:
       'Guide revenue operations teams through CRM and billing updates to keep pipeline data accurate.',
     hero:
@@ -380,6 +385,374 @@ export const USE_CASES: UseCase[] = [
       'Percent of opportunities updated on time.',
       'Forecast accuracy variance after rollouts.',
       'Data completeness rate by stage.',
+    ],
+  },
+  {
+    slug: 'it-access-provisioning',
+    title: 'IT access & device provisioning',
+    category: 'IT',
+    summary:
+      'Standardize device setup, software installs, and access requests across identity, MDM, and ticketing tools.',
+    hero:
+      'Keep IT onboarding and access changes consistent across every desktop and system.',
+    outcomes: [
+      'Reduce time-to-ready for new hires and contractors.',
+      'Prevent access gaps with consistent approval trails.',
+      'Keep device and software rollouts predictable.',
+    ],
+    workflows: [
+      {
+        title: 'New hire laptop setup',
+        systems: ['MDM', 'Identity provider', 'Ticketing', 'App catalog'],
+        steps: [
+          'Open the onboarding ticket and confirm start date.',
+          'Open the MDM console and locate the assigned device.',
+          'Apply the standard image profile.',
+          'Assign the device to the new hire in MDM.',
+          'Open the identity provider and create the user account.',
+          'Assign baseline groups and MFA policy.',
+          'Open the app catalog and select required applications.',
+          'Deploy the app bundle to the device.',
+          'Verify device health and encryption status in MDM.',
+          'Send the welcome email with login instructions.',
+          'Update the onboarding ticket with completion notes.',
+        ],
+      },
+      {
+        title: 'Privileged access request',
+        systems: ['Ticketing', 'PAM', 'Identity provider', 'Audit log'],
+        steps: [
+          'Open the access request ticket and review the justification.',
+          'Verify the requester role in the identity provider.',
+          'Open the PAM system and create a new access request.',
+          'Select the target system and access scope.',
+          'Set the expiration date and approval requirement.',
+          'Submit for approval and wait for approver sign-off.',
+          'Apply the role assignment in the identity provider.',
+          'Confirm access in the PAM audit log.',
+          'Update the ticket with approval and access details.',
+        ],
+      },
+      {
+        title: 'Software rollout update',
+        systems: ['App catalog', 'MDM', 'Release notes', 'Knowledge base'],
+        steps: [
+          'Open the release notes for the new version.',
+          'Deploy the update to a pilot group in MDM.',
+          'Monitor installation status and error logs.',
+          'Confirm the app launches successfully on pilot devices.',
+          'Roll out the update to the full device group.',
+          'Update the knowledge base with new UI changes.',
+          'Notify teams of the update in the IT channel.',
+        ],
+      },
+    ],
+    metrics: [
+      'Time from request to provisioned access.',
+      'Percentage of devices fully compliant within 24 hours.',
+      'Number of access escalations per month.',
+    ],
+  },
+  {
+    slug: 'compliance-audit',
+    title: 'Compliance & audit readiness',
+    category: 'Compliance',
+    summary:
+      'Collect evidence, run access reviews, and keep control documentation consistent across audits.',
+    hero:
+      'Make audit prep a repeatable workflow instead of a scramble.',
+    outcomes: [
+      'Reduce audit prep time with consistent evidence capture.',
+      'Surface access exceptions early.',
+      'Maintain a clear trail of control execution.',
+    ],
+    workflows: [
+      {
+        title: 'Quarterly access review',
+        systems: ['Identity provider', 'HRIS', 'Spreadsheet', 'GRC tool'],
+        steps: [
+          'Export the current user access list from the identity provider.',
+          'Export the active employee roster from HRIS.',
+          'Open the access review spreadsheet.',
+          'Import both exports into the review tabs.',
+          'Run the mismatch check and filter exceptions.',
+          'Validate exceptions with department owners.',
+          'Document decisions in the review spreadsheet.',
+          'Open the GRC tool and upload the completed review.',
+          'Mark the control evidence task complete.',
+        ],
+      },
+      {
+        title: 'Audit evidence collection',
+        systems: ['GRC tool', 'Ticketing', 'Logging platform', 'Shared drive'],
+        steps: [
+          'Open the audit request in the GRC tool.',
+          'Review the list of required controls.',
+          'Open the logging platform and export activity logs.',
+          'Download supporting tickets from the ticketing tool.',
+          'Save evidence files in the audit folder on the shared drive.',
+          'Upload evidence files to the GRC request.',
+          'Add notes describing the control execution.',
+          'Submit the evidence package for auditor review.',
+        ],
+      },
+      {
+        title: 'Policy attestation cycle',
+        systems: ['HRIS', 'E-sign tool', 'LMS'],
+        steps: [
+          'Open the policy attestation campaign in the LMS.',
+          'Upload the updated policy PDF.',
+          'Sync the active employee list from HRIS.',
+          'Send attestation requests.',
+          'Track completion status and reminders.',
+          'Export the completion report.',
+          'Store the report in the compliance archive.',
+        ],
+      },
+    ],
+    metrics: [
+      'Days to complete access review.',
+      'Percentage of controls with complete evidence.',
+      'Policy attestation completion rate.',
+    ],
+  },
+  {
+    slug: 'procurement-approvals',
+    title: 'Procurement approvals',
+    category: 'Procurement',
+    summary:
+      'Standardize purchase requests, vendor changes, and approval routing across procurement and finance tools.',
+    hero:
+      'Keep purchasing decisions consistent with clear approvals and evidence.',
+    outcomes: [
+      'Reduce back-and-forth on purchase approvals.',
+      'Prevent vendor data errors with verified changes.',
+      'Maintain clear approval trails for finance.',
+    ],
+    workflows: [
+      {
+        title: 'Purchase request to PO',
+        systems: ['Procurement portal', 'Approvals', 'ERP', 'Shared drive'],
+        steps: [
+          'Open the procurement portal and click New Request.',
+          'Enter vendor, item description, and budget code.',
+          'Upload vendor quotes from the shared drive.',
+          'Submit the request for approval.',
+          'Open the approvals tool and review the request.',
+          'Approve the request and note any conditions.',
+          'Open the ERP and create a purchase order.',
+          'Attach the approved request and quotes.',
+          'Send the PO to the vendor and log confirmation.',
+          'Update the procurement request with the PO number.',
+        ],
+      },
+      {
+        title: 'Vendor banking change',
+        systems: ['Vendor master', 'Document system', 'Approvals'],
+        steps: [
+          'Open the vendor change request ticket.',
+          'Verify the new banking document in the document system.',
+          'Open the vendor master record in the ERP.',
+          'Update banking details and mark as pending approval.',
+          'Open the approvals tool and route to finance.',
+          'After approval, confirm the vendor record is active.',
+          'Document the change in the vendor change log.',
+        ],
+      },
+      {
+        title: 'Contract renewal review',
+        systems: ['Contract system', 'Spend dashboard', 'Approvals'],
+        steps: [
+          'Open the contract record for the renewal.',
+          'Review usage and spend in the spend dashboard.',
+          'Update the renewal summary with findings.',
+          'Submit the renewal for approval.',
+          'Capture approval notes and required changes.',
+          'Finalize the renewal status in the contract system.',
+        ],
+      },
+    ],
+    metrics: [
+      'Average approval cycle time.',
+      'Number of vendor data corrections per month.',
+      'Spend under approved contracts.',
+    ],
+  },
+  {
+    slug: 'customer-onboarding',
+    title: 'Customer onboarding',
+    category: 'Customer Success',
+    summary:
+      'Coordinate account provisioning, data setup, and training across CRM, onboarding tools, and product admin.',
+    hero:
+      'Turn onboarding into a consistent, measurable launch playbook.',
+    outcomes: [
+      'Reduce time to first value.',
+      'Ensure every onboarding step is tracked.',
+      'Keep handoffs between sales and CS consistent.',
+    ],
+    workflows: [
+      {
+        title: 'Account provisioning',
+        systems: ['CRM', 'Product admin', 'Billing', 'Email'],
+        steps: [
+          'Open the closed-won opportunity in the CRM.',
+          'Click Create onboarding task.',
+          'Open the product admin console.',
+          'Create the customer workspace with plan tier.',
+          'Invite the primary admin via email.',
+          'Open the billing system and activate the subscription.',
+          'Confirm the subscription status is Active.',
+          'Update the CRM onboarding checklist.',
+        ],
+      },
+      {
+        title: 'Data import and validation',
+        systems: ['File transfer portal', 'Spreadsheet', 'Product admin'],
+        steps: [
+          'Open the onboarding tracker and confirm data sources.',
+          'Download the customer data export from the portal.',
+          'Open the file in Excel and validate required columns.',
+          'Fix formatting errors and save the cleaned file.',
+          'Upload the cleaned file to the product admin importer.',
+          'Run the validation preview and resolve errors.',
+          'Submit the import and confirm completion status.',
+          'Update the onboarding tracker with results.',
+        ],
+      },
+      {
+        title: 'Training and go-live readiness',
+        systems: ['Calendar', 'LMS', 'CRM'],
+        steps: [
+          'Schedule the kickoff session on the calendar.',
+          'Send training resources from the LMS.',
+          'Track completion of required modules.',
+          'Document attendance and questions in the CRM.',
+          'Confirm go-live date with the customer admin.',
+          'Mark onboarding status as Ready for Go-Live.',
+        ],
+      },
+    ],
+    metrics: [
+      'Days from close to first active user.',
+      'Onboarding checklist completion rate.',
+      'Training completion percentage.',
+    ],
+  },
+  {
+    slug: 'claims-processing',
+    title: 'Claims processing',
+    category: 'Claims',
+    summary:
+      'Guide claims teams through intake, verification, and payout across policy, imaging, and payment systems.',
+    hero:
+      'Keep claims consistent, compliant, and fully documented.',
+    outcomes: [
+      'Reduce claim cycle time.',
+      'Improve documentation quality for audits.',
+      'Lower rework from missing evidence.',
+    ],
+    workflows: [
+      {
+        title: 'Claim intake and validation',
+        systems: ['Claims system', 'Policy admin', 'Document intake'],
+        steps: [
+          'Open the claim intake queue.',
+          'Select the new claim and verify required fields.',
+          'Open the policy admin system and confirm coverage.',
+          'Validate claimant details against the policy record.',
+          'Open the document intake portal.',
+          'Download supporting documents and attach to claim.',
+          'Set claim status to In Review.',
+        ],
+      },
+      {
+        title: 'Fraud screening workflow',
+        systems: ['Fraud tool', 'Claims system', 'Notes'],
+        steps: [
+          'Open the claim and click Run fraud screen.',
+          'Review the fraud score and flags.',
+          'If flagged, request additional documentation.',
+          'Document the request in claim notes.',
+          'Set the claim status to Pending Review.',
+        ],
+      },
+      {
+        title: 'Payout approval and payment',
+        systems: ['Claims system', 'Approvals', 'Payment system', 'Ledger'],
+        steps: [
+          'Open the claim and review the settlement amount.',
+          'Submit the payout for approval.',
+          'Approve the payout in the approvals tool.',
+          'Open the payment system and issue the payout.',
+          'Update the ledger with the payout memo.',
+          'Mark the claim as Closed and notify the claimant.',
+        ],
+      },
+    ],
+    metrics: [
+      'Average days to close a claim.',
+      'Percentage of claims missing documentation.',
+      'Fraud flag rate per month.',
+    ],
+  },
+  {
+    slug: 'logistics-fulfillment',
+    title: 'Logistics & fulfillment',
+    category: 'Logistics',
+    summary:
+      'Coordinate picking, packing, and shipping across WMS, carrier portals, and customer updates.',
+    hero:
+      'Make fulfillment repeatable across warehouses and carriers.',
+    outcomes: [
+      'Reduce fulfillment errors and delays.',
+      'Improve tracking consistency for customers.',
+      'Standardize exception handling across sites.',
+    ],
+    workflows: [
+      {
+        title: 'Shipment creation and dispatch',
+        systems: ['WMS', 'Carrier portal', 'ERP', 'Customer portal'],
+        steps: [
+          'Open the pick list in the WMS.',
+          'Confirm inventory availability and reserve items.',
+          'Print packing slip and pick tickets.',
+          'Pack the order and scan items.',
+          'Open the carrier portal and create a shipment.',
+          'Print the shipping label and apply it.',
+          'Update the shipment tracking number in the ERP.',
+          'Notify the customer via the portal.',
+        ],
+      },
+      {
+        title: 'Shipment exception handling',
+        systems: ['WMS', 'Carrier portal', 'Ticketing', 'Customer comms'],
+        steps: [
+          'Open the exception queue in the WMS.',
+          'Identify the delayed shipment and check status.',
+          'Open the carrier portal and view tracking events.',
+          'Create an exception ticket with root cause.',
+          'Update the customer with a new ETA.',
+          'Flag the shipment for follow-up review.',
+        ],
+      },
+      {
+        title: 'Cycle count reconciliation',
+        systems: ['WMS', 'Spreadsheet', 'ERP'],
+        steps: [
+          'Run the cycle count report in the WMS.',
+          'Export the report to CSV.',
+          'Open the CSV in Excel and compare to ERP stock.',
+          'Identify discrepancies and document reasons.',
+          'Update inventory adjustments in the ERP.',
+          'Save the reconciliation file to the shared drive.',
+        ],
+      },
+    ],
+    metrics: [
+      'Order accuracy rate.',
+      'Average time from pick to ship.',
+      'Exception rate per 1,000 shipments.',
     ],
   },
 ]
