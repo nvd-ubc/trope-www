@@ -1045,63 +1045,37 @@ export const RESOURCES: Resource[] = [
       {
         heading: 'Why workflows drift',
         body:
-          'UI changes, tool migrations, and undocumented shortcuts slowly erode consistency. Drift shows up as rework, escalations, and unreliable training. The best teams treat drift as an expected maintenance cost, not a surprise failure.',
+          'Workflows drift because the UI is a moving target. Desktop apps ship updates, admins change settings, and approval paths evolve as policies and teams change. Even when the business task stays the same, the clicks often do not.\n\nDrift also comes from variability that is not obvious in documentation: different permissions, feature flags, and tenant configurations can change what a screen looks like. A workflow captured by an admin may not match what a new operator sees.\n\nDrift is expensive because it usually starts small. A button moves, a field becomes required, a report export changes shape, and operators compensate with workarounds. If you do not catch it, those workarounds become tribal knowledge and training quietly degrades.\n\nThe best teams treat drift like preventative maintenance: expected, scheduled, and owned. The goal is not to eliminate change. It is to make updates routine so critical workflows stay dependable.',
       },
       {
         heading: 'What drift looks like in practice',
         body:
-          'Drift is usually not a big break. It is a series of small mismatches between how a workflow was captured and how it is performed today. Common symptoms include workarounds, skipped steps, and inconsistent outcomes across operators.',
-        bullets: [
-          'Operators take a different path than the documented steps.',
-          'A previously stable step now requires a manual search or extra clicks.',
-          'Approvals and evidence collection happen, but the order varies.',
-          'Escalations increase because exceptions are handled ad hoc.',
-        ],
+          'Most drift is not a catastrophic break. It is friction: one extra dialog, a renamed menu item, or a new identity step that interrupts a previously smooth path.\n\nExamples you can expect: a desktop app moves an export button into a new toolbar, a web portal adds a required dropdown, SSO prompts appear in the middle of a flow, or a CSV report adds a column that breaks an Excel import. Operators still finish the job, but the path diverges from the guide.\n\nPeople adapt quickly: they keep a personal cheat sheet, ask a teammate for the new path, or skip the guide entirely. The work gets done, but the process stops being teachable.\n\nDrift is not just navigation. It also shows up when checks are skipped, evidence is captured inconsistently, or approvals happen outside the workflow. That is where risk creeps in.\n\nThe signal to watch for is inconsistency. If two operators complete the same workflow with different steps, different evidence, or different escalation points, your guidance is already drifting.',
       },
       {
         heading: 'Detect changes early',
         body:
-          'Tie workflow ownership to real teams, review guidance on a predictable cadence, and use run feedback to surface outdated steps.',
-        bullets: [
-          'Assign an owner per workflow.',
-          'Add review cadences to critical flows.',
-          'Track exceptions reported during runs.',
-        ],
+          'Drift is easiest to fix when it is caught the same day it appears. That means you need two things: clear ownership and a simple way for operators to report "this step is wrong" without starting a project.\n\nAssign an owner (and a backup) for every critical workflow, then set a review cadence that matches risk. High-impact flows may need monthly review. Low-risk flows can be quarterly.\n\nCreate a single intake path for drift reports. A short form, a tagged help desk queue, or a dedicated channel works as long as it is consistent and routed to owners.\n\nIf your IT team plans application updates or policy changes, treat those as scheduled drift events. Ask for a heads up on upcoming releases and permission changes so you can proactively review the workflows most likely to be affected.\n\nFinally, treat run feedback and exceptions as your early-warning system. If a workflow repeatedly triggers the same question, the guide is missing context. If operators stop using the guide, it is probably because it stopped matching reality.',
       },
       {
         heading: 'Set a drift response SLA',
         body:
-          'Define what happens when drift is detected. For high-impact workflows, decide how quickly the guide should be corrected, who can approve changes, and how you communicate updates to operators.',
-        bullets: [
-          'Severity levels (minor UI change vs blocking failure).',
-          'Response time targets per severity.',
-          'Approval process for regulated or high-risk steps.',
-        ],
+          'Not all drift is equal. A cosmetic label change can wait. A broken approval step or compliance-required evidence gap cannot. Define a simple severity model so everyone knows what happens next.\n\nA pragmatic approach is to use three severities. Minor: the workflow still works, but the instructions are slightly off. Major: the workflow is still possible, but it causes delays or extra help from an SME. Blocking: the workflow cannot be completed or it risks a policy violation.\n\nFor each severity, decide who can approve an update, how quickly you aim to publish a fix, and how you notify the people who run the workflow most often. This turns drift from an interruption into an operational process.\n\nWhen a fix will take time, publish an interim note. A short callout like "Export button moved to the toolbar" keeps operators moving while you record and review the updated steps.',
       },
       {
         heading: 'Build a capture and review loop',
         body:
-          'Drift is easier to manage when you have a lightweight loop: capture when something changes, review quickly, and publish an updated version. Keep the loop short so fixes happen while context is fresh.',
-        bullets: [
-          'Re-capture only the affected portion of a workflow when possible.',
-          'Have an SME review updates with a short checklist.',
-          'Validate by running the workflow with a non-expert operator.',
-        ],
+          'When drift shows up, speed matters, but so does correctness. The fastest loops are small: reproduce the issue, capture only the affected portion, update the guide, and validate it with a quick run.\n\nTry this pattern. One person captures the updated steps while the context is fresh. An SME reviews with a short checklist (inputs, approvals, evidence, expected outcome). Then a non-expert runs the workflow end to end to confirm the guide is clear and resilient.\n\nValidate in the environment your operators actually use. If the workflow behaves differently by role, confirm the steps with the least-privileged role that still needs to run it.\n\nIf the workflow is regulated or high-risk, add a lightweight sign-off step and keep a brief change note. It does not need to be heavy, it just needs to be consistent.',
       },
       {
         heading: 'Communicate updates without disruption',
         body:
-          'Operators need to trust that the workflow is current. Announce updates with clear intent (what changed, why it changed, and what operators should do differently), and keep old links or copies from lingering.',
-        bullets: [
-          'Use a short change log for each updated workflow.',
-          'Notify the teams that run the workflow most often.',
-          'Deprecate outdated versions and remove stale bookmarks.',
-        ],
+          'Operators adopt guidance when they trust it. When you update a workflow, communicate the change like a release note: what changed, why it changed, and what the operator should do differently.\n\nKeep updates close to where people work. A short message in the team channel, a note in the workflow library, and an update to onboarding materials is usually enough.\n\nThe most important part is removing ambiguity. Deprecate old versions, keep one canonical link, and avoid having multiple copies floating around in bookmarks, wikis, and training decks.\n\nIf you have a help desk or enablement team, give them the change note too. They are often the first to hear "this broke" and can route drift reports to the right owner.',
       },
       {
         heading: 'Measure drift so it stays manageable',
         body:
-          'A simple set of metrics makes drift visible. Track how often workflows need updates, where exceptions occur, and how long it takes to publish a fix. This helps you prioritize maintenance time and prevent repeat issues.',
+          'Metrics should make drift visible, not create a reporting burden. Pick a few that help you answer: Are we catching drift quickly? Where does it happen? Is it getting worse?\n\nA good starter set is time-to-fix (how long from report to publish), exception rate (how often a run deviates or needs help), and update frequency for your highest-risk workflows. If any of these trend up, it is a signal to invest in ownership, review cadence, or capture quality.\n\nUse these metrics to make resourcing decisions. If critical workflows update every month, the answer is not "try harder". The answer is a scheduled maintenance budget, just like you would do for any other operational system.',
         bullets: [
           'Time from drift report to updated workflow published.',
           'Exception rate per workflow and per step.',
@@ -1111,7 +1085,7 @@ export const RESOURCES: Resource[] = [
       {
         heading: 'Close the loop',
         body:
-          'Capture a fresh recording for changed screens, update the guide, and notify teams through your shared workflow library. Drift becomes manageable when updates are routine and ownership is clear.',
+          'Drift never goes away, so the goal is to make it boring. Put workflow maintenance on the calendar, reserve a small amount of time each week for updates, and keep a backlog of reported issues.\n\nIf you have dozens of workflows, start with the ones that run most often or carry the most risk. Once you have owners, a cadence, and a response loop, expanding the library is straightforward.\n\nRetire workflows that are no longer used. A smaller, well-maintained library beats a large library full of outdated guidance.\n\nThe outcome you want is simple: operators know where to go for the current way to do the work, and the guide stays current without heroics.',
       },
     ],
   },
@@ -1127,82 +1101,52 @@ export const RESOURCES: Resource[] = [
       {
         heading: 'Start with a clear pilot goal',
         body:
-          'A good onboarding pilot is not "ship software". It is a short, focused effort to prove that guided workflows reduce ramp time and improve consistency. Define success criteria up front so the rollout stays practical.',
-        bullets: [
-          'Pick a target team and a start date.',
-          'Define what "trained" means (speed, accuracy, escalation rate).',
-          'Decide how you will measure adoption in the first month.',
-        ],
+          'An onboarding pilot is not a software rollout. It is a short, focused experiment to prove that guided workflows reduce ramp time and improve consistency.\n\nPick one team, pick a start date, and define success in plain language. For example: new hires reach independent execution in two weeks instead of four, and the number of escalations per run drops.\n\nDecide the pilot window (typically 2 to 4 weeks) and name a sponsor who will make tradeoffs when priorities compete. Momentum matters more than perfection.\n\nBefore you capture anything, document the baseline with a few timed runs and notes about where people get stuck. You want a "before" that is simple enough to compare against later.\n\nAlso decide who will do the work: who records, who reviews, and who owns updates. A pilot moves faster when responsibilities are explicit.\n\nDecide how you will measure adoption early. If you cannot tell whether people used the guide, you will not know whether the pilot worked.',
       },
       {
         heading: 'Pilot workflow selection',
         body:
-          'Pick 3-5 workflows that are high frequency, high impact, and prone to errors. Use them to prove ROI early.',
-        bullets: [
-          'Revenue-impacting workflows.',
-          'High-volume back-office tasks.',
-          'Processes with long training time.',
-        ],
+          'Pick 3 to 5 workflows that are common, valuable, and easy to evaluate. If the workflow runs every day and mistakes are costly, it is a great candidate.\n\nAvoid edge-case processes for the first pilot. You want workflows with a clear start and finish, a predictable outcome, and operators who can run them repeatedly.\n\nChoose workflows that touch the real mix of tools, but keep it bounded. Two to four systems per workflow is usually enough to prove value without turning every run into a maze.\n\nPrefer workflows where you can measure impact quickly. If you can tie the workflow to SLAs, error rates, or training time, you will have an easier story at the end of the pilot.\n\nGood candidates tend to be revenue-impacting tasks, high-volume back-office work, and processes that currently require shadowing or constant SME help.',
       },
       {
         heading: 'Capture standards',
         body:
-          'Document expected inputs, approvals, and success criteria before recording. This ensures the guide reflects the true process, not just the path taken on a good day.',
+          'Before anyone hits record, write down what "done" means. What inputs are required? What approvals are needed? What evidence must be captured? Where does the output go?\n\nThis sounds obvious, but it prevents the most common failure mode: recording a workflow that reflects one expert\'s perfect day, but not the real process.\n\nWrite down preconditions and access requirements. If the workflow requires a certain role, a VPN, or a shared folder path, capture it so new hires do not discover it the hard way.\n\nDefine naming and ownership up front. A workflow should have an owner, a backup, and a clear label for where it belongs in the library.\n\nIf a step involves sensitive data, decide how you will handle it (test accounts, masked data, or pausing capture). Capture standards are as much about security as they are about clarity.',
       },
       {
         heading: 'Recording best practices',
         body:
-          'Strong recordings reduce downstream rework. Record in a stable environment, avoid sensitive data when possible, and aim for a clear, repeatable path. Treat workflow capture like writing internal documentation.',
-        bullets: [
-          'Use test accounts or masked data when available.',
-          'Pause or stop capture around secrets (passwords, MFA codes, API keys).',
-          'Keep window layouts consistent and remove distractions.',
-        ],
+          'Great recordings are calm and repeatable. Use a stable environment, close distractions, and follow the path you want everyone to take.\n\nRecord at a normal pace. If you race through the workflow, the guide will feel rushed. If you pause too long, it will feel ambiguous. Aim for the pace of a real operator, not a demo.\n\nNarrate intent, not just clicks. When you choose an option, explain why. When there is a validation check, call it out. If there are common exceptions, include the decision point and the correct escalation path.\n\nInclude the "why" at the moments that matter. A single sentence like "we check this field because it affects billing" prevents operators from skipping steps later.\n\nKeep sensitive information out of recordings whenever possible. Pause around passwords, MFA codes, API keys, and customer PII. If the workflow must touch sensitive screens, limit distribution and ensure the right access controls are in place.',
       },
       {
         heading: 'Review and QA before broad rollout',
         body:
-          'Before sharing a workflow widely, validate it with someone who did not record it. This is the fastest way to catch missing context, ambiguous steps, and brittle navigation.',
-        bullets: [
-          'Have an SME validate correctness.',
-          'Have a novice validate clarity.',
-          'Confirm expected evidence and approvals are included.',
-        ],
+          'Treat review as part of the workflow, not an afterthought. The fastest way to find gaps is to have someone who did not record it run it.\n\nStart with an SME to confirm correctness, then use a novice to confirm clarity. If the novice gets stuck, the workflow will not scale.\n\nQA should include small variations: different user permissions, different data, and the screens operators actually see. A workflow that only works for the recorder is not a workflow, it is a demo.\n\nIf possible, test at least one realistic exception path. Operators learn fastest when the guide tells them what to do when something looks different.\n\nDo a quick sensitive-data check as part of review. Make sure the recording does not include secrets, customer PII, or anything you would not want broadly shared.',
       },
       {
         heading: 'Launch communication',
         body:
-          'Share the "why" along with the workflow. Make it clear that guidance replaces shadowing and gives every operator a consistent safety net.',
+          'On launch day, you are not just sharing a link. You are changing how the team learns.\n\nTell operators when to use the workflow (every time, until it becomes muscle memory), where to find it, and how to report issues. Make it clear that feedback is expected and welcomed, especially in the first week.\n\nIf you have team leads, give them a short script. Their buy-in is the difference between "optional tool" and "standard way we work".\n\nA simple adoption trick: ask leads to reference workflows in daily handoffs and to request the run history when something goes wrong. This normalizes using guidance as the default path, not just a training artifact.\n\nFor onboarding, include a single starting point. New hires should not have to guess which workflows are authoritative. Point them to the library, the top workflows for their role, and who to ask when something does not match.',
       },
       {
         heading: 'Enablement plan for the first two weeks',
         body:
-          'Treat the first two weeks as an enablement sprint: a small amount of structure goes a long way. Provide a clear starting point, office hours for questions, and a feedback channel for issues.',
-        bullets: [
-          'Short kickoff training (15 to 30 minutes).',
-          'Office hours or a Slack channel for questions.',
-          'A simple intake form for workflow issues and updates.',
-        ],
+          'Treat the first two weeks like an enablement sprint. You will learn quickly which steps are unclear and which screens drift.\n\nSet up office hours or a dedicated channel, and assign one person to triage feedback daily. Small fixes shipped quickly build trust.\n\nCreate a lightweight daily rhythm: review top issues, ship the highest-impact fixes, and communicate updates. The point is to keep the library current while usage is ramping.\n\nIf possible, recruit a couple of champions in the team. They will surface issues earlier and help normalize using guidance in the moment, not after something goes wrong.',
       },
       {
         heading: 'Governance and ongoing maintenance',
         body:
-          'Rollout is the beginning, not the end. Assign owners, set review cadences for critical workflows, and build a lightweight process for updates so workflows do not drift.',
-        bullets: [
-          'Assign workflow owners and backups.',
-          'Set a cadence for review (monthly or quarterly).',
-          'Use run feedback to prioritize updates.',
-        ],
+          'Rollout is the beginning, not the end. As soon as the workflow library becomes useful, it becomes critical infrastructure.\n\nAssign an owner and backup for each workflow, set a review cadence based on risk, and define a lightweight update path. This keeps workflows from drifting and keeps operators from inventing new tribal knowledge.\n\nDefine a simple lifecycle. Draft workflows are being built, reviewed workflows are validated by an SME, and published workflows are the standard path. Retire or archive workflows that are no longer used so the library stays trustworthy.\n\nWhen team membership changes, governance matters. Make sure access is current, old versions are retired, and new hires know which workflows are authoritative.',
+      },
+      {
+        heading: 'Common pitfalls to avoid',
+        body:
+          'Most onboarding rollouts fail for predictable reasons. The most common is over-scoping: trying to capture everything at once and ending up with a library that no one trusts.\n\nAnother common pitfall is capturing one expert\'s path without defining the standard. If the workflow reflects personal shortcuts, new hires will learn the shortcuts, not the process.\n\nFinally, do not underestimate maintenance. If nobody owns updates, drift will show up quickly and adoption will drop. A small, well-maintained library beats a large library that is out of date.',
       },
       {
         heading: 'Metrics to track',
         body:
-          'Use a few simple metrics to show impact and guide iteration. Focus on adoption, speed, quality, and confidence. A pilot is successful when it is repeatable and scalable.',
-        bullets: [
-          'Time to proficiency for new hires.',
-          'Exception and escalation rate during runs.',
-          'Workflow completion rate and time per run.',
-        ],
+          'You do not need a dashboard full of numbers. Track a handful of signals that demonstrate adoption and quality.\n\nCommon metrics include time to proficiency for new hires, exception and escalation rate during runs, and workflow completion rate and time per run. Pair these with qualitative feedback: fewer DMs to SMEs, fewer handoffs, and higher confidence from operators.\n\nIf you want to be rigorous, sample a few workflows before and after rollout and compare. Even a small set of consistent measurements is usually enough to show whether the pilot is working.',
       },
     ],
   },
@@ -1218,52 +1162,42 @@ export const RESOURCES: Resource[] = [
       {
         heading: 'Start with a baseline',
         body:
-          'Pick a small set of workflows and establish today\'s baseline: how long they take, how often they run, how often they fail, and what rework costs. Even rough estimates are useful if you are consistent.',
-        bullets: [
-          'Weekly runs per workflow.',
-          'Average time per run (and variance by operator).',
-          'Exception rate and escalation rate.',
-        ],
+          'Start small. Pick a few workflows that run often and cause real pain today. For each one, capture a baseline that everyone agrees is "close enough".\n\nAt minimum, you need volume (runs per week), time (minutes per run), and quality (how often something goes wrong). If there is rework, estimate how long it takes and who is involved.\n\nIf the workflow touches multiple roles, include that too. A five-minute delay is more expensive when it requires an SME, a manager approval, or a second team to step in.\n\nThe goal is not perfect accounting. The goal is a consistent model you can update as you learn more.',
       },
       {
         heading: 'Estimate time saved',
         body:
-          'Start with weekly runs per workflow, average duration, and the percent of time you expect to save with guided steps.',
+          'Start with the simplest lever: time per run. Multiply weekly runs by average duration, then apply a conservative percent savings from guided steps.\n\nExample: if a workflow runs 200 times per week at 6 minutes per run, that is 1,200 minutes. A 15% reduction saves 180 minutes per week (3 hours). Multiply by fully loaded hourly cost to translate into dollars.\n\nNot all time saved becomes hard savings. In many teams, the first win is capacity: fewer interruptions, fewer stalls, and more throughput with the same headcount. That is still ROI, but be clear about how you will talk about it.\n\nBe careful with optimistic savings. Time savings come from fewer pauses, fewer questions, and fewer context switches, but only after the workflow is adopted.',
       },
       {
         heading: 'Add ramp time improvement',
         body:
-          'Guided workflows often have their biggest impact during onboarding. Estimate the number of new hires per quarter and how long it takes them to reach full proficiency today, then model how much of that ramp can be accelerated with consistent guidance.',
+          'Guided workflows often pay off fastest during onboarding. New hires spend less time shadowing and get fewer interruptions from SMEs.\n\nModel this by estimating how many operators you onboard per quarter, how many hours it currently takes to reach independent execution, and how much of that ramp can be accelerated. Include trainer time if onboarding pulls senior operators away from production work.\n\nIf you shadow today, include it. Shadowing is expensive because it doubles labor and it reduces the output of your best operators.\n\nEven small improvements add up. Cutting onboarding from four weeks to three has an immediate throughput impact, especially in seasonal teams.',
       },
       {
         heading: 'Account for quality',
         body:
-          'Factor in the cost of errors, rework, and escalations. Even small reductions in mistakes often outweigh raw time savings.',
+          'Time saved is nice, but quality is where ROI becomes compelling. Rework, escalations, and missed steps are expensive because they trigger additional labor and sometimes customer impact.\n\nEstimate the current exception rate (for example, 5% of runs require rework) and the average cost of handling an exception (extra minutes, additional approvals, tickets, or refunds). Then model a reduction based on guidance and validation.\n\nIf you track QA scores or audit findings today, use them. Those metrics are often more persuasive to stakeholders than "minutes saved".',
       },
       {
         heading: 'Include compliance and evidence costs when relevant',
         body:
-          'In regulated or finance-heavy workflows, the cost of missing evidence or skipping an approval can be large. If this applies, include the time spent collecting evidence and the cost of audit exceptions in your model.',
+          'If your workflows require approvals or evidence, include the cost of collecting it. Many teams spend time after the fact reconstructing what happened.\n\nModel the time spent attaching artifacts, recording approvals, and preparing for audits. Then consider the cost of audit exceptions if evidence is missing or inconsistent. Guidance that bakes evidence collection into the workflow reduces both effort and risk.',
       },
       {
         heading: 'Compare to investment',
         body:
-          'Use pilot results to project annual savings and prioritize the workflows to scale next.',
+          'Be explicit about what it costs to get value. Include software cost, internal rollout time, and any change management effort.\n\nDo not forget internal time. Someone has to own the workflows, respond to drift, and keep the library current. The best programs plan for this up front.\n\nIf you plan to start with a pilot, model the pilot cost separately and compare it to measured savings. This helps you make a simple go/no-go decision before scaling.',
       },
       {
         heading: 'Run a quick sensitivity check',
         body:
-          'Model outcomes across a few scenarios (conservative, expected, aggressive). This helps you avoid overfitting to optimistic assumptions and shows which variables matter most.',
-        bullets: [
-          'Time saved per run (percentage).',
-          'Reduction in exception rate.',
-          'Adoption rate across the target team.',
-        ],
+          'ROI models are sensitive to a few variables, so test them. Create three scenarios: conservative, expected, and aggressive. In each one, vary the three biggest drivers: how much time is saved per run, how much the exception rate drops, and how widely the team adopts the workflows.\n\nIf the model still looks good under conservative assumptions, it is worth piloting. If it only looks good when everything is perfect, you have learned something useful before spending time rolling out.\n\nWhen you present the model, show the range. Stakeholders trust a range more than a single point estimate.\n\nIf you want a quick starting point, use the ROI calculator to plug in assumptions, then refine the inputs with pilot data.',
       },
       {
         heading: 'Validate with a pilot',
         body:
-          'Use a short pilot to turn assumptions into measured results. Track run time, completion rate, and exception handling with and without guidance, then update the model using real data.',
+          'A short pilot turns assumptions into measured results. Track run time, completion rate, and exception handling with and without guidance, then update the model using real data.\n\nIf you can, compare a guided cohort to a baseline cohort (or compare the same team before and after) rather than relying on anecdotes.\n\nWhen you share results, show both the savings and the operational wins: faster onboarding, more consistent execution, and better visibility. Those are often the reasons teams keep the program alive after the first project.',
       },
     ],
   },
