@@ -7,7 +7,8 @@ export default function Pricing() {
     {
       name: 'Pilot',
       description: 'Launch a closed beta with one team and prove value fast.',
-      price: 'Request access',
+      badge: 'Invite-only',
+      note: 'Pilot engagement',
       features: [
         'Guided workflow capture + run',
         'Invite-only workspace access',
@@ -22,7 +23,8 @@ export default function Pricing() {
     {
       name: 'Growth',
       description: 'Scale guidance across departments with admin visibility.',
-      price: 'Talk to sales',
+      badge: 'Custom',
+      note: 'Per-team rollout',
       features: [
         'Workspace admin roles',
         'Workflow owners + review cadence',
@@ -37,7 +39,8 @@ export default function Pricing() {
     {
       name: 'Enterprise',
       description: 'Governance, compliance, and rollout support at scale.',
-      price: 'Talk to sales',
+      badge: 'Enterprise',
+      note: 'Custom rollout',
       features: [
         'Custom workflow governance',
         'Audit exports and reporting',
@@ -82,10 +85,13 @@ export default function Pricing() {
               </p>
             </div>
 
-            <div className="mb-6">
-              <div className={`text-xl md:text-2xl font-semibold ${plan.highlighted ? 'text-white' : 'text-slate-900'}`}>
-                {plan.price}
-              </div>
+            <div className="mb-6 flex items-center justify-between text-xs uppercase tracking-wide">
+              <span className={`rounded-full px-2 py-1 ${plan.highlighted ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                {plan.badge}
+              </span>
+              <span className={plan.highlighted ? 'text-white/80' : 'text-slate-500'}>
+                {plan.note}
+              </span>
             </div>
 
             <a

@@ -57,7 +57,7 @@ export default function Hero() {
               {/* Subtitle */}
               <AnimateIn delay={0} duration={700}>
                 <p className="text-[#1861C8] text-sm md:text-base mb-4 tracking-wide font-medium">
-                  Desktop workflow guidance for B2B teams
+                  Desktop workflow guidance for operations teams
                 </p>
               </AnimateIn>
 
@@ -101,7 +101,7 @@ export default function Hero() {
                     Book a call
                   </a>
                 </div>
-                <p className="mt-3 text-xs text-slate-500">Closed beta • Invite-only access for B2B teams</p>
+                <p className="mt-3 text-xs text-slate-500">Closed beta • Invite-only access for teams</p>
               </AnimateIn>
             </div>
 

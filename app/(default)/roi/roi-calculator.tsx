@@ -33,6 +33,15 @@ export default function RoiCalculator() {
     }
   }, [avgMinutes, hourlyCost, runsPerWeek, savingsRate, teamMembers])
 
+  const currentMonthlyCost = results.monthlyHours * hourlyCost
+  const projectedMonthlyCost = Math.max(currentMonthlyCost - results.monthlySavings, 0)
+  const chartData = [
+    { label: 'Current cost', value: currentMonthlyCost, color: 'bg-slate-200' },
+    { label: 'Savings', value: results.monthlySavings, color: 'bg-[#1861C8]' },
+    { label: 'Projected cost', value: projectedMonthlyCost, color: 'bg-[#61AFF9]' },
+  ]
+  const chartMax = Math.max(...chartData.map((item) => item.value), 1)
+
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
       <div className="rounded-3xl border border-slate-200 bg-white p-6">
@@ -120,6 +129,22 @@ export default function RoiCalculator() {
           <div className="flex items-center justify-between">
             <span>Hours saved per team member</span>
             <span className="font-semibold text-slate-900">{results.hoursPerPerson.toFixed(1)} hrs/mo</span>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="text-xs uppercase tracking-wide text-slate-400">Monthly impact</div>
+          <div className="mt-3 flex items-end gap-4 h-28">
+            {chartData.map((item) => (
+              <div key={item.label} className="flex-1">
+                <div
+                  className={`w-full rounded-xl ${item.color}`}
+                  style={{ height: `${Math.max(12, Math.round((item.value / chartMax) * 100))}%` }}
+                />
+                <div className="mt-2 text-[11px] text-slate-500">{item.label}</div>
+                <div className="text-xs font-semibold text-slate-700">{formatCurrency(item.value)}</div>
+              </div>
+            ))}
           </div>
         </div>
 

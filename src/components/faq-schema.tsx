@@ -16,7 +16,7 @@ export default function FAQSchema() {
         "name": "Is Trope available publicly?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Trope is currently in closed beta for B2B teams. Request access or use an invite link to join a workspace."
+          "text": "Trope is currently in closed beta for operations teams. Request access or use an invite link to join a workspace."
         }
       },
       {

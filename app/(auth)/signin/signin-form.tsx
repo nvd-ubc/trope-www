@@ -19,6 +19,7 @@ export default function SignInForm() {
   const signup = queryValue(searchParams, 'signup')
   const reset = queryValue(searchParams, 'reset')
   const signedOut = queryValue(searchParams, 'signed_out')
+  const inviteIntent = next.includes('/invite')
 
   const inferredDesktop = queryValue(searchParams, 'client') === 'desktop' || Boolean(redirect && state)
   const client = inferredDesktop ? 'desktop' : 'web'
@@ -108,13 +109,22 @@ export default function SignInForm() {
         </div>
 
         <p className="text-center text-sm text-slate-600 mt-6">
-          Don&apos;t have an account?{' '}
-          <Link
-            className="font-medium text-[#1861C8] hover:text-[#1861C8]/80"
-            href={next ? `/signup?next=${encodeURIComponent(next)}` : '/signup'}
-          >
-            Sign up
+          Need access?{' '}
+          <Link className="font-medium text-[#1861C8] hover:text-[#1861C8]/80" href="/request-access">
+            Request access
           </Link>
+          {inviteIntent && (
+            <>
+              {' '}or{' '}
+              <Link
+                className="font-medium text-[#1861C8] hover:text-[#1861C8]/80"
+                href={`/signup?next=${encodeURIComponent(next)}`}
+              >
+                create an account
+              </Link>
+              {' '}to accept your invite.
+            </>
+          )}
         </p>
       </div>
     </>

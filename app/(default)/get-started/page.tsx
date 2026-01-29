@@ -19,7 +19,7 @@ export default function GetStartedPage() {
               Launch a guided workflow pilot
             </h1>
             <p className="text-lg text-slate-600">
-              Trope is in closed beta for B2B teams. We&apos;ll help you capture a pilot workflow, onboard operators, and
+              Trope is in closed beta for operations teams. We&apos;ll help you capture a pilot workflow, onboard operators, and
               measure impact quickly.
             </p>
           </div>

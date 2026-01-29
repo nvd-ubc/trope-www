@@ -22,21 +22,21 @@ export default function Features03() {
 
             <div className="space-y-8">
               <StatItem
-                value="Faster"
-                label="Onboarding"
-                description="Interactive guides replace shadowing so new team members ramp quickly."
+                value="2-3x"
+                label="Faster onboarding"
+                description="Target outcome: shorten ramp time with guided, repeatable runs."
               />
               <div className="border-t border-slate-200" />
               <StatItem
-                value="Fewer"
-                label="Escalations"
-                description="Guided steps reduce handoffs and keep experts focused on high-value work."
+                value="30-50%"
+                label="Fewer errors"
+                description="Target outcome: reduce rework by embedding best-practice steps."
               />
               <div className="border-t border-slate-200" />
               <StatItem
-                value="Clear"
-                label="Run history"
-                description="Every workflow execution is logged so you can review outcomes and accountability."
+                value="100%"
+                label="Run visibility"
+                description="Every workflow execution is logged for audits, coaching, and accountability."
               />
             </div>
           </div>

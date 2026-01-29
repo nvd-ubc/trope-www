@@ -7,7 +7,7 @@ export default function SchemaMarkup() {
     "name": "Trope",
     "url": "https://trope.ai",
     "logo": "https://trope.ai/logo/trope_logomark_dark.svg",
-    "description": "Trope captures desktop workflows and delivers guided runs so B2B teams can onboard faster and scale operations.",
+    "description": "Trope captures desktop workflows and delivers guided runs so operations teams can onboard faster and scale operations.",
     "email": CONTACT_EMAIL,
     "address": {
       "@type": "PostalAddress",

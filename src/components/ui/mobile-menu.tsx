@@ -129,7 +129,7 @@ export default function MobileMenu() {
           </li>
           <li className="border-t border-slate-200 mt-2 pt-2">
             <Link
-              className="flex font-semibold text-sm text-white bg-[#1861C8] hover:bg-[#2171d8] py-2 px-4 rounded-full justify-center"
+              className="flex font-semibold text-sm text-white bg-[#1861C8] hover:bg-[#2171d8] py-2 px-4 rounded-full justify-center whitespace-nowrap"
               href="/get-started"
               onClick={closeNav}
             >

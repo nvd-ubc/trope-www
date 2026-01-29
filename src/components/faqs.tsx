@@ -68,7 +68,7 @@ export default function Faqs() {
     },
     {
       question: "Is Trope available publicly?",
-      answer: "Not yet. Trope is in closed beta for B2B teams. Request access or use an invite link to join a workspace."
+      answer: "Not yet. Trope is in closed beta for operations teams. Request access or use an invite link to join a workspace."
     },
     {
       question: "How does workflow guidance work?",

@@ -78,7 +78,7 @@ export default function About() {
             <div className="rounded-2xl border border-slate-200 bg-white p-6">
               <h3 className="text-lg font-semibold text-slate-900">Built for teams</h3>
               <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-                Trope is a B2B platform with workspaces, roles, audit trails, and operational
+                Trope is a team platform with workspaces, roles, audit trails, and operational
                 reporting so leaders can scale knowledge across the org.
               </p>
             </div>

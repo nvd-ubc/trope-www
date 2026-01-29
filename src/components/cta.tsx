@@ -208,7 +208,7 @@ export default function Cta() {
 
           <AnimateIn delay={200}>
             <p className="text-lg text-slate-600 mb-10 max-w-lg mx-auto">
-              Trope is invite-only for B2B teams. We&apos;ll help you capture a pilot workflow and prove impact fast.
+              Trope is invite-only for teams. We&apos;ll help you capture a pilot workflow and prove impact fast.
             </p>
           </AnimateIn>
 

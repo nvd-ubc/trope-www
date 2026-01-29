@@ -18,7 +18,7 @@ export default function RequestAccessForm({ error, requested }: RequestAccessFor
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Request access</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Trope is in closed beta for B2B teams. Tell us about your workflows and we&apos;ll follow up.
+          Trope is in closed beta for operations teams. Tell us about your workflows and we&apos;ll follow up.
         </p>
       </div>
 

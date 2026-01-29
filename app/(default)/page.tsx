@@ -40,16 +40,17 @@ export default function Home() {
           </div>
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {USE_CASES.slice(0, 3).map((useCase) => (
-              <div key={useCase.slug} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-slate-900">{useCase.title}</h3>
+              <Link
+                key={useCase.slug}
+                className="group rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300"
+                href={`/use-cases/${useCase.slug}`}
+              >
+                <h3 className="text-lg font-semibold text-slate-900 group-hover:text-[#1861C8]">{useCase.title}</h3>
                 <p className="mt-2 text-sm text-slate-600">{useCase.summary}</p>
-                <Link
-                  className="mt-4 inline-flex items-center text-sm font-medium text-[#1861C8] hover:text-[#2171d8]"
-                  href={`/use-cases/${useCase.slug}`}
-                >
+                <span className="mt-4 inline-flex items-center text-sm font-medium text-[#1861C8]">
                   View use case →
-                </Link>
-              </div>
+                </span>
+              </Link>
             ))}
           </div>
           <div className="mt-8">

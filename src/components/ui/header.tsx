@@ -56,7 +56,7 @@ export default function Header() {
             </li>
             <li>
               <Link
-                className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-full transition-all duration-300 overflow-hidden hover:-translate-y-0.5"
+                className="group relative inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-full transition-all duration-300 overflow-hidden hover:-translate-y-0.5 whitespace-nowrap"
                 href="/get-started"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-[#1861C8] to-[#61AFF9] opacity-90 group-hover:opacity-100 transition-opacity" />
