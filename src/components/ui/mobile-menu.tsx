@@ -110,11 +110,6 @@ export default function MobileMenu() {
             </Link>
           </li>
           <li>
-            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/download" onClick={closeNav}>
-              Download
-            </Link>
-          </li>
-          <li>
             <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/request-access" onClick={closeNav}>
               Request access
             </Link>

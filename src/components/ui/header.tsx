@@ -43,14 +43,6 @@ export default function Header() {
           </nav>
 
           <ul className="flex-1 flex justify-end items-center">
-            <li className="hidden lg:block mr-4">
-              <Link
-                className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out"
-                href="/download"
-              >
-                Download
-              </Link>
-            </li>
             <li className="mr-4">
               <AuthLink className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out" />
             </li>
