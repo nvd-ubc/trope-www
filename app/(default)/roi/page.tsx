@@ -26,6 +26,39 @@ export default function RoiPage() {
             <RoiCalculator />
           </div>
 
+          <div className="mt-12">
+            <div className="max-w-3xl">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Long-term impact beyond cost savings</h2>
+              <p className="mt-3 text-base text-slate-600">
+                ROI compounds when workflows stay consistent, knowledge stays in the system, and changes roll out without
+                disruption.
+              </p>
+            </div>
+            <div className="mt-8 grid gap-6 lg:grid-cols-3">
+              <div className="rounded-3xl border border-slate-200 bg-white p-6">
+                <p className="text-xs uppercase tracking-wide text-slate-400">Institutional memory</p>
+                <h3 className="mt-3 text-lg font-semibold text-slate-900">SOPs codified and preserved</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Keep critical workflows documented in context so departures don&apos;t erase hard-won expertise.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-6">
+                <p className="text-xs uppercase tracking-wide text-slate-400">Change management</p>
+                <h3 className="mt-3 text-lg font-semibold text-slate-900">Faster rollouts, fewer regressions</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  When tools or policies shift, update a workflow once and push a verified path to every operator.
+                </p>
+              </div>
+              <div className="rounded-3xl border border-slate-200 bg-white p-6">
+                <p className="text-xs uppercase tracking-wide text-slate-400">Operational resilience</p>
+                <h3 className="mt-3 text-lg font-semibold text-slate-900">Audit-ready, consistent execution</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Build a reliable run history to support compliance, coaching, and cross-team accountability.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="mt-12 rounded-3xl border border-slate-200 bg-white px-6 py-8 md:px-10">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>

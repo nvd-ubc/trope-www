@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "node --import tsx --test",
+    "audit:links": "node --import tsx scripts/audit-links.ts",
     "check": "npm run build && tsc"
   },
   "dependencies": {
