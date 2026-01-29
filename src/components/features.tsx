@@ -196,6 +196,7 @@ function RecordDemo({ index = 0 }: { index?: number }) {
   const [activeStep, setActiveStep] = useState(0)
   const [cursorPos, setCursorPos] = useState({ x: 30, y: 35 })
   const [isClicking, setIsClicking] = useState(false)
+  const windowRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const rowRefs = useRef<(HTMLDivElement | null)[]>([])
 
@@ -225,7 +226,7 @@ function RecordDemo({ index = 0 }: { index?: number }) {
 
   useEffect(() => {
     if (!isActive) return
-    const container = contentRef.current
+    const container = windowRef.current
     const row = rowRefs.current[activeStep]
     if (!container || !row) return
     const containerRect = container.getBoundingClientRect()
@@ -245,7 +246,7 @@ function RecordDemo({ index = 0 }: { index?: number }) {
         <div className="absolute inset-0 bg-slate-900/10 blur-2xl rounded-2xl transform translate-y-4 scale-95" />
 
         {/* Main window */}
-        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+        <div ref={windowRef} className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
           {/* Window header */}
           <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
             <div className="flex items-center gap-2">
@@ -285,27 +286,28 @@ function RecordDemo({ index = 0 }: { index?: number }) {
                 </div>
               ))}
             </div>
+          </div>
 
-            {/* Animated cursor */}
-            {isActive && (
-              <div
-                className="absolute w-4 h-4 transition-all duration-500 ease-out z-20 pointer-events-none"
-                style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
-              >
-                <svg
-                  className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M4 4l16 8-7 2-2 7z" />
-                </svg>
-                {isClicking && (
-                  <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
-                )}
-              </div>
+        </div>
+
+        {/* Animated cursor */}
+        {isActive && (
+          <div
+            className="absolute w-4 h-4 transition-all duration-500 ease-out z-30 pointer-events-none"
+            style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
+          >
+            <svg
+              className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M4 4l16 8-7 2-2 7z" />
+            </svg>
+            {isClicking && (
+              <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -315,8 +317,8 @@ function RecordDemo({ index = 0 }: { index?: number }) {
 function GuidanceDemo({ index = 1 }: { index?: number }) {
   const { isActive } = useAutoPlay(index)
   const [step, setStep] = useState(0)
-  const [cursorPos, setCursorPos] = useState({ x: 52, y: 30 })
-  const [radarPos, setRadarPos] = useState({ x: 52, y: 30 })
+  const [cursorPos, setCursorPos] = useState({ left: 0, top: 0 })
+  const [radarPos, setRadarPos] = useState({ left: 0, top: 0 })
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 })
   const [isClicking, setIsClicking] = useState(false)
   const contentRef = useRef<HTMLDivElement | null>(null)
@@ -351,22 +353,33 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
     const targetRect = target.getBoundingClientRect()
     const centerX = (targetRect.left - containerRect.left) + targetRect.width * 0.5
     const centerY = (targetRect.top - containerRect.top) + targetRect.height * 0.5
-    const cursorX = (targetRect.left - containerRect.left) + Math.min(16, targetRect.width * 0.2)
-    const cursorY = centerY
-    const tooltipLeft = Math.min(containerRect.width - 140, Math.max(8, centerX + 12))
-    const tooltipTop = Math.max(8, centerY - 28)
-    setCursorPos({
-      x: (cursorX / containerRect.width) * 100,
-      y: (cursorY / containerRect.height) * 100,
+    const cursorLeft = centerX - 6
+    const cursorTop = centerY - 6
+    const tooltipWidth = 150
+    const tooltipHeight = 32
+    const placeAbove = centerY > containerRect.height * 0.55
+    const tooltipLeft = Math.min(containerRect.width - tooltipWidth - 8, Math.max(8, centerX + 12))
+    const tooltipTop = placeAbove
+      ? Math.max(8, centerY - tooltipHeight - 10)
+      : Math.min(containerRect.height - tooltipHeight - 8, centerY + 10)
+    setRadarPos({ left: centerX, top: centerY })
+    setTooltipPos({
+      top: tooltipTop,
+      left: tooltipLeft,
     })
-    setRadarPos({
-      x: (centerX / containerRect.width) * 100,
-      y: (centerY / containerRect.height) * 100,
-    })
-    setTooltipPos({ top: tooltipTop, left: tooltipLeft })
-    setIsClicking(true)
-    const clickTimeout = setTimeout(() => setIsClicking(false), 180)
-    return () => clearTimeout(clickTimeout)
+    const moveDelay = 180
+    const clickOnDelay = 420
+    const clickOffDelay = 560
+    const moveTimer = setTimeout(() => {
+      setCursorPos({ left: cursorLeft, top: cursorTop })
+    }, moveDelay)
+    const clickOnTimer = setTimeout(() => setIsClicking(true), clickOnDelay)
+    const clickOffTimer = setTimeout(() => setIsClicking(false), clickOffDelay)
+    return () => {
+      clearTimeout(moveTimer)
+      clearTimeout(clickOnTimer)
+      clearTimeout(clickOffTimer)
+    }
   }, [isActive, step])
 
   return (
@@ -407,7 +420,7 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
             {isActive && (
               <div
                 className="absolute z-0 pointer-events-none"
-                style={{ left: `${radarPos.x}%`, top: `${radarPos.y}%` }}
+                style={{ left: radarPos.left, top: radarPos.top }}
               >
                 <div className="relative w-10 h-10 -translate-x-1/2 -translate-y-1/2">
                   <div className="absolute inset-0 rounded-full bg-[#1861C8]/10 animate-ping" />
@@ -421,7 +434,7 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
             {isActive && (
               <div
                 className="absolute w-4 h-4 transition-all duration-500 ease-out z-20 pointer-events-none"
-                style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
+                style={{ left: cursorPos.left, top: cursorPos.top, transitionDelay: '140ms' }}
               >
                 <svg
                   className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
@@ -440,7 +453,7 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
             {isActive && (
               <div
                 className="absolute z-10 transition-all duration-500 ease-out"
-                style={{ top: tooltipPos.top, left: tooltipPos.left }}
+                style={{ top: tooltipPos.top, left: tooltipPos.left, width: 150 }}
               >
                 <div className="relative bg-[#1861C8] text-white px-3 py-1.5 rounded-lg shadow-xl animate-bounce-subtle">
                   <div className="flex items-center gap-2">
@@ -449,7 +462,6 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
                     </div>
                     <span className="text-[10px] font-medium whitespace-nowrap">{tooltipLabels[step]}</span>
                   </div>
-                  <div className="absolute left-4 top-full w-2.5 h-2.5 bg-[#1861C8] rotate-45 -translate-y-1/2" />
                 </div>
               </div>
             )}
