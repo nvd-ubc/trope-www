@@ -63,23 +63,8 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-6">
-              <h2 className="text-lg font-semibold text-slate-900">Example workflows</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Cross-application paths where consistency and auditability matter most.
-              </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                {useCase.workflows.map((workflow) => (
-                  <li key={workflow} className="flex items-start gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-slate-300" />
-                    <span>{workflow}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-6 h-fit">
               <h2 className="text-lg font-semibold text-slate-900">Metrics to watch</h2>
               <p className="mt-2 text-sm text-slate-600">
                 Use these signals to validate your pilot and prioritize what to scale next.
@@ -92,6 +77,47 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
                   </li>
                 ))}
               </ul>
+            </div>
+
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Example workflows</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                Detailed, cross-application steps that show how Trope guides real operators.
+              </p>
+              <div className="mt-6 grid gap-6">
+                {useCase.workflows.map((workflow) => (
+                  <div key={workflow.title} className="rounded-3xl border border-slate-200 bg-white p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-900">{workflow.title}</h3>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {workflow.systems.map((system) => (
+                            <span
+                              key={system}
+                              className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs text-slate-500"
+                            >
+                              {system}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-xs uppercase tracking-wide text-slate-400">
+                        {workflow.steps.length} steps
+                      </span>
+                    </div>
+                    <ol className="mt-5 space-y-3 text-sm text-slate-600">
+                      {workflow.steps.map((step, index) => (
+                        <li key={`${workflow.title}-${index}`} className="flex gap-3">
+                          <span className="w-7 text-xs font-semibold text-slate-400 tabular-nums">
+                            {String(index + 1).padStart(2, '0')}
+                          </span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
