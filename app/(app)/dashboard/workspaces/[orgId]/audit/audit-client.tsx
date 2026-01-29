@@ -302,7 +302,7 @@ export default function AuditClient({ orgId }: { orgId: string }) {
           >
             <option value="newest">Newest first</option>
             <option value="oldest">Oldest first</option>
-            <option value="action">Action A–Z</option>
+            <option value="action">Action A-Z</option>
           </select>
           <Input
             value={query}
@@ -360,10 +360,10 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                           Copy ID
                         </button>
                       </TableCell>
-                      <TableCell>{resourceLabel ?? '—'}</TableCell>
-                      <TableCell>{event.ip ?? '—'}</TableCell>
+                      <TableCell>{resourceLabel ?? '-'}</TableCell>
+                      <TableCell>{event.ip ?? '-'}</TableCell>
                       <TableCell className="max-w-[220px] truncate text-xs text-slate-500">
-                        {event.user_agent ?? '—'}
+                        {event.user_agent ?? '-'}
                       </TableCell>
                     </TableRow>
                   )

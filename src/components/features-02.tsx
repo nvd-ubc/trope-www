@@ -181,7 +181,7 @@ function DesktopFirstCard() {
           </div>
         </div>
         <p className="text-slate-600 text-base mb-8 max-w-sm">
-          Works natively with Excel, QuickBooks, and desktop apps—not just browsers.
+          Works natively with Excel, QuickBooks, and desktop apps, not just browsers.
           Record workflows anywhere your team works.
         </p>
 

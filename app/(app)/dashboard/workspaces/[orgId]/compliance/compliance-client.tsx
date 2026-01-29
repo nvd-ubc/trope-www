@@ -63,14 +63,14 @@ type WorkflowCompletion = {
 }
 
 const formatDate = (value?: string | null) => {
-  if (!value) return '—'
+  if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return '—'
+  if (!value) return '-'
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return value
   return date.toLocaleString(undefined, {

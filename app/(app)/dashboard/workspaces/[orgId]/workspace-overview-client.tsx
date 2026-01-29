@@ -354,7 +354,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Success rate</div>
-              <div className="text-slate-900">{summary.successRate ? `${summary.successRate}%` : '—'}</div>
+              <div className="text-slate-900">{summary.successRate ? `${summary.successRate}%` : '-'}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Overdue runs</div>
