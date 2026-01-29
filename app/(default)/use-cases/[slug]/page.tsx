@@ -11,8 +11,9 @@ export async function generateStaticParams() {
   return USE_CASES.map((useCase) => ({ slug: useCase.slug }))
 }
 
-export function generateMetadata({ params }: { params: Params }): Metadata {
-  const useCase = USE_CASES.find((item) => item.slug === params.slug)
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { slug } = await params
+  const useCase = USE_CASES.find((item) => item.slug === slug)
   if (!useCase) {
     return {
       title: 'Use case - Trope',
@@ -26,8 +27,9 @@ export function generateMetadata({ params }: { params: Params }): Metadata {
   }
 }
 
-export default function UseCaseDetail({ params }: { params: Params }) {
-  const useCase = USE_CASES.find((item) => item.slug === params.slug)
+export default async function UseCaseDetail({ params }: { params: Promise<Params> }) {
+  const { slug } = await params
+  const useCase = USE_CASES.find((item) => item.slug === slug)
   if (!useCase) {
     notFound()
   }

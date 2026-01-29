@@ -11,8 +11,9 @@ export async function generateStaticParams() {
   return RESOURCES.map((resource) => ({ slug: resource.slug }))
 }
 
-export function generateMetadata({ params }: { params: Params }): Metadata {
-  const resource = RESOURCES.find((item) => item.slug === params.slug)
+export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  const { slug } = await params
+  const resource = RESOURCES.find((item) => item.slug === slug)
   if (!resource) {
     return {
       title: 'Resource - Trope',
@@ -26,8 +27,9 @@ export function generateMetadata({ params }: { params: Params }): Metadata {
   }
 }
 
-export default function ResourceDetail({ params }: { params: Params }) {
-  const resource = RESOURCES.find((item) => item.slug === params.slug)
+export default async function ResourceDetail({ params }: { params: Promise<Params> }) {
+  const { slug } = await params
+  const resource = RESOURCES.find((item) => item.slug === slug)
   if (!resource) {
     notFound()
   }
