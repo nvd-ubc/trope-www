@@ -5,86 +5,69 @@ export const metadata = {
 
 import Link from 'next/link'
 
-const docSections = [
-  {
-    title: 'Getting started',
-    items: [
-      'Install the desktop app',
-      'Join a workspace',
-      'Record your first workflow',
-    ],
-  },
-  {
-    title: 'Workflow guidance',
-    items: [
-      'Generate guides from recordings',
-      'Run workflows with overlays',
-      'Share a workflow run',
-    ],
-  },
-  {
-    title: 'Administration',
-    items: [
-      'Invite and manage members',
-      'Set workflow owners',
-      'Review run history',
-    ],
-  },
-  {
-    title: 'Best practices',
-    items: [
-      'Choose pilot workflows',
-      'Set review cadences',
-      'Maintain workflow health',
-    ],
-  },
-]
-
 export default function DocsPage() {
   return (
-    <section className="bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+    <section className="relative overflow-hidden bg-gradient-to-b from-white via-slate-50 to-slate-50">
+      <div className="pointer-events-none absolute -top-16 right-0 h-[320px] w-[320px] rounded-full bg-[#1861C8]/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-[260px] w-[260px] rounded-full bg-slate-200/70 blur-[120px]" />
+
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6">
         <div className="pt-28 pb-16 md:pt-36 md:pb-20">
           <div className="max-w-3xl">
-            <p className="text-[#1861C8] text-sm font-medium mb-4 tracking-wide uppercase">Docs</p>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Trope documentation
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#1861C8]/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#1861C8]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
+              Docs
+            </span>
+            <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+              Documentation is under construction
             </h1>
             <p className="text-lg text-slate-600">
-              Learn how to capture workflows, publish guidance, and manage your workspace.
+              We&apos;re assembling a comprehensive guide for enterprise rollouts, governance, and workflow scale.
+              Early access is available for pilot partners.
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-2">
-            {docSections.map((section) => (
-              <div key={section.title} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-                <h2 className="text-lg font-semibold text-slate-900">{section.title}</h2>
-                <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                  {section.items.map((item) => (
-                    <li key={item} className="flex items-start gap-2">
-                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.4)]">
+              <h2 className="text-xl font-semibold text-slate-900">What&apos;s coming</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                We&apos;re prioritizing the highest-leverage guidance for teams rolling Trope out across complex desktops.
+              </p>
+              <ul className="mt-6 grid gap-3 text-sm text-slate-600">
+                {[
+                  'Installation + desktop permissions (macOS + Windows)',
+                  'Capture best practices for multi-app workflows',
+                  'Publishing standards, approvals, and governance',
+                  'Run monitoring, QA, and audit readiness',
+                  'Security, data boundaries, and compliance expectations',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <span className="mt-1.5 h-2 w-2 rounded-full bg-[#1861C8]" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-          <div className="mt-12 rounded-3xl border border-slate-200 bg-white px-6 py-8 md:px-10">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Need hands-on guidance?</h3>
-                <p className="mt-2 text-sm text-slate-600">
-                  We can walk your team through capture and guide design in a live session.
-                </p>
+            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-[#F1F6FF] p-8 shadow-[0_20px_45px_-35px_rgba(24,97,200,0.5)]">
+              <h2 className="text-xl font-semibold text-slate-900">Need guidance now?</h2>
+              <p className="mt-2 text-sm text-slate-600">
+                We&apos;ll share pilot documentation, checklists, and workflows tailored to your team.
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <Link
+                  className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
+                  href="/request-access"
+                >
+                  Request early access
+                </Link>
+                <Link
+                  className="inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 hover:border-slate-300"
+                  href="/support"
+                >
+                  Contact support
+                </Link>
               </div>
-              <Link
-                className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
-                href="/support"
-              >
-                Contact support
-              </Link>
             </div>
           </div>
         </div>

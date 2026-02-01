@@ -59,7 +59,7 @@ export default function ResourcesPage() {
                       </h2>
                     </div>
                   </div>
-                  <span className="hidden sm:inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                  <span className="hidden sm:inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600 whitespace-nowrap shadow-sm">
                     {resource.audience}
                   </span>
                 </div>
