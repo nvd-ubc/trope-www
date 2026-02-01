@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CONTACT_EMAIL } from '@/lib/constants'
+import Link from 'next/link'
+import { CONTACT_EMAIL, SALES_CALL_URL } from '@/lib/constants'
 import AnimateIn from './animate-in'
 import ChromaText from './chroma-text'
 
@@ -113,6 +114,8 @@ function AnimatedCursor({ className, delay = 0 }: { className: string; delay?: n
 }
 
 export default function Cta() {
+  const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
+
   return (
     <section className="relative py-20 md:py-28 lg:py-36 overflow-hidden">
       {/* Simplified gradient background - single layer for performance */}
@@ -193,29 +196,29 @@ export default function Cta() {
           {/* Eyebrow text */}
           <AnimateIn>
             <p className="text-[#61AFF9] text-sm font-medium mb-5 tracking-wide uppercase">
-              Get Started
+              Launch a pilot
             </p>
           </AnimateIn>
 
           <AnimateIn delay={100}>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-6">
-              Ready to <ChromaText>transform</ChromaText> how<br className="hidden sm:block" /> your team works?
+              Ready to <ChromaText>standardize</ChromaText> how<br className="hidden sm:block" /> your team works?
             </h2>
           </AnimateIn>
 
           <AnimateIn delay={200}>
             <p className="text-lg text-slate-600 mb-10 max-w-lg mx-auto">
-              Join teams who have turned tribal knowledge into living documentation that scales.
+              Trope is invite-only for teams. We&apos;ll help you capture a pilot workflow and prove impact fast.
             </p>
           </AnimateIn>
 
           <AnimateIn delay={300}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
+              <Link
                 className="group inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition-all duration-200"
-                href={`mailto:${CONTACT_EMAIL}`}
+                href="/request-access"
               >
-                Talk to Sales
+                Request access
                 <svg
                   className="ml-2 w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
                   fill="none"
@@ -224,14 +227,15 @@ export default function Cta() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </a>
+              </Link>
               <a
                 className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-slate-700 border border-slate-300 rounded-full hover:border-slate-400 hover:text-slate-900 transition-all duration-200"
-                href="#features"
+                href={salesHref}
               >
-                Learn more
+                Book a call
               </a>
             </div>
+            <p className="mt-4 text-xs text-slate-500">Closed beta • We respond within 1-2 business days.</p>
           </AnimateIn>
         </div>
       </div>

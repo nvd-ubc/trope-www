@@ -267,6 +267,40 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         </div>
       </div>
 
+      <Card className="p-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Getting started</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Capture a workflow, invite teammates, and track the first guided runs.
+            </p>
+          </div>
+          <Link href="/download">
+            <Button size="sm">Download desktop app</Button>
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+          <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
+            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+          >
+            Record your first workflow
+          </Link>
+          <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/members`}
+            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+          >
+            Invite teammates
+          </Link>
+          <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`}
+            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+          >
+            Review run history
+          </Link>
+        </div>
+      </Card>
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="p-6">
           <div className="flex items-center justify-between">
@@ -320,7 +354,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Success rate</div>
-              <div className="text-slate-900">{summary.successRate ? `${summary.successRate}%` : '—'}</div>
+              <div className="text-slate-900">{summary.successRate ? `${summary.successRate}%` : '-'}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Overdue runs</div>

@@ -251,7 +251,7 @@ export default function ShareClient({ shareId }: { shareId: string }) {
               </div>
               <div>
                 <span className="font-semibold text-slate-900">Steps:</span>{' '}
-                {typeof version.steps_count === 'number' ? version.steps_count : '—'}
+                {typeof version.steps_count === 'number' ? version.steps_count : '-'}
               </div>
               <div>
                 <span className="font-semibold text-slate-900">Shared:</span> {formatDateTime(share.created_at)}

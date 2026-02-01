@@ -86,10 +86,10 @@ export default function Features() {
         <div className="max-w-3xl mx-auto text-center mb-16 md:mb-20">
           <p className="text-[#1861C8] text-sm font-medium mb-3 tracking-wide uppercase">How it works</p>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 mb-5">
-            <ChromaText color="inherit">Living</ChromaText> guides in 3 steps
+            Guided workflows in <ChromaText color="inherit">three steps</ChromaText>
           </h2>
           <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
-            The easiest way to transform tribal knowledge into scalable documentation.
+            Capture once, publish guidance, and keep every run consistent across desktop and web tools.
           </p>
         </div>
 
@@ -100,8 +100,8 @@ export default function Features() {
             <StepCard
               index={0}
               number={1}
-              title="Record workflow"
-              description="Click record before starting. Trope captures every click and keystroke."
+              title="Capture the workflow"
+              description="Record a real workflow across desktop apps and web tools, including context and screenshots."
             >
               <RecordDemo index={0} />
             </StepCard>
@@ -117,8 +117,8 @@ export default function Features() {
             <StepCard
               index={1}
               number={2}
-              title="Deploy guide"
-              description="Click stop when done. Your workflow becomes a living, interactive guide."
+              title="Publish the guide"
+              description="Turn the recording into a guided playbook your team can follow inside their tools."
             >
               <GuidanceDemo index={1} />
             </StepCard>
@@ -134,8 +134,8 @@ export default function Features() {
             <StepCard
               index={2}
               number={3}
-              title="Get results"
-              description="Your team follows guides, automations run, everything is logged."
+              title="Run and improve"
+              description="Track every run, gather feedback, and keep workflows current as tools evolve."
             >
               <AutomationDemo index={2} />
             </StepCard>
@@ -196,17 +196,15 @@ function RecordDemo({ index = 0 }: { index?: number }) {
   const [activeStep, setActiveStep] = useState(0)
   const [cursorPos, setCursorPos] = useState({ x: 30, y: 35 })
   const [isClicking, setIsClicking] = useState(false)
+  const windowRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const steps = [
-    { x: 30, y: 35 },
-    { x: 50, y: 50 },
-    { x: 40, y: 65 },
-  ]
+  const steps = [0, 1, 2]
 
   useEffect(() => {
     if (isActive) {
       setActiveStep(0)
-      setCursorPos(steps[0])
       setIsClicking(false)
     }
   }, [isActive])
@@ -216,16 +214,34 @@ function RecordDemo({ index = 0 }: { index?: number }) {
     const interval = setInterval(() => {
       setActiveStep(s => {
         const next = (s + 1) % steps.length
-        setCursorPos(steps[next])
-        setTimeout(() => {
-          setIsClicking(true)
-          setTimeout(() => setIsClicking(false), 150)
-        }, 400)
         return next
       })
     }, 1400)
     return () => clearInterval(interval)
   }, [isActive])
+
+  useEffect(() => {
+    if (!isActive) return
+    const container = windowRef.current
+    const row = rowRefs.current[activeStep]
+    if (!container || !row) return
+    const containerRect = container.getBoundingClientRect()
+    const icon = row.querySelector('[data-demo-icon]') as HTMLElement | null
+    const target = icon ?? row
+    const targetRect = target.getBoundingClientRect()
+    const x = ((targetRect.left - containerRect.left) + targetRect.width * 0.5) / containerRect.width * 100
+    const baseY = (targetRect.top - containerRect.top) + targetRect.height * 0.5
+    const yOffset = activeStep === steps.length - 1 ? 10 : 0
+    const y = (Math.max(0, baseY - yOffset) / containerRect.height) * 100
+    setCursorPos({ x, y })
+    setIsClicking(false)
+    const clickDelay = 560
+    const clickTimer = setTimeout(() => {
+      setIsClicking(true)
+      setTimeout(() => setIsClicking(false), 150)
+    }, clickDelay)
+    return () => clearTimeout(clickTimer)
+  }, [activeStep, isActive])
 
   return (
     <div className="absolute inset-0 flex items-center justify-center p-6">
@@ -235,7 +251,7 @@ function RecordDemo({ index = 0 }: { index?: number }) {
         <div className="absolute inset-0 bg-slate-900/10 blur-2xl rounded-2xl transform translate-y-4 scale-95" />
 
         {/* Main window */}
-        <div className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
+        <div ref={windowRef} className="relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xl">
           {/* Window header */}
           <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
             <div className="flex items-center gap-2">
@@ -255,16 +271,17 @@ function RecordDemo({ index = 0 }: { index?: number }) {
           </div>
 
           {/* Window content */}
-          <div className="p-4 h-32 relative bg-slate-50">
+          <div ref={contentRef} className="p-4 h-32 relative bg-slate-50">
             <div className="space-y-2">
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
+                  ref={(el) => { rowRefs.current[i] = el }}
                   className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
                     isActive && activeStep === i ? 'bg-[#1861C8]/10 ring-1 ring-[#1861C8]' : 'bg-white'
                   }`}
                 >
-                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center">
+                  <div data-demo-icon className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center">
                     <div className="w-3 h-3 rounded-sm bg-[#1861C8]/30" />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -274,27 +291,28 @@ function RecordDemo({ index = 0 }: { index?: number }) {
                 </div>
               ))}
             </div>
+          </div>
 
-            {/* Animated cursor */}
-            {isActive && (
-              <div
-                className="absolute w-4 h-4 transition-all duration-500 ease-out z-20 pointer-events-none"
-                style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
-              >
-                <svg
-                  className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M4 4l16 8-7 2-2 7z" />
-                </svg>
-                {isClicking && (
-                  <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
-                )}
-              </div>
+        </div>
+
+        {/* Animated cursor */}
+        {isActive && (
+          <div
+            className="absolute w-4 h-4 transition-all duration-500 ease-out z-30 pointer-events-none"
+            style={{ left: `${cursorPos.x}%`, top: `${cursorPos.y}%` }}
+          >
+            <svg
+              className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M4 4l16 8-7 2-2 7z" />
+            </svg>
+            {isClicking && (
+              <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
@@ -304,11 +322,18 @@ function RecordDemo({ index = 0 }: { index?: number }) {
 function GuidanceDemo({ index = 1 }: { index?: number }) {
   const { isActive } = useAutoPlay(index)
   const [step, setStep] = useState(0)
+  const [cursorPos, setCursorPos] = useState({ left: 0, top: 0 })
+  const [radarPos, setRadarPos] = useState({ left: 0, top: 0 })
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 })
+  const [isClicking, setIsClicking] = useState(false)
+  const [typedCount, setTypedCount] = useState(0)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const fieldRefs = useRef<(HTMLDivElement | null)[]>([])
 
-  const tooltips = [
-    { top: '25%', left: '55%', label: 'Click here to start' },
-    { top: '45%', left: '60%', label: 'Enter customer name' },
-    { top: '70%', left: '30%', label: 'Submit to continue' },
+  const tooltipLabels = [
+    'Click here to start',
+    'Enter customer name',
+    'Submit to continue',
   ]
 
   useEffect(() => {
@@ -318,12 +343,74 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
   }, [isActive])
 
   useEffect(() => {
+    if (!isActive || step === 0) {
+      setTypedCount(0)
+    }
+  }, [isActive, step])
+
+  useEffect(() => {
     if (!isActive) return
     const interval = setInterval(() => {
-      setStep(s => (s + 1) % tooltips.length)
-    }, 1800)
+      setStep(s => (s + 1) % tooltipLabels.length)
+    }, 2600)
     return () => clearInterval(interval)
   }, [isActive])
+
+  useEffect(() => {
+    if (!isActive) return
+    const container = contentRef.current
+    const target = fieldRefs.current[step]
+    if (!container || !target) return
+    const containerRect = container.getBoundingClientRect()
+    const targetRect = target.getBoundingClientRect()
+    const centerX = (targetRect.left - containerRect.left) + targetRect.width * 0.5
+    const centerY = (targetRect.top - containerRect.top) + targetRect.height * 0.5
+    const cursorLeft = centerX - 6
+    const cursorTop = centerY - 6
+    const tooltipWidth = 150
+    const tooltipHeight = 32
+    const placeAbove = centerY > containerRect.height * 0.55
+    const tooltipLeft = Math.min(containerRect.width - tooltipWidth - 8, Math.max(8, centerX + 12))
+    const tooltipTop = placeAbove
+      ? Math.max(8, centerY - tooltipHeight - 10)
+      : Math.min(containerRect.height - tooltipHeight - 8, centerY + 10)
+    setRadarPos({ left: centerX, top: centerY })
+    setTooltipPos({
+      top: tooltipTop,
+      left: tooltipLeft,
+    })
+    const moveDelay = 180
+    const clickOnDelay = 720
+    const clickOffDelay = 860
+    const typingStartDelay = clickOffDelay + 160
+    const moveTimer = setTimeout(() => {
+      setCursorPos({ left: cursorLeft, top: cursorTop })
+    }, moveDelay)
+    const clickOnTimer = setTimeout(() => setIsClicking(true), clickOnDelay)
+    const clickOffTimer = setTimeout(() => setIsClicking(false), clickOffDelay)
+    let typingTimer: ReturnType<typeof setTimeout> | null = null
+    let typingInterval: ReturnType<typeof setInterval> | null = null
+    if (step === 1) {
+      setTypedCount(0)
+      typingTimer = setTimeout(() => {
+        let count = 0
+        typingInterval = setInterval(() => {
+          count = Math.min(8, count + 1)
+          setTypedCount(count)
+          if (count >= 8 && typingInterval) {
+            clearInterval(typingInterval)
+          }
+        }, 120)
+      }, typingStartDelay)
+    }
+    return () => {
+      clearTimeout(moveTimer)
+      clearTimeout(clickOnTimer)
+      clearTimeout(clickOffTimer)
+      if (typingTimer) clearTimeout(typingTimer)
+      if (typingInterval) clearInterval(typingInterval)
+    }
+  }, [isActive, step])
 
   return (
     <div className="absolute inset-0 flex items-center justify-center p-6">
@@ -343,28 +430,80 @@ function GuidanceDemo({ index = 1 }: { index?: number }) {
           </div>
 
           {/* Form content */}
-          <div className="p-4 h-32 relative bg-slate-50">
+          <div ref={contentRef} className="p-4 h-32 relative bg-slate-50">
             <div className="space-y-3">
-              <div className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 0 ? 'ring-2 ring-[#1861C8]' : ''}`} />
-              <div className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`} />
-              <div className={`h-5 w-20 rounded bg-slate-200 transition-all duration-300 ${isActive && step === 2 ? 'ring-2 ring-[#1861C8]' : ''}`} />
+              <div
+                ref={(el) => { fieldRefs.current[0] = el }}
+                className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 ${isActive && step === 0 ? 'ring-2 ring-[#1861C8]' : ''}`}
+              />
+              <div
+                ref={(el) => { fieldRefs.current[1] = el }}
+                className={`h-6 rounded bg-white border border-slate-200 transition-all duration-300 relative ${isActive && step === 1 ? 'ring-2 ring-[#1861C8]' : ''}`}
+              >
+                {isActive && typedCount > 0 && (
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {Array.from({ length: typedCount }).map((_, i) => (
+                      <span key={i} className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+                    ))}
+                    {step === 1 && typedCount < 8 && (
+                      <span className="w-[2px] h-3 bg-slate-400 animate-pulse" />
+                    )}
+                  </div>
+                )}
+              </div>
+              <div
+                ref={(el) => { fieldRefs.current[2] = el }}
+                className={`h-5 w-20 rounded bg-slate-200 transition-all duration-300 ${isActive && step === 2 ? 'ring-2 ring-[#1861C8]' : ''}`}
+              />
             </div>
+
+            {/* Radar pulse */}
+            {isActive && (
+              <div
+                className="absolute z-0 pointer-events-none"
+                style={{ left: radarPos.left, top: radarPos.top }}
+              >
+                <div className="relative w-10 h-10 -translate-x-1/2 -translate-y-1/2">
+                  <div className="absolute inset-0 rounded-full bg-[#1861C8]/10 animate-ping" />
+                  <div className="absolute inset-1 rounded-full border border-[#1861C8]/35" />
+                  <div className="absolute inset-[14px] rounded-full bg-[#1861C8]/40" />
+                </div>
+              </div>
+            )}
+
+            {/* Animated cursor */}
+            {isActive && (
+              <div
+                className="absolute w-4 h-4 transition-all duration-500 ease-out z-20 pointer-events-none"
+                style={{ left: cursorPos.left, top: cursorPos.top, transitionDelay: '140ms' }}
+              >
+                <svg
+                  className={`w-4 h-4 text-slate-800 drop-shadow-lg transition-transform duration-100 ${isClicking ? 'scale-75' : 'scale-100'}`}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M4 4l16 8-7 2-2 7z" />
+                </svg>
+                {isClicking && (
+                  <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-[#1861C8]/40 animate-ping" />
+                )}
+              </div>
+            )}
 
             {/* Floating tooltip */}
             {isActive && (
               <div
                 className="absolute z-10 transition-all duration-500 ease-out"
-                style={{ top: tooltips[step].top, left: tooltips[step].left }}
+                style={{ top: tooltipPos.top, left: tooltipPos.left, width: 150 }}
               >
-                <div className="bg-[#1861C8] text-white px-3 py-1.5 rounded-lg shadow-xl animate-bounce-subtle">
+                <div className="relative bg-[#1861C8] text-white px-3 py-1.5 rounded-lg shadow-xl animate-bounce-subtle">
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[9px] font-bold">
                       {step + 1}
                     </div>
-                    <span className="text-[10px] font-medium whitespace-nowrap">{tooltips[step].label}</span>
+                    <span className="text-[10px] font-medium whitespace-nowrap">{tooltipLabels[step]}</span>
                   </div>
                 </div>
-                <div className="w-2.5 h-2.5 bg-[#1861C8] rotate-45 -mt-1 ml-6" />
               </div>
             )}
           </div>
@@ -411,8 +550,9 @@ function AutomationDemo({ index = 2 }: { index?: number }) {
               <span className="text-[10px] text-slate-500">Customer Onboarding Guide</span>
             </div>
             {isActive && (
-              <div className="px-2 py-0.5 bg-green-500/20 rounded-full">
-                <span className="text-[9px] text-green-600 font-medium">Live</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] text-emerald-700 font-semibold tracking-wide uppercase leading-none">Live</span>
               </div>
             )}
           </div>

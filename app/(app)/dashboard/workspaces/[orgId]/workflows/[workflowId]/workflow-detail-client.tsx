@@ -155,7 +155,7 @@ const formatDateTime = (value?: string | null) => {
 }
 
 const formatDuration = (ms?: number | null) => {
-  if (!ms || ms <= 0) return '—'
+  if (!ms || ms <= 0) return '-'
   const seconds = Math.round(ms / 1000)
   const minutes = Math.floor(seconds / 60)
   if (minutes <= 0) return `${seconds}s`
@@ -751,7 +751,7 @@ export default function WorkflowDetailClient({
   const successRate =
     typeof workflow.success_rate_7d === 'number'
       ? `${Math.round(workflow.success_rate_7d * 100)}%`
-      : '—'
+      : '-'
   const metrics = workflow.metrics_7d
   const cadenceDays = resolveCadenceDays(
     workflow.expected_run_cadence,
@@ -877,7 +877,7 @@ export default function WorkflowDetailClient({
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Runs (7d)</div>
-              <div className="text-slate-900">{runStats?.total ?? '—'}</div>
+              <div className="text-slate-900">{runStats?.total ?? '-'}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Views (7d)</div>
@@ -917,7 +917,7 @@ export default function WorkflowDetailClient({
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Maintainers</div>
               <div className="text-slate-900">
-                {maintainerLabels.length ? maintainerLabels.join(', ') : '—'}
+                {maintainerLabels.length ? maintainerLabels.join(', ') : '-'}
               </div>
             </div>
             <div>
@@ -926,12 +926,12 @@ export default function WorkflowDetailClient({
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Contexts</div>
-              <div className="text-slate-900">{contextLabel || '—'}</div>
+              <div className="text-slate-900">{contextLabel || '-'}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Review cadence</div>
               <div className="text-slate-900">
-                {workflow.review_cadence_days ? `${workflow.review_cadence_days} days` : '—'}
+                {workflow.review_cadence_days ? `${workflow.review_cadence_days} days` : '-'}
               </div>
             </div>
             <div>
@@ -1197,13 +1197,13 @@ export default function WorkflowDetailClient({
                         <div className="text-xs text-slate-400">{run.run_id}</div>
                       </TableCell>
                       <TableCell>{formatDuration(run.duration_ms)}</TableCell>
-                      <TableCell>{run.actor_email ?? run.actor_user_id ?? '—'}</TableCell>
+                      <TableCell>{run.actor_email ?? run.actor_user_id ?? '-'}</TableCell>
                       <TableCell>
                         {run.steps_total
                           ? `${run.steps_completed ?? 0}/${run.steps_total}`
-                          : '—'}
+                          : '-'}
                       </TableCell>
-                      <TableCell>{run.error_summary ?? '—'}</TableCell>
+                      <TableCell>{run.error_summary ?? '-'}</TableCell>
                     </TableRow>
                   ))}
                 </tbody>

@@ -2,14 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { CONTACT_EMAIL } from '@/lib/constants'
+import { CONTACT_EMAIL, SALES_CALL_URL } from '@/lib/constants'
+import AuthLink from './header-auth-link'
 
-type MobileMenuProps = {
-  isAuthenticated: boolean
-}
-
-export default function MobileMenu({ isAuthenticated }: MobileMenuProps) {
+export default function MobileMenu() {
   const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false)
+  const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
 
   const trigger = useRef<HTMLButtonElement>(null)
   const mobileNav = useRef<HTMLDivElement>(null)
@@ -34,6 +32,8 @@ export default function MobileMenu({ isAuthenticated }: MobileMenuProps) {
     document.addEventListener('keydown', keyHandler)
     return () => document.removeEventListener('keydown', keyHandler)
   })
+
+  const closeNav = () => setMobileNavOpen(false)
 
   return (
     <div className="md:hidden flex items-center ml-4">
@@ -80,21 +80,56 @@ export default function MobileMenu({ isAuthenticated }: MobileMenuProps) {
       >
         <ul className="bg-white border border-slate-200 rounded-xl shadow-lg px-4 py-2">
           <li>
-            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#features">Features</Link>
-          </li>
-          <li>
-            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#pricing">Pricing</Link>
-          </li>
-          <li>
-            <Link
-              className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2"
-              href={isAuthenticated ? '/dashboard' : '/signin'}
-            >
-              {isAuthenticated ? 'Dashboard' : 'Sign in'}
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/#features" onClick={closeNav}>
+              Product
             </Link>
           </li>
           <li>
-            <a className="flex font-medium text-sm text-[#1861C8] hover:text-[#1861C8]/80 py-2" href={`mailto:${CONTACT_EMAIL}`}>Talk to Sales</a>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/use-cases" onClick={closeNav}>
+              Use cases
+            </Link>
+          </li>
+          <li>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/security" onClick={closeNav}>
+              Security
+            </Link>
+          </li>
+          <li>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/resources" onClick={closeNav}>
+              Resources
+            </Link>
+          </li>
+          <li>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/pricing" onClick={closeNav}>
+              Pricing
+            </Link>
+          </li>
+          <li>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/roi" onClick={closeNav}>
+              ROI calculator
+            </Link>
+          </li>
+          <li>
+            <Link className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" href="/request-access" onClick={closeNav}>
+              Request access
+            </Link>
+          </li>
+          <li>
+            <AuthLink className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" onClick={closeNav} />
+          </li>
+          <li>
+            <a className="flex font-medium text-sm text-[#1861C8] hover:text-[#1861C8]/80 py-2" href={salesHref} onClick={closeNav}>
+              Talk to sales
+            </a>
+          </li>
+          <li className="border-t border-slate-200 mt-2 pt-2">
+            <Link
+              className="flex font-semibold text-sm text-white bg-[#1861C8] hover:bg-[#2171d8] py-2 px-4 rounded-full justify-center whitespace-nowrap"
+              href="/get-started"
+              onClick={closeNav}
+            >
+              Get started
+            </Link>
           </li>
         </ul>
       </nav>

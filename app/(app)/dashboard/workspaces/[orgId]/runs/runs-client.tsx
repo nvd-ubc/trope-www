@@ -54,7 +54,7 @@ const formatDateTime = (value?: string | null) => {
 }
 
 const formatDuration = (ms?: number | null) => {
-  if (!ms || ms <= 0) return '—'
+  if (!ms || ms <= 0) return '-'
   const seconds = Math.round(ms / 1000)
   const minutes = Math.floor(seconds / 60)
   if (minutes <= 0) return `${seconds}s`
@@ -338,7 +338,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
             <option value="started_desc">Newest start</option>
             <option value="started_asc">Oldest start</option>
             <option value="duration_desc">Longest duration</option>
-            <option value="status">Status A–Z</option>
+            <option value="status">Status A-Z</option>
           </select>
           <Input
             value={query}
@@ -393,8 +393,8 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                     <TableCell>
                       {run.actor_email ?? run.actor_user_id}
                     </TableCell>
-                    <TableCell>{run.client ?? '—'}</TableCell>
-                    <TableCell>{run.error_summary ?? '—'}</TableCell>
+                    <TableCell>{run.client ?? '-'}</TableCell>
+                    <TableCell>{run.error_summary ?? '-'}</TableCell>
                   </TableRow>
                 ))}
               </tbody>

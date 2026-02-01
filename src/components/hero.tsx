@@ -1,9 +1,12 @@
-import { CONTACT_EMAIL } from '@/lib/constants'
+import Link from 'next/link'
+import { CONTACT_EMAIL, SALES_CALL_URL } from '@/lib/constants'
 import HeroDemo from './hero-demo'
 import AnimateIn from './animate-in'
 import ChromaText from './chroma-text'
 
 export default function Hero() {
+  const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
+
   return (
     <section className="relative overflow-hidden min-h-screen flex items-center">
       {/* Layered gradient background - light theme */}
@@ -54,7 +57,7 @@ export default function Hero() {
               {/* Subtitle */}
               <AnimateIn delay={0} duration={700}>
                 <p className="text-[#1861C8] text-sm md:text-base mb-4 tracking-wide font-medium">
-                  Workflow documentation for teams
+                  Desktop workflow guidance for operations teams
                 </p>
               </AnimateIn>
 
@@ -69,18 +72,19 @@ export default function Hero() {
               {/* Description */}
               <AnimateIn delay={200} duration={700}>
                 <p className="text-base md:text-lg text-slate-600 max-w-lg mx-auto lg:mx-0 mb-8 leading-relaxed">
-                  Trope records any workflow once—across desktop apps and the web—then delivers living guides and safe one-click automations.
+                  Trope turns complex desktop workflows into guided, repeatable playbooks. Standardize onboarding,
+                  reduce errors, and scale execution across every team.
                 </p>
               </AnimateIn>
 
               {/* CTA Buttons */}
               <AnimateIn delay={300} duration={700}>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <a
+                  <Link
                     className="group inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition-all duration-200 shadow-lg shadow-[#1861C8]/20"
-                    href={`mailto:${CONTACT_EMAIL}`}
+                    href="/request-access"
                   >
-                    Talk to Sales
+                    Request access
                     <svg
                       className="ml-2 w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5"
                       fill="none"
@@ -89,14 +93,15 @@ export default function Hero() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
-                  </a>
+                  </Link>
                   <a
                     className="inline-flex items-center justify-center px-7 py-3.5 text-base font-semibold text-slate-700 border border-slate-300 rounded-full hover:border-slate-400 hover:text-slate-900 transition-all duration-200"
-                    href="#features"
+                    href={salesHref}
                   >
-                    Learn more
+                    Book a call
                   </a>
                 </div>
+                <p className="mt-3 text-xs text-slate-500">Closed beta • Invite-only access for teams</p>
               </AnimateIn>
             </div>
 

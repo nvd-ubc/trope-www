@@ -1,9 +1,6 @@
 import type { NextConfig } from "next";
-import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-	// Configure `pageExtensions` to include MDX files
-	pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
 	async headers() {
 		return [
 			{
@@ -17,10 +14,25 @@ const nextConfig: NextConfig = {
 			},
 		];
 	},
+	async redirects() {
+		return [
+			{
+				source: "/customers",
+				destination: "/use-cases",
+				permanent: true,
+			},
+			{
+				source: "/integrations",
+				destination: "/resources",
+				permanent: true,
+			},
+			{
+				source: "/changelog",
+				destination: "/release-notes",
+				permanent: true,
+			},
+		];
+	},
 };
 
-const withMDX = createMDX({
-	// Add markdown plugins here, as desired
-});
-
-export default withMDX(nextConfig);
+export default nextConfig;

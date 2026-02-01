@@ -58,7 +58,7 @@ export default function Features02() {
     return () => observer.disconnect()
   }, [])
 
-  // Auto-advance through cards: 0=Desktop, 1=Drift, 2=Audit, 3=Role
+  // Auto-advance through cards: 0=Desktop, 1=Review, 2=Run history, 3=Role
   useEffect(() => {
     if (!isVisible || isPaused) return
 
@@ -90,7 +90,7 @@ export default function Features02() {
               Built for <ChromaText color="inherit">real workflows</ChromaText>
             </h2>
             <p className="text-base md:text-lg text-slate-600 max-w-xl mx-auto">
-              Unlike browser-only tools, Trope works where your team actually works.
+              Desktop-first capture, guided runs, and the controls teams need to scale.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function Features02() {
             {/* Right - Stacked capabilities */}
             <div className="grid gap-6">
               <div className="grid sm:grid-cols-2 gap-6">
-                <DriftDetectionCard />
+                <ReviewCadenceCard />
                 <AuditTrailsCard />
               </div>
               <RoleBasedCard />
@@ -181,7 +181,7 @@ function DesktopFirstCard() {
           </div>
         </div>
         <p className="text-slate-600 text-base mb-8 max-w-sm">
-          Works natively with Excel, QuickBooks, and desktop apps—not just browsers.
+          Works natively with Excel, QuickBooks, and desktop apps, not just browsers.
           Record workflows anywhere your team works.
         </p>
 
@@ -292,8 +292,8 @@ function DesktopFirstCard() {
   )
 }
 
-// Drift Detection card (index 1)
-function DriftDetectionCard() {
+// Review cadence card (index 1)
+function ReviewCadenceCard() {
   const { isActive, hoverProps } = useCapabilityAutoPlay(1)
   const [phase, setPhase] = useState<'normal' | 'changing' | 'alert'>('normal')
 
@@ -332,14 +332,14 @@ function DriftDetectionCard() {
           </div>
           {isActive && phase === 'alert' && (
             <div className="px-2 py-0.5 bg-yellow-100 rounded-full animate-scale-in">
-              <span className="text-[10px] text-yellow-700 font-medium">UI Changed</span>
+              <span className="text-[10px] text-yellow-700 font-medium">Review due</span>
             </div>
           )}
         </div>
 
-        <h3 className="text-base font-semibold text-slate-900 mb-1">Drift detection</h3>
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Review cadence</h3>
         <p className="text-slate-600 text-sm mb-4">
-          Auto-flags when apps change and workflows become outdated.
+          Keep workflows current with scheduled reviews and owner alerts.
         </p>
 
         {/* UI change demo */}
@@ -403,9 +403,9 @@ function AuditTrailsCard() {
           </svg>
         </div>
 
-        <h3 className="text-base font-semibold text-slate-900 mb-1">Audit trails</h3>
+        <h3 className="text-base font-semibold text-slate-900 mb-1">Run history</h3>
         <p className="text-slate-600 text-sm mb-4">
-          Every action logged with full lineage.
+          Track each workflow run with actor, time, and outcome context.
         </p>
 
         {/* Log entries demo */}
@@ -439,7 +439,7 @@ function RoleBasedCard() {
 
   const roles = [
     { name: 'Admin', permissions: ['View', 'Edit', 'Delete', 'Manage'], color: '#61AFF9' },
-    { name: 'Editor', permissions: ['View', 'Edit'], color: '#1861C8' },
+    { name: 'Member', permissions: ['View', 'Edit'], color: '#1861C8' },
     { name: 'Viewer', permissions: ['View'], color: '#1861C8' },
   ]
 

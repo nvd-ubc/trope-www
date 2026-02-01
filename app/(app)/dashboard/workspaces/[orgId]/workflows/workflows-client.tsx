@@ -107,7 +107,7 @@ const formatStatus = (status?: string | null) => {
 }
 
 const formatSource = (source?: string | null) => {
-  if (!source) return '—'
+  if (!source) return '-'
   if (source === 'share') return 'Imported'
   return source.replace(/_/g, ' ')
 }
@@ -592,7 +592,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
             className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
           >
             <option value="updated_desc">Newest updated</option>
-            <option value="title_asc">Title A–Z</option>
+            <option value="title_asc">Title A-Z</option>
             <option value="last_success_desc">Last success</option>
             <option value="runs_desc">Runs (7d)</option>
             <option value="health">Health</option>
@@ -708,7 +708,15 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-6 text-sm text-slate-500">
-            No workflows yet. Publish a guide from the desktop app to populate the library.
+            <p>No workflows yet. Publish a guide from the desktop app to populate the library.</p>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/download">
+                Download desktop app
+              </Link>
+              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/get-started">
+                Getting started
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -739,8 +747,8 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                   const successRate =
                     typeof workflow.success_rate_7d === 'number'
                       ? `${Math.round(workflow.success_rate_7d * 100)}%`
-                      : '—'
-                  let reviewDue = '—'
+                      : '-'
+                  let reviewDue = '-'
                   if (workflow.review_cadence_days && workflow.last_reviewed_at) {
                     const lastReviewed = new Date(workflow.last_reviewed_at)
                     if (!Number.isNaN(lastReviewed.getTime())) {
@@ -816,7 +824,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                       <TableCell>{reviewDue}</TableCell>
                       <TableCell>{formatDate(workflow.last_success_at ?? undefined)}</TableCell>
                       <TableCell>
-                        <div className="text-sm text-slate-700">{runStats?.total ?? '—'}</div>
+                        <div className="text-sm text-slate-700">{runStats?.total ?? '-'}</div>
                         <div className="text-xs text-slate-400">Success {successRate}</div>
                       </TableCell>
                     </TableRow>
