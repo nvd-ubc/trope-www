@@ -79,7 +79,7 @@ export default async function ResourceDetail({ params }: { params: Promise<Param
                   </p>
                 </div>
                 <Link
-                  className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-5 py-2 text-sm font-semibold text-white hover:bg-[#2171d8]"
+                  className="inline-flex items-center justify-center rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8] whitespace-nowrap leading-none"
                   href="/roi"
                 >
                   Open ROI calculator →

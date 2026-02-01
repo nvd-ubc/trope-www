@@ -33,7 +33,7 @@ export default function DocsPage() {
               <p className="mt-2 text-sm text-slate-600">
                 We&apos;re prioritizing the highest-leverage guidance for teams rolling Trope out across complex desktops.
               </p>
-              <ul className="mt-6 grid gap-3 text-sm text-slate-600">
+              <ul className="mt-6 grid gap-3 text-sm text-slate-600 list-disc list-inside marker:text-[#1861C8]">
                 {[
                   'Installation + desktop permissions (macOS + Windows)',
                   'Capture best practices for multi-app workflows',
@@ -41,10 +41,7 @@ export default function DocsPage() {
                   'Run monitoring, QA, and audit readiness',
                   'Security, data boundaries, and compliance expectations',
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <span className="mt-1.5 h-2 w-2 rounded-full bg-[#1861C8]" />
-                    <span>{item}</span>
-                  </li>
+                  <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>

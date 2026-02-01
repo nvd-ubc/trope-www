@@ -33,6 +33,9 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
   if (!useCase) {
     notFound()
   }
+  const workflowCount = useCase.workflows.length
+  const stepCount = useCase.workflows.reduce((total, workflow) => total + workflow.steps.length, 0)
+  const systemCount = new Set(useCase.workflows.flatMap((workflow) => workflow.systems)).size
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-slate-50 to-white">
@@ -74,21 +77,40 @@ export default async function UseCaseDetail({ params }: { params: Promise<Params
             </div>
           </div>
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-[#F4F7FF] p-6 h-fit shadow-[0_16px_40px_-32px_rgba(15,23,42,0.5)] lg:sticky lg:top-28">
-              <p className="text-xs uppercase tracking-wide text-slate-400">Metrics to watch</p>
-              <h2 className="mt-2 text-lg font-semibold text-slate-900">Pilot validation signals</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Use these signals to validate your pilot and prioritize what to scale next.
-              </p>
-              <ul className="mt-4 space-y-3 text-sm text-slate-700">
-                {useCase.metrics.map((metric) => (
-                  <li key={metric} className="flex items-start gap-2">
-                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
-                    <span>{metric}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="space-y-6 lg:sticky lg:top-28 h-fit">
+              <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-[#F4F7FF] p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.5)]">
+                <p className="text-xs uppercase tracking-wide text-slate-400">Metrics to watch</p>
+                <h2 className="mt-2 text-lg font-semibold text-slate-900">Pilot validation signals</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  Use these signals to validate your pilot and prioritize what to scale next.
+                </p>
+                <ul className="mt-4 space-y-3 text-sm text-slate-700">
+                  {useCase.metrics.map((metric) => (
+                    <li key={metric} className="flex items-start gap-2">
+                      <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#1861C8]" />
+                      <span>{metric}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.4)]">
+                <p className="text-xs uppercase tracking-wide text-slate-400">Coverage snapshot</p>
+                <h2 className="mt-2 text-lg font-semibold text-slate-900">Workflow scope</h2>
+                <div className="mt-4 grid gap-3">
+                  {[
+                    { label: 'Example workflows', value: workflowCount },
+                    { label: 'Steps captured', value: stepCount },
+                    { label: 'Tools involved', value: systemCount },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="text-sm text-slate-600">{item.label}</span>
+                      <span className="text-lg font-semibold text-slate-900">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div>
