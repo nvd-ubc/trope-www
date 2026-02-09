@@ -467,24 +467,13 @@ export default function WorkflowDetailClient({
         const response = await fetch(
           `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
             workflowId
-          )}/versions/${encodeURIComponent(selectedVersionId)}`,
+          )}/versions/${encodeURIComponent(selectedVersionId)}/guide-spec`,
           { cache: 'no-store' }
         )
         if (!response.ok) {
-          throw new Error('Unable to load version details.')
-        }
-        const payload = (await response.json().catch(() => null)) as
-          | VersionDetailResponse
-          | null
-        const downloadUrl = payload?.version?.guide_spec?.download_url
-        if (!downloadUrl) {
           throw new Error('Guide spec is not available for this version.')
         }
-        const specResponse = await fetch(downloadUrl, { cache: 'no-store' })
-        if (!specResponse.ok) {
-          throw new Error('Unable to download guide spec.')
-        }
-        const specJson = (await specResponse.json().catch(() => null)) as GuideSpec | null
+        const specJson = (await response.json().catch(() => null)) as GuideSpec | null
         if (!specJson) {
           throw new Error('Guide spec is empty.')
         }
@@ -1260,7 +1249,17 @@ export default function WorkflowDetailClient({
 
         <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-base font-semibold text-slate-900">Guide preview</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-base font-semibold text-slate-900">Guide preview</h2>
+              <Link
+                href={`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide${
+                  selectedVersionId ? `?versionId=${encodeURIComponent(selectedVersionId)}` : ''
+                }`}
+                className="text-xs font-semibold text-[color:var(--trope-accent)] hover:underline"
+              >
+                Open guide
+              </Link>
+            </div>
             {selectedVersion && (
               <div className="text-xs text-slate-500">Version {selectedVersion.version_id}</div>
             )}

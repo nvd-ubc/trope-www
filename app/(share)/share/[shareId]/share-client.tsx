@@ -123,12 +123,10 @@ export default function ShareClient({ shareId }: { shareId: string }) {
         setWorkflow(payload.workflow)
         setVersion(payload.version)
 
-        const downloadUrl = payload.version?.guide_spec?.download_url
-        if (downloadUrl) {
-          const specResponse = await fetch(downloadUrl, { cache: 'no-store' })
-          if (!specResponse.ok) {
-            throw new Error('Unable to download guide spec.')
-          }
+        const specResponse = await fetch(`/api/shares/${encodeURIComponent(shareId)}/guide-spec`, {
+          cache: 'no-store',
+        })
+        if (specResponse.ok) {
           const specJson = (await specResponse.json().catch(() => null)) as GuideSpec | null
           if (!specJson) {
             throw new Error('Guide spec is empty.')
