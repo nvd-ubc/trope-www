@@ -1,0 +1,13 @@
+import { proxyBackendRequest } from '@/lib/server/backend'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ workflowId: string }> }
+) {
+  const { workflowId } = await context.params
+  return proxyBackendRequest(`/v1/workflows/${encodeURIComponent(workflowId)}/resolve`)
+}
+
