@@ -237,7 +237,7 @@ const StepImageCard = ({
 export default function WorkflowGuideClient({ workflowId }: { workflowId: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const csrfToken = useCsrfToken()
+  const { token: csrfToken } = useCsrfToken()
 
   const versionIdParam = (searchParams.get('versionId') ?? '').trim()
 
