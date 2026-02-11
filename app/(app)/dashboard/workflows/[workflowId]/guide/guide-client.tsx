@@ -847,6 +847,12 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           >
             Copy link
           </Button>
+          <Link
+            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`}
+            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
+          >
+            Share
+          </Link>
           {isAdmin && !isEditing && spec && (
             <Button variant="primary" size="sm" onClick={handleStartEditing}>
               Edit
