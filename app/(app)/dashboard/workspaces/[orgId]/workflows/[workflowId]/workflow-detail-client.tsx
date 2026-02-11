@@ -452,6 +452,11 @@ export default function WorkflowDetailClient({
     () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
     [versions, selectedVersionId]
   )
+  const guidePageHref = useMemo(() => {
+    const base = `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide`
+    if (!selectedVersionId) return base
+    return `${base}?versionId=${encodeURIComponent(selectedVersionId)}`
+  }, [workflowId, selectedVersionId])
 
   useEffect(() => {
     if (!selectedVersionId) {
@@ -1252,9 +1257,7 @@ export default function WorkflowDetailClient({
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-base font-semibold text-slate-900">Guide preview</h2>
               <Link
-                href={`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide${
-                  selectedVersionId ? `?versionId=${encodeURIComponent(selectedVersionId)}` : ''
-                }`}
+                href={guidePageHref}
                 className="text-xs font-semibold text-[color:var(--trope-accent)] hover:underline"
               >
                 Open guide
