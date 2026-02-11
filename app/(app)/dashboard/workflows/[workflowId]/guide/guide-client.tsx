@@ -7,11 +7,23 @@ import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import {
+  buildSaveFingerprint,
+  createDraftStep,
+  getRadarPercent,
+  normalizeSpecForPublish,
+} from '@/lib/guide-editor'
 
 type ResolveResponse = {
   org_id: string
   workflow_id: string
   status?: string | null
+}
+
+type OrgProfileResponse = {
+  membership?: {
+    role?: string | null
+  } | null
 }
 
 type WorkflowDefinition = {
@@ -70,18 +82,12 @@ type VersionDetailResponse = {
   }
 }
 
-type GuideSpec = {
-  workflow_title: string
-  app: string
-  version: string
-  variables?: Array<{
-    id: string
-    label: string
-    sensitive: boolean
-    type?: string
-    description?: string
-  }>
-  steps: Array<GuideStep>
+type GuideVariable = {
+  id: string
+  label: string
+  sensitive: boolean
+  type?: string
+  description?: string
 }
 
 type GuideStep = {
@@ -90,11 +96,38 @@ type GuideStep = {
   why?: string
   instructions: string
   kind?: string
+  video_ranges?: unknown[]
   anchors?: {
-    text?: Array<{ string?: string; area_hint?: string }>
-    icons?: Array<{ description?: string }>
-    layout?: Array<{ region?: string; relative_to?: string; position_hint?: string }>
+    text?: unknown[]
+    icons?: unknown[]
+    layout?: unknown[]
+    [key: string]: unknown
   }
+  [key: string]: unknown
+}
+
+type GuideSpec = {
+  workflow_title: string
+  app: string
+  version: string
+  variables?: GuideVariable[]
+  steps: GuideStep[]
+  [key: string]: unknown
+}
+
+type ArtifactsPresignResponse = {
+  artifacts?: Array<{
+    name?: string
+    key?: string
+    upload_url?: string
+    content_type?: string
+  }>
+}
+
+type VersionsCreateResponse = {
+  version?: WorkflowVersionSummary
+  error?: string
+  message?: string
 }
 
 const formatDate = (value?: string | null) => {
@@ -112,6 +145,15 @@ const formatKind = (kind?: string | null) => {
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
 
+const sortVersionsByDate = (versions: WorkflowVersionSummary[]) =>
+  [...versions].sort((a, b) => {
+    const aTime = new Date(a.created_at).getTime()
+    const bTime = new Date(b.created_at).getTime()
+    return bTime - aTime
+  })
+
+const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
+
 const StepImageCard = ({
   orgId,
   workflowId,
@@ -119,6 +161,16 @@ const StepImageCard = ({
   step,
   index,
   image,
+  isEditing,
+  canMoveUp,
+  canMoveDown,
+  canDelete,
+  onMoveUp,
+  onMoveDown,
+  onDelete,
+  onInsertAfter,
+  onStepTitleChange,
+  onStepInstructionChange,
 }: {
   orgId: string
   workflowId: string
@@ -126,16 +178,44 @@ const StepImageCard = ({
   step: GuideStep
   index: number
   image: StepImage | null
+  isEditing: boolean
+  canMoveUp: boolean
+  canMoveDown: boolean
+  canDelete: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onDelete: () => void
+  onInsertAfter: () => void
+  onStepTitleChange: (value: string) => void
+  onStepInstructionChange: (value: string) => void
 }) => {
   const kindLabel = formatKind(step.kind)
-  const anchorText = step.anchors?.text
-    ?.map((anchor) => anchor.string)
+  const anchorText = (step.anchors?.text ?? [])
+    .map((anchor) => {
+      if (anchor && typeof anchor === 'object' && !Array.isArray(anchor)) {
+        const record = anchor as { string?: string }
+        return record.string
+      }
+      return undefined
+    })
     .filter((value): value is string => Boolean(value))
-  const iconText = step.anchors?.icons
-    ?.map((icon) => icon.description)
+  const iconText = (step.anchors?.icons ?? [])
+    .map((icon) => {
+      if (icon && typeof icon === 'object' && !Array.isArray(icon)) {
+        const record = icon as { description?: string }
+        return record.description
+      }
+      return undefined
+    })
     .filter((value): value is string => Boolean(value))
-  const layoutText = step.anchors?.layout
-    ?.map((layout) => layout.region || layout.relative_to || layout.position_hint)
+  const layoutText = (step.anchors?.layout ?? [])
+    .map((layout) => {
+      if (layout && typeof layout === 'object' && !Array.isArray(layout)) {
+        const record = layout as { region?: string; relative_to?: string; position_hint?: string }
+        return record.region || record.relative_to || record.position_hint
+      }
+      return undefined
+    })
     .filter((value): value is string => Boolean(value))
 
   const imgSrc = image
@@ -147,34 +227,47 @@ const StepImageCard = ({
   const radar = image?.radar ?? null
   const width = image?.width ?? null
   const height = image?.height ?? null
-  const radarPercent = useMemo(() => {
-    if (!radar || radar.coordinate_space !== 'step_image_pixels_v1') {
-      return null
-    }
-    if (!isFiniteNumber(radar.x) || !isFiniteNumber(radar.y)) {
-      return null
-    }
-    if (!isFiniteNumber(width) || !isFiniteNumber(height) || width <= 0 || height <= 0) {
-      return null
-    }
-    return {
-      left: (radar.x / width) * 100,
-      top: (radar.y / height) * 100,
-    }
-  }, [height, radar, width])
+  const radarPercent = useMemo(() => getRadarPercent(radar, width, height), [height, radar, width])
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
-          <div className="text-base font-semibold text-slate-900">{step.title}</div>
+          {isEditing ? (
+            <input
+              value={step.title}
+              onChange={(event) => onStepTitleChange(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1 text-base font-semibold text-slate-900 focus:border-[color:var(--trope-accent)] focus:outline-none"
+              placeholder={`Step ${index + 1}`}
+            />
+          ) : (
+            <div className="text-base font-semibold text-slate-900">{step.title}</div>
+          )}
         </div>
-        {kindLabel && (
-          <Badge variant="info" className="text-[10px]">
-            {kindLabel}
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {kindLabel && (
+            <Badge variant="info" className="text-[10px]">
+              {kindLabel}
+            </Badge>
+          )}
+          {isEditing && (
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
+                Up
+              </Button>
+              <Button variant="outline" size="sm" onClick={onMoveDown} disabled={!canMoveDown}>
+                Down
+              </Button>
+              <Button variant="outline" size="sm" onClick={onInsertAfter}>
+                + Step
+              </Button>
+              <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {imgSrc && (
@@ -208,22 +301,44 @@ const StepImageCard = ({
         </a>
       )}
 
-      <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
+      {!imgSrc && (
+        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          No screenshot available for this step.
+        </div>
+      )}
+
+      {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
+        <div className="mt-2 text-xs text-slate-500">
+          Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
+        </div>
+      )}
+
+      {isEditing ? (
+        <textarea
+          value={step.instructions}
+          onChange={(event) => onStepInstructionChange(event.target.value)}
+          className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-[color:var(--trope-accent)] focus:outline-none"
+          rows={3}
+          placeholder="Describe the action clearly."
+        />
+      ) : (
+        <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
+      )}
       {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
 
-      {(anchorText?.length || iconText?.length || layoutText?.length) && (
+      {!isEditing && (anchorText.length > 0 || iconText.length > 0 || layoutText.length > 0) && (
         <div className="mt-4 space-y-2 text-xs text-slate-500">
-          {anchorText && anchorText.length > 0 && (
+          {anchorText.length > 0 && (
             <div>
               <span className="font-semibold text-slate-600">Text anchors:</span> {anchorText.join(', ')}
             </div>
           )}
-          {iconText && iconText.length > 0 && (
+          {iconText.length > 0 && (
             <div>
               <span className="font-semibold text-slate-600">Icon anchors:</span> {iconText.join(', ')}
             </div>
           )}
-          {layoutText && layoutText.length > 0 && (
+          {layoutText.length > 0 && (
             <div>
               <span className="font-semibold text-slate-600">Layout anchors:</span> {layoutText.join(', ')}
             </div>
@@ -243,16 +358,27 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
   const [orgId, setOrgId] = useState<string | null>(null)
   const [resolveError, setResolveError] = useState<string | null>(null)
+  const [requestId, setRequestId] = useState<string | null>(null)
 
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null)
   const [versions, setVersions] = useState<WorkflowVersionSummary[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
   const [versionDetail, setVersionDetail] = useState<VersionDetailResponse['version'] | null>(null)
+  const [membershipRole, setMembershipRole] = useState<string | null>(null)
 
   const [spec, setSpec] = useState<GuideSpec | null>(null)
+  const [draftSpec, setDraftSpec] = useState<GuideSpec | null>(null)
+  const [baselineFingerprint, setBaselineFingerprint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [specLoading, setSpecLoading] = useState(false)
   const [specError, setSpecError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [saveRequestId, setSaveRequestId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+
+  const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
 
   useEffect(() => {
     let active = true
@@ -260,6 +386,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setLoading(true)
       setResolveError(null)
       setOrgId(null)
+      setRequestId(null)
       try {
         const response = await fetch(`/api/workflows/${encodeURIComponent(workflowId)}/resolve`, {
           cache: 'no-store',
@@ -289,7 +416,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     const load = async () => {
       setLoading(true)
       try {
-        const [workflowResponse, versionsResponse] = await Promise.all([
+        const [workflowResponse, versionsResponse, orgResponse] = await Promise.all([
           fetch(
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`,
             { cache: 'no-store' }
@@ -298,6 +425,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
             { cache: 'no-store' }
           ),
+          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
         ])
 
         const workflowPayload = (await workflowResponse.json().catch(() => null)) as
@@ -306,6 +434,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         const versionsPayload = (await versionsResponse.json().catch(() => null)) as
           | VersionsResponse
           | null
+        const orgPayload = (await orgResponse.json().catch(() => null)) as OrgProfileResponse | null
 
         if (!workflowResponse.ok || !workflowPayload?.workflow) {
           throw new Error('Unable to load workflow.')
@@ -315,15 +444,18 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         }
         if (!active) return
 
+        const sortedVersions = sortVersionsByDate(versionsPayload.versions ?? [])
+
         setWorkflow(workflowPayload.workflow)
-        setVersions(versionsPayload.versions ?? [])
+        setVersions(sortedVersions)
+        setMembershipRole(orgPayload?.membership?.role ?? null)
 
         const defaultVersion =
-          (versionIdParam && versionsPayload.versions.some((v) => v.version_id === versionIdParam)
+          (versionIdParam && sortedVersions.some((v) => v.version_id === versionIdParam)
             ? versionIdParam
             : null) ||
           (workflowPayload.latest_version?.version_id ?? null) ||
-          (versionsPayload.versions[0]?.version_id ?? null)
+          (sortedVersions[0]?.version_id ?? null)
 
         setSelectedVersionId(defaultVersion)
       } catch (err) {
@@ -364,7 +496,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   useEffect(() => {
     if (!orgId || !selectedVersionId) {
       setSpec(null)
+      setDraftSpec(null)
       setVersionDetail(null)
+      setBaselineFingerprint(null)
       return
     }
 
@@ -372,6 +506,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     const loadSpec = async () => {
       setSpecLoading(true)
       setSpecError(null)
+      setSaveError(null)
+      setSaveMessage(null)
+      setSaveRequestId(null)
       try {
         const [specResponse, versionResponse] = await Promise.all([
           fetch(
@@ -407,11 +544,21 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         }
 
         if (!active) return
+        const normalized = normalizeSpecForPublish(
+          specJson,
+          workflow?.title ?? specJson.workflow_title ?? workflowId
+        )
         setVersionDetail(versionPayload.version)
-        setSpec(specJson)
+        setSpec(normalized)
+        setDraftSpec(cloneSpec(normalized))
+        setBaselineFingerprint(
+          buildSaveFingerprint(normalized, workflow?.title ?? normalized.workflow_title ?? workflowId)
+        )
+        setIsEditing(false)
       } catch (err) {
         if (!active) return
         setSpec(null)
+        setDraftSpec(null)
         setVersionDetail(null)
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
@@ -423,7 +570,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return () => {
       active = false
     }
-  }, [orgId, selectedVersionId, workflowId])
+  }, [orgId, selectedVersionId, workflow?.title, workflowId])
 
   const stepImageMap = useMemo(() => {
     const map: Record<string, StepImage> = {}
@@ -436,11 +583,209 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return map
   }, [versionDetail?.guide_media?.step_images])
 
+  const visibleSpec = isEditing ? draftSpec : spec
+
+  const draftIsDirty = useMemo(() => {
+    if (!isEditing || !draftSpec || !baselineFingerprint) return false
+    const fingerprint = buildSaveFingerprint(draftSpec, workflow?.title ?? workflowId)
+    return fingerprint !== baselineFingerprint
+  }, [baselineFingerprint, draftSpec, isEditing, workflow?.title, workflowId])
+
   const onSelectVersion = (versionId: string) => {
+    if (isEditing && draftIsDirty) {
+      const proceed = window.confirm(
+        'You have unsaved edits. Switch versions and discard those edits?'
+      )
+      if (!proceed) return
+    }
+    setIsEditing(false)
+    setSaveError(null)
+    setSaveMessage(null)
+    setSaveRequestId(null)
     setSelectedVersionId(versionId)
     const params = new URLSearchParams(searchParams.toString())
     params.set('versionId', versionId)
     router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
+  }
+
+  const updateDraftStep = (index: number, updater: (step: GuideStep) => GuideStep) => {
+    setDraftSpec((prev) => {
+      if (!prev || !Array.isArray(prev.steps) || !prev.steps[index]) return prev
+      const steps = [...prev.steps]
+      steps[index] = updater(steps[index] as GuideStep)
+      return { ...prev, steps }
+    })
+  }
+
+  const insertDraftStep = (index: number) => {
+    setDraftSpec((prev) => {
+      if (!prev || !Array.isArray(prev.steps)) return prev
+      const steps = [...prev.steps]
+      steps.splice(index, 0, createDraftStep())
+      return { ...prev, steps }
+    })
+  }
+
+  const deleteDraftStep = (index: number) => {
+    setDraftSpec((prev) => {
+      if (!prev || !Array.isArray(prev.steps) || prev.steps.length <= 1) return prev
+      const steps = prev.steps.filter((_, stepIndex) => stepIndex !== index)
+      return { ...prev, steps }
+    })
+  }
+
+  const moveDraftStep = (index: number, direction: 'up' | 'down') => {
+    setDraftSpec((prev) => {
+      if (!prev || !Array.isArray(prev.steps)) return prev
+      const targetIndex = direction === 'up' ? index - 1 : index + 1
+      if (targetIndex < 0 || targetIndex >= prev.steps.length) return prev
+      const steps = [...prev.steps]
+      const [step] = steps.splice(index, 1)
+      steps.splice(targetIndex, 0, step as GuideStep)
+      return { ...prev, steps }
+    })
+  }
+
+  const handleStartEditing = () => {
+    if (!spec || !isAdmin) return
+    setDraftSpec(cloneSpec(spec))
+    setBaselineFingerprint(buildSaveFingerprint(spec, workflow?.title ?? workflowId))
+    setSaveError(null)
+    setSaveMessage(null)
+    setSaveRequestId(null)
+    setIsEditing(true)
+  }
+
+  const handleDoneEditing = () => {
+    if (draftIsDirty) {
+      const shouldDiscard = window.confirm('Discard unsaved edits?')
+      if (!shouldDiscard) return
+    }
+    if (spec) {
+      setDraftSpec(cloneSpec(spec))
+      setBaselineFingerprint(buildSaveFingerprint(spec, workflow?.title ?? workflowId))
+    } else {
+      setDraftSpec(null)
+      setBaselineFingerprint(null)
+    }
+    setSaveError(null)
+    setSaveMessage(null)
+    setSaveRequestId(null)
+    setIsEditing(false)
+  }
+
+  const refreshVersions = async (): Promise<WorkflowVersionSummary[]> => {
+    if (!orgId) return []
+    const response = await fetch(
+      `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
+      { cache: 'no-store' }
+    )
+    if (!response.ok) {
+      throw new Error('Unable to refresh versions.')
+    }
+    const payload = (await response.json().catch(() => null)) as VersionsResponse | null
+    return sortVersionsByDate(payload?.versions ?? [])
+  }
+
+  const handleSaveEdits = async () => {
+    if (!csrfToken || !orgId || !selectedVersionId || !draftSpec) return
+    setSaving(true)
+    setSaveError(null)
+    setSaveMessage(null)
+    setSaveRequestId(null)
+
+    try {
+      const normalizedSpec = normalizeSpecForPublish(draftSpec, workflow?.title ?? workflowId)
+      if (!Array.isArray(normalizedSpec.steps) || normalizedSpec.steps.length === 0) {
+        throw new Error('At least one step is required before saving.')
+      }
+
+      const presignResponse = await fetch('/api/artifacts/presign', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({
+          org_id: orgId,
+          artifacts: [
+            {
+              name: 'guide_spec_override',
+              filename: `guide-spec-edited-${Date.now()}.json`,
+              content_type: 'application/json',
+            },
+          ],
+        }),
+      })
+      const presignRequestId = presignResponse.headers.get('x-trope-request-id')
+      const presignPayload = (await presignResponse.json().catch(() => null)) as
+        | ArtifactsPresignResponse
+        | null
+      if (!presignResponse.ok) {
+        setSaveRequestId(presignRequestId)
+        throw new Error('Unable to prepare save artifact upload.')
+      }
+
+      const artifact = presignPayload?.artifacts?.[0]
+      const uploadUrl = artifact?.upload_url ?? ''
+      const artifactKey = artifact?.key ?? ''
+      if (!uploadUrl || !artifactKey) {
+        throw new Error('Artifact upload details are missing.')
+      }
+
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(normalizedSpec),
+      })
+      if (!uploadResponse.ok) {
+        throw new Error('Unable to upload edited guide spec.')
+      }
+
+      const publishResponse = await fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}/versions`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-csrf-token': csrfToken,
+          },
+          body: JSON.stringify({
+            base_version_id: selectedVersionId,
+            guide_spec_override_key: artifactKey,
+          }),
+        }
+      )
+      const publishRequestId = publishResponse.headers.get('x-trope-request-id')
+      const publishPayload = (await publishResponse.json().catch(() => null)) as
+        | VersionsCreateResponse
+        | null
+      if (!publishResponse.ok || !publishPayload?.version?.version_id) {
+        setSaveRequestId(publishRequestId ?? presignRequestId)
+        throw new Error(
+          publishPayload?.message || 'Unable to publish edited guide version.'
+        )
+      }
+
+      const nextVersionId = publishPayload.version.version_id
+      const refreshedVersions = await refreshVersions()
+      setVersions(refreshedVersions)
+      setSelectedVersionId(nextVersionId)
+      const params = new URLSearchParams(searchParams.toString())
+      params.set('versionId', nextVersionId)
+      router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
+      setIsEditing(false)
+      setSaveMessage('Edits saved as a new version.')
+      setSaveRequestId(publishRequestId ?? presignRequestId)
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Unable to save edits.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading && !orgId) {
@@ -456,6 +801,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       <div className="flex items-center justify-center">
         <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
           {resolveError ?? 'Workflow not found or you do not have access.'}
+          {requestId && <div className="mt-2 text-xs text-rose-600">Request ID: {requestId}</div>}
         </Card>
       </div>
     )
@@ -465,7 +811,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-1">
-          <div className="text-xs uppercase tracking-wide text-slate-400">Workflow guide</div>
+          <div className="text-xs uppercase tracking-wide text-slate-400">
+            {isEditing ? 'Workflow guide editor' : 'Workflow guide'}
+          </div>
           <h1 className="text-2xl font-semibold text-slate-900">{workflow?.title ?? workflowId}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
             <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-500">
@@ -477,6 +825,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             >
               View workflow
             </Link>
+            {isEditing && draftIsDirty && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
+                Unsaved edits
+              </span>
+            )}
           </div>
         </div>
 
@@ -494,6 +847,26 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           >
             Copy link
           </Button>
+          {isAdmin && !isEditing && spec && (
+            <Button variant="primary" size="sm" onClick={handleStartEditing}>
+              Edit
+            </Button>
+          )}
+          {isAdmin && isEditing && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleDoneEditing} disabled={saving}>
+                Done editing
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSaveEdits}
+                disabled={saving || !draftIsDirty}
+              >
+                {saving ? 'Saving…' : 'Save as new version'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -503,7 +876,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={selectedVersionId ?? ''}
-              onChange={(e) => onSelectVersion(e.target.value)}
+              onChange={(event) => onSelectVersion(event.target.value)}
               className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm"
             >
               {versions.map((version) => (
@@ -514,8 +887,8 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             </select>
             {selectedVersionId && (
               <span className="text-xs text-slate-500">
-                {versions.find((v) => v.version_id === selectedVersionId)?.steps_count
-                  ? `${versions.find((v) => v.version_id === selectedVersionId)?.steps_count} steps`
+                {versions.find((version) => version.version_id === selectedVersionId)?.steps_count
+                  ? `${versions.find((version) => version.version_id === selectedVersionId)?.steps_count} steps`
                   : ''}
               </span>
             )}
@@ -529,13 +902,29 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">{specError}</Card>
       )}
 
-      {spec && selectedVersionId && (
+      {saveError && (
+        <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
+          {saveError}
+          {saveRequestId && <div className="mt-2 text-xs text-rose-600">Request ID: {saveRequestId}</div>}
+        </Card>
+      )}
+
+      {saveMessage && (
+        <Card className="border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-700">
+          {saveMessage}
+          {saveRequestId && (
+            <div className="mt-2 text-xs text-emerald-700">Request ID: {saveRequestId}</div>
+          )}
+        </Card>
+      )}
+
+      {visibleSpec && selectedVersionId && (
         <div className="space-y-8">
-          {spec.variables && spec.variables.length > 0 && (
+          {visibleSpec.variables && visibleSpec.variables.length > 0 && (
             <Card className="p-6">
               <div className="text-xs uppercase tracking-wide text-slate-400">Variables</div>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {spec.variables.map((variable) => (
+                {visibleSpec.variables.map((variable) => (
                   <div
                     key={variable.id}
                     className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
@@ -553,18 +942,70 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             </Card>
           )}
 
-          <div className="space-y-6">
-            {spec.steps.map((step, index) => (
-              <StepImageCard
-                key={step.id}
-                orgId={orgId}
-                workflowId={workflowId}
-                versionId={selectedVersionId}
-                step={step}
-                index={index}
-                image={stepImageMap[step.id] ?? null}
-              />
+          <div className="space-y-4">
+            {isEditing && visibleSpec.steps.length === 0 && (
+              <div className="flex justify-center">
+                <Button variant="outline" size="sm" onClick={() => insertDraftStep(0)}>
+                  + Add first step
+                </Button>
+              </div>
+            )}
+
+            {visibleSpec.steps.map((step, index) => (
+              <div key={step.id || `${index}`}>
+                {isEditing && (
+                  <div className="mb-3 flex justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => insertDraftStep(index)}
+                    >
+                      + Insert step here
+                    </Button>
+                  </div>
+                )}
+                <StepImageCard
+                  orgId={orgId}
+                  workflowId={workflowId}
+                  versionId={selectedVersionId}
+                  step={step}
+                  index={index}
+                  image={stepImageMap[step.id] ?? null}
+                  isEditing={isEditing}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < visibleSpec.steps.length - 1}
+                  canDelete={visibleSpec.steps.length > 1}
+                  onMoveUp={() => moveDraftStep(index, 'up')}
+                  onMoveDown={() => moveDraftStep(index, 'down')}
+                  onDelete={() => deleteDraftStep(index)}
+                  onInsertAfter={() => insertDraftStep(index + 1)}
+                  onStepTitleChange={(value) =>
+                    updateDraftStep(index, (current) => ({
+                      ...current,
+                      title: value,
+                    }))
+                  }
+                  onStepInstructionChange={(value) =>
+                    updateDraftStep(index, (current) => ({
+                      ...current,
+                      instructions: value,
+                    }))
+                  }
+                />
+              </div>
             ))}
+
+            {isEditing && (
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => insertDraftStep(visibleSpec.steps.length)}
+                >
+                  + Add step
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}
