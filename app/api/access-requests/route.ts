@@ -36,12 +36,28 @@ export async function POST(request: Request) {
   }
 
   const email = formValue(formData, 'email')
-  const name = formValue(formData, 'full_name')
+  const firstNameInput = formValue(formData, 'first_name')
+  const lastNameInput = formValue(formData, 'last_name')
+  const legacyFullName = formValue(formData, 'full_name')
   const company = formValue(formData, 'company')
   const note = formValue(formData, 'note')
 
+  const legacyNameParts = legacyFullName.split(/\s+/).filter(Boolean)
+  const firstName = firstNameInput || legacyNameParts[0] || ''
+  const lastName =
+    lastNameInput || (legacyNameParts.length > 1 ? legacyNameParts.slice(1).join(' ') : '')
+  const name = `${firstName} ${lastName}`.trim()
+
   if (!email) {
     return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.'))
+  }
+
+  if (!firstName) {
+    return redirectAfterPost(request, buildErrorRedirect(request, 'First name is required.'))
+  }
+
+  if (!lastName) {
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Last name is required.'))
   }
 
   try {
