@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import Logo from '@/components/ui/logo'
 import SignOutForm from './signout-form'
 import WorkspaceSwitcher from './workspace-switcher'
 import WorkspaceNavLink from './workspace-nav-link'
 import CommandPalette from './command-palette'
+import ProfileCompletionGate from './profile-completion-gate'
 
 export default function AppLayout({
   children,
@@ -71,7 +73,17 @@ export default function AppLayout({
               </div>
             </div>
           </header>
-          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
+          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">
+            <Suspense
+              fallback={
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+                  Loading dashboard…
+                </div>
+              }
+            >
+              <ProfileCompletionGate>{children}</ProfileCompletionGate>
+            </Suspense>
+          </main>
         </div>
       </div>
     </div>
