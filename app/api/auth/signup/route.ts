@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { authErrorMessage, getAuthConfig, signUp } from '@/lib/server/auth'
 import { csrfFormField, validateCsrf } from '@/lib/server/csrf'
+import { parseProfileNameFields } from '@/lib/profile-identity'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -43,11 +44,11 @@ export async function POST(request: Request) {
   const company = formValue(formData, 'company')
   const nextPath = formValue(formData, 'next')
 
-  const legacyNameParts = legacyFullName.split(/\s+/).filter(Boolean)
-  const firstName = firstNameInput || legacyNameParts[0] || ''
-  const lastName =
-    lastNameInput || (legacyNameParts.length > 1 ? legacyNameParts.slice(1).join(' ') : '')
-  const name = `${firstName} ${lastName}`.trim()
+  const { firstName, lastName, displayName: name } = parseProfileNameFields({
+    firstNameInput,
+    lastNameInput,
+    legacyFullName,
+  })
 
   if (!email) {
     return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.'))

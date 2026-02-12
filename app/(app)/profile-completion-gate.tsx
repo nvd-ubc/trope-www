@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { hasRequiredProfileNames } from '@/lib/profile-identity'
 
 type ProfileCompletionGateProps = {
   children: React.ReactNode
@@ -11,8 +12,6 @@ type MeResponse = {
   first_name?: string | null
   last_name?: string | null
 }
-
-const hasNameValue = (value?: string | null): boolean => Boolean(value && value.trim().length > 0)
 
 export default function ProfileCompletionGate({ children }: ProfileCompletionGateProps) {
   const router = useRouter()
@@ -54,7 +53,7 @@ export default function ProfileCompletionGate({ children }: ProfileCompletionGat
           return
         }
 
-        const missingName = !hasNameValue(payload.first_name) || !hasNameValue(payload.last_name)
+        const missingName = !hasRequiredProfileNames(payload)
         if (missingName) {
           router.replace(`/dashboard/account?completeProfile=1&next=${encodeURIComponent(currentPath)}`)
           return

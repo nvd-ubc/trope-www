@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { safeInternalPath } from '@/lib/profile-identity'
 
 type PlanInfo = {
   name: string
@@ -41,15 +42,6 @@ type ProfileUpdateResponse = {
   display_name?: string | null
   message?: string
   error?: string
-}
-
-const safeInternalPath = (value: string | null): string | null => {
-  if (!value) return null
-  const trimmed = value.trim()
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//')) {
-    return null
-  }
-  return trimmed
 }
 
 export default function AccountClient() {
