@@ -37,6 +37,16 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const memberPrimaryLabel = (member: MemberRecord) =>
+  member.display_name?.trim() || member.email || member.user_id
+
+const memberSecondaryEmail = (member: MemberRecord) => {
+  if (member.display_name?.trim() && member.email) {
+    return member.email
+  }
+  return null
+}
+
 export default function MembersClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -257,6 +267,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
             const isRemoved = member.status !== 'active'
             const isLastOwner = member.role === 'org_owner' && ownerCount <= 1
             const roleValue = roleOverrides[member.user_id] ?? member.role
+            const secondaryEmail = memberSecondaryEmail(member)
             return (
               <div
                 key={member.user_id}
@@ -265,7 +276,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="text-sm font-semibold text-slate-900">
-                      {member.email || member.user_id}
+                      {memberPrimaryLabel(member)}
                     </div>
                     {isYou && (
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
@@ -278,7 +289,10 @@ export default function MembersClient({ orgId }: { orgId: string }) {
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500">Joined {formatDate(member.created_at)}</div>
+                  <div className="text-xs text-slate-500">
+                    {secondaryEmail ? `${secondaryEmail} · ` : ''}
+                    Joined {formatDate(member.created_at)}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <select

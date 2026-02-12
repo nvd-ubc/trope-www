@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { authErrorMessage, getAuthConfig, signUp } from '@/lib/server/auth'
 import { csrfFormField, validateCsrf } from '@/lib/server/csrf'
+import { parseProfileNameFields } from '@/lib/profile-identity'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -37,12 +38,28 @@ export async function POST(request: Request) {
 
   const email = formValue(formData, 'email')
   const password = formValue(formData, 'password')
-  const name = formValue(formData, 'full_name')
+  const firstNameInput = formValue(formData, 'first_name')
+  const lastNameInput = formValue(formData, 'last_name')
+  const legacyFullName = formValue(formData, 'full_name')
   const company = formValue(formData, 'company')
   const nextPath = formValue(formData, 'next')
 
+  const { firstName, lastName, displayName: name } = parseProfileNameFields({
+    firstNameInput,
+    lastNameInput,
+    legacyFullName,
+  })
+
   if (!email) {
     return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.'))
+  }
+
+  if (!firstName) {
+    return redirectAfterPost(request, buildErrorRedirect(request, 'First name is required.'))
+  }
+
+  if (!lastName) {
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Last name is required.'))
   }
 
   try {
@@ -78,7 +95,8 @@ export async function POST(request: Request) {
     await signUp({
       email,
       password,
-      name: name || undefined,
+      firstName,
+      lastName,
       company: company || undefined,
     })
 

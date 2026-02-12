@@ -67,18 +67,33 @@ export default function RequestAccessForm({ error, requested }: RequestAccessFor
                   <option value="1000+">1000+</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="full-name">
-                  Full Name
-                </label>
-                <input
-                  id="full-name"
-                  name="full_name"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
-                  type="text"
-                  placeholder="Mark Rossi"
-                  required
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="first-name">
+                    First Name
+                  </label>
+                  <input
+                    id="first-name"
+                    name="first_name"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
+                    type="text"
+                    placeholder="Mark"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="last-name">
+                    Last Name
+                  </label>
+                  <input
+                    id="last-name"
+                    name="last_name"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition"
+                    type="text"
+                    placeholder="Rossi"
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email">
