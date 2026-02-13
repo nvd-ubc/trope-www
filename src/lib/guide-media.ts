@@ -6,6 +6,11 @@ export type GuideMediaRadar = {
   reason_code?: string | null
 }
 
+type GuideStepLike = {
+  kind?: string | null
+  expected_event?: unknown
+}
+
 export type GuideMediaVariantDescriptor = {
   key?: string | null
   download_url?: string | null
@@ -142,4 +147,83 @@ export const formatCaptureTimestamp = (seconds: number | null | undefined): stri
   const minutes = Math.floor(wholeSeconds / 60)
   const remaining = wholeSeconds % 60
   return `${minutes}:${String(remaining).padStart(2, '0')}`
+}
+
+const normalizeStepKind = (kind: string | null | undefined): string =>
+  (kind ?? '').trim().toLowerCase()
+
+const clickStepKinds = new Set([
+  'click_target',
+  'select_menu',
+  'context_menu',
+  'drag_drop',
+  'multi_select',
+  'table_action',
+])
+
+const nonClickStepKinds = new Set([
+  'manual',
+  'informational',
+  'type_into_field',
+  'copy_paste',
+  'press_shortcut',
+  'wait_for_window',
+  'wait_for_element',
+  'verify_state',
+  'branch',
+  'scroll',
+  'file_dialog',
+])
+
+const expectedEventTypeFromStep = (step: GuideStepLike): string => {
+  const expectedEvent = step.expected_event
+  if (!expectedEvent || typeof expectedEvent !== 'object' || Array.isArray(expectedEvent)) {
+    return ''
+  }
+  const rawType = (expectedEvent as { type?: unknown }).type
+  return isNonEmptyString(rawType) ? rawType.trim().toLowerCase() : ''
+}
+
+const stepIsClickLike = (step: GuideStepLike): boolean => {
+  const expectedType = expectedEventTypeFromStep(step)
+  if (expectedType === 'click') return true
+  if (expectedType === 'keypress' || expectedType === 'input' || expectedType === 'navigation') {
+    return false
+  }
+
+  const kind = normalizeStepKind(step.kind)
+  if (!kind) return false
+  if (clickStepKinds.has(kind)) return true
+  if (nonClickStepKinds.has(kind)) return false
+  return false
+}
+
+export const shouldRenderStepRadar = (params: {
+  step: GuideStepLike
+  radar: GuideMediaRadar | null | undefined
+  width: number | null
+  height: number | null
+}): boolean => {
+  if (!stepIsClickLike(params.step)) return false
+
+  const radar = params.radar
+  if (!radar) return false
+  if (radar.coordinate_space !== 'step_image_pixels_v1') return false
+  if (!Number.isFinite(radar.x) || !Number.isFinite(radar.y)) return false
+
+  const width = toPositiveFiniteNumber(params.width)
+  const height = toPositiveFiniteNumber(params.height)
+  if (width === null || height === null) return false
+  if (radar.x < 0 || radar.x > width || radar.y < 0 || radar.y > height) return false
+
+  const reasonCode = (radar.reason_code ?? '').trim().toLowerCase()
+  if (reasonCode.startsWith('default_center')) return false
+
+  const confidence = radar.confidence
+  if (typeof confidence === 'number') {
+    if (!Number.isFinite(confidence)) return false
+    if (confidence <= 0.05) return false
+  }
+
+  return true
 }

@@ -11,6 +11,7 @@ import { getRadarPercent } from '@/lib/guide-editor'
 import {
   formatCaptureTimestamp,
   resolveStepImageVariant,
+  shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
 
@@ -330,7 +331,14 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                 const radar = image?.radar ?? null
                 const radarWidth = previewImage?.width ?? image?.width ?? null
                 const radarHeight = previewImage?.height ?? image?.height ?? null
-                const radarPercent = getRadarPercent(radar, radarWidth, radarHeight)
+                const radarPercent = shouldRenderStepRadar({
+                  step,
+                  radar,
+                  width: radarWidth,
+                  height: radarHeight,
+                })
+                  ? getRadarPercent(radar, radarWidth, radarHeight)
+                  : null
                 const imageAspectRatio =
                   typeof radarWidth === 'number' &&
                   Number.isFinite(radarWidth) &&

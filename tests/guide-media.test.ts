@@ -1,7 +1,12 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { formatCaptureTimestamp, resolveStepImageVariant, type GuideMediaStepImage } from '../src/lib/guide-media'
+import {
+  formatCaptureTimestamp,
+  resolveStepImageVariant,
+  shouldRenderStepRadar,
+  type GuideMediaStepImage,
+} from '../src/lib/guide-media'
 
 const stepImageFixture = (): GuideMediaStepImage => ({
   step_id: 'step_1',
@@ -111,5 +116,95 @@ describe('guide media helpers', () => {
     assert.equal(formatCaptureTimestamp(64.2), '1:04')
     assert.equal(formatCaptureTimestamp(-1), null)
     assert.equal(formatCaptureTimestamp(null), null)
+  })
+
+  it('renders radar only for click-like steps with valid projected coordinates', () => {
+    assert.equal(
+      shouldRenderStepRadar({
+        step: { kind: 'click_target' },
+        radar: {
+          x: 120,
+          y: 40,
+          coordinate_space: 'step_image_pixels_v1',
+          confidence: 0.86,
+          reason_code: 'click_projected_mouse_up',
+        },
+        width: 240,
+        height: 120,
+      }),
+      true
+    )
+  })
+
+  it('does not render radar for non-click steps', () => {
+    assert.equal(
+      shouldRenderStepRadar({
+        step: { kind: 'verify_state' },
+        radar: {
+          x: 120,
+          y: 40,
+          coordinate_space: 'step_image_pixels_v1',
+          confidence: 0.86,
+          reason_code: 'click_projected_mouse_up',
+        },
+        width: 240,
+        height: 120,
+      }),
+      false
+    )
+  })
+
+  it('does not render fallback center radar even on click steps', () => {
+    assert.equal(
+      shouldRenderStepRadar({
+        step: { kind: 'click_target' },
+        radar: {
+          x: 120,
+          y: 40,
+          coordinate_space: 'step_image_pixels_v1',
+          confidence: 0.01,
+          reason_code: 'default_center',
+        },
+        width: 240,
+        height: 120,
+      }),
+      false
+    )
+  })
+
+  it('does not render radar when projected coordinates are out of bounds', () => {
+    assert.equal(
+      shouldRenderStepRadar({
+        step: { kind: 'click_target' },
+        radar: {
+          x: 1200,
+          y: 40,
+          coordinate_space: 'step_image_pixels_v1',
+          confidence: 0.9,
+          reason_code: 'click_projected_window_mouse_up',
+        },
+        width: 240,
+        height: 120,
+      }),
+      false
+    )
+  })
+
+  it('accepts expected_event click when step kind is absent', () => {
+    assert.equal(
+      shouldRenderStepRadar({
+        step: { expected_event: { type: 'click' } },
+        radar: {
+          x: 120,
+          y: 40,
+          coordinate_space: 'step_image_pixels_v1',
+          confidence: 0.86,
+          reason_code: 'click_projected_mouse_up',
+        },
+        width: 240,
+        height: 120,
+      }),
+      true
+    )
   })
 })

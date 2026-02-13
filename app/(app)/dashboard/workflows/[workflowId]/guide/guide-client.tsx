@@ -27,6 +27,7 @@ import {
 import {
   formatCaptureTimestamp,
   resolveStepImageVariant,
+  shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
 
@@ -251,7 +252,18 @@ const StepImageCard = ({
   const radar = image?.radar ?? null
   const width = cardImage?.width ?? image?.width ?? null
   const height = cardImage?.height ?? image?.height ?? null
-  const radarPercent = useMemo(() => getRadarPercent(radar, width, height), [height, radar, width])
+  const radarPercent = useMemo(
+    () =>
+      shouldRenderStepRadar({
+        step,
+        radar,
+        width,
+        height,
+      })
+        ? getRadarPercent(radar, width, height)
+        : null,
+    [height, radar, step, width]
+  )
   const imageAspectRatio =
     isFiniteNumber(width) && isFiniteNumber(height) && width > 0 && height > 0
       ? `${width} / ${height}`
