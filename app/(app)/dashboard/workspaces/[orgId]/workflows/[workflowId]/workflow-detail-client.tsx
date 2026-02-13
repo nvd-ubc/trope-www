@@ -1294,32 +1294,36 @@ export default function WorkflowDetailClient({
             <div className="mt-4 text-sm text-muted-foreground">No versions yet.</div>
           )}
           <div className="mt-4 space-y-3">
-            {versions.map((version, index) => (
-              <Button
-                key={version.version_id}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setSelectedVersionId(version.version_id)}
-                className={`h-auto w-full rounded-xl border px-4 py-3 text-sm transition ${
-                  selectedVersionId === version.version_id
-                    ? 'border-[color:var(--trope-accent)] bg-[color:var(--trope-accent)]/5'
-                    : 'border-border bg-card hover:border-border/80'
-                }`}
-              >
-                <div className="flex flex-wrap items-center justify-center gap-2 text-center">
-                  <div className="font-semibold text-foreground">Release {index + 1}</div>
-                  <div className="text-xs text-muted-foreground">{formatDate(version.created_at)}</div>
-                </div>
-                <div className="mt-1 text-center text-xs text-muted-foreground">
-                  {typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown'}
-                  {version.created_by
-                    ? ` · Published by ${memberMap[version.created_by] ?? 'team member'}`
-                    : ''}
-                  {version.status ? ` · ${formatStatus(version.status)}` : ''}
-                </div>
-              </Button>
-            ))}
+            {versions.map((version, index) => {
+              const releaseMeta = [
+                formatDate(version.created_at),
+                typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown',
+                version.created_by ? `Published by ${memberMap[version.created_by] ?? 'team member'}` : null,
+                version.status ? formatStatus(version.status) : null,
+              ]
+                .filter((value): value is string => Boolean(value))
+                .join(' · ')
+
+              return (
+                <Button
+                  key={version.version_id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedVersionId(version.version_id)}
+                  className={`h-auto w-full rounded-xl border px-4 py-3 text-sm transition ${
+                    selectedVersionId === version.version_id
+                      ? 'border-[color:var(--trope-accent)] bg-[color:var(--trope-accent)]/5'
+                      : 'border-border bg-card hover:border-border/80'
+                  }`}
+                >
+                  <div className="flex min-h-10 flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center leading-tight">
+                    <span className="font-semibold text-foreground">Release {index + 1}</span>
+                    <span className="text-sm text-muted-foreground">{releaseMeta}</span>
+                  </div>
+                </Button>
+              )
+            })}
           </div>
           {shareId && (
             <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
