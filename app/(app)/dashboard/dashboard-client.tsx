@@ -20,6 +20,9 @@ type PlanInfo = {
 type MeResponse = {
   sub: string
   email?: string | null
+  display_name?: string | null
+  first_name?: string | null
+  last_name?: string | null
   plan: PlanInfo
   personal_org_id?: string | null
   default_org_id?: string | null
@@ -141,18 +144,19 @@ export default function DashboardClient() {
   const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
   const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
   const workspaceBase = defaultOrg?.org_id ? `/dashboard/workspaces/${defaultOrg.org_id}` : '/dashboard/workspaces'
-  const identityIsEmail = Boolean(me.email)
-  const identityValue = identityIsEmail
-    ? me.email
-    : `${me.sub.slice(0, 8)}…${me.sub.slice(-6)}`
+  const accountDisplayName =
+    me.display_name?.trim() ||
+    `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim() ||
+    me.email?.trim() ||
+    'Workspace member'
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          label={identityIsEmail ? 'Signed in as' : 'Account ID'}
-          value={identityValue}
-          helper={identityIsEmail ? 'Identity tied to your workspace permissions' : 'Email is not available for this account'}
+          label="Account"
+          value={accountDisplayName}
+          helper={me.email ? me.email : 'Profile email not yet configured'}
         />
         <MetricCard
           label="Plan"

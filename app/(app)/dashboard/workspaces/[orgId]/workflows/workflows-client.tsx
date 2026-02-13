@@ -845,11 +845,8 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                             )}`}
                             className="block text-sm font-semibold text-foreground hover:text-primary"
                           >
-                            {workflow.title || workflow.workflow_id}
+                            {workflow.title || 'Untitled workflow'}
                           </Link>
-                          <div className="max-w-[30rem] truncate text-xs text-muted-foreground">
-                            {workflow.workflow_id}
-                          </div>
                           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
                             <span>{typeof latest?.steps_count === 'number' ? `${latest.steps_count} steps` : 'Steps -'}</span>
                             <span>•</span>
