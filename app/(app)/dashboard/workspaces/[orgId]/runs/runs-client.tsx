@@ -2,12 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import Input from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowRun = {
   org_id: string
@@ -244,7 +251,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
 
   if (loading) {
     return (
-      <Card className="p-6 text-sm text-slate-600">
+      <Card className="p-6 text-sm text-muted-foreground">
         Loading runs…
       </Card>
     )
@@ -252,110 +259,100 @@ export default function RunsClient({ orgId }: { orgId: string }) {
 
   if (error && runs.length === 0) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load runs"
+        message={error}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Runs</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Recent guided executions across this workspace.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Runs"
+        description="Recent guided executions across this workspace."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-          {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-              <span>Request ID: {requestId}</span>
-              <button
-                onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-              >
-                Copy
-              </button>
-            </div>
-          )}
-        </Card>
+        <ErrorNotice
+          title="Runs data is partially unavailable"
+          message={error}
+          requestId={requestId}
+          onCopyRequestId={() => copyRequestId()}
+        />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-500">{filtered.length} runs</div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
+      <DataToolbar
+        summary={`${filtered.length} runs`}
+        filters={
+          <>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger size="sm" className="min-w-[9.75rem]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="success">Success</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+              <SelectItem value="canceled">Canceled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select
+            value={workflowFilter || '__all_workflows'}
+            onValueChange={(value) => setWorkflowFilter(value === '__all_workflows' ? '' : value)}
           >
-            <option value="all">All statuses</option>
-            <option value="success">Success</option>
-            <option value="failed">Failed</option>
-            <option value="canceled">Canceled</option>
-          </select>
-          <select
-            value={workflowFilter}
-            onChange={(event) => setWorkflowFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="">All workflows</option>
-            {Object.entries(workflowMap)
-              .sort((a, b) => a[1].localeCompare(b[1]))
-              .map(([id, title]) => (
-                <option key={id} value={id}>
-                  {title || id}
-                </option>
-              ))}
-          </select>
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="started_desc">Newest start</option>
-            <option value="started_asc">Oldest start</option>
-            <option value="duration_desc">Longest duration</option>
-            <option value="status">Status A-Z</option>
-          </select>
+            <SelectTrigger size="sm" className="min-w-[11rem]">
+              <SelectValue placeholder="All workflows" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all_workflows">All workflows</SelectItem>
+              {Object.entries(workflowMap)
+                .sort((a, b) => a[1].localeCompare(b[1]))
+                .map(([id, title]) => (
+                  <SelectItem key={id} value={id}>
+                    {title || id}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger size="sm" className="min-w-[10rem]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="started_desc">Newest start</SelectItem>
+              <SelectItem value="started_asc">Oldest start</SelectItem>
+              <SelectItem value="duration_desc">Longest duration</SelectItem>
+              <SelectItem value="status">Status A-Z</SelectItem>
+            </SelectContent>
+          </Select>
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search workflow or run ID"
             className="w-64"
           />
+          </>
+        }
+        actions={
           <Button variant="outline" size="sm" onClick={exportCsv}>
             Export CSV
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">
-            No runs yet. Start a guided workflow from the desktop app to populate this list.
+          <div className="p-6">
+            <EmptyState
+              title="No runs for this filter"
+              description="Start a guided workflow from the desktop app to populate this list."
+              className="py-8"
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -375,10 +372,10 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                 {filtered.map((run) => (
                   <TableRow key={run.run_id}>
                     <TableCell>
-                      <div className="text-sm font-semibold text-slate-900">
+                      <div className="text-sm font-semibold text-foreground">
                         {workflowMap[run.workflow_id] ?? run.workflow_id}
                       </div>
-                      <div className="text-xs text-slate-500">{run.workflow_id}</div>
+                      <div className="text-xs text-muted-foreground">{run.workflow_id}</div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant(run.status)}>
@@ -386,8 +383,8 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
-                      <div className="text-xs text-slate-400">{run.run_id}</div>
+                      <div className="text-sm text-foreground">{formatDateTime(run.started_at)}</div>
+                      <div className="text-xs text-muted-foreground">{run.run_id}</div>
                     </TableCell>
                     <TableCell>{formatDuration(run.duration_ms)}</TableCell>
                     <TableCell>

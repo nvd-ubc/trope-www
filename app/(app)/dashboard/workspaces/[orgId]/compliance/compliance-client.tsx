@@ -7,7 +7,15 @@ import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import Input from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -394,85 +402,63 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading compliance data…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading compliance data…</Card>
   }
 
   if (error && requiredWorkflows.length === 0) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load compliance data"
+        message={error}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Compliance</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Track required SOP completion across your workspace.
-          </p>
-          <div className="mt-2 text-xs text-slate-400">
-            Reporting window: last {lookbackDays} days (run retention)
-          </div>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Compliance"
+        description={`Track required SOP completion across your workspace. Reporting window: last ${lookbackDays} days.`}
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-          {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-              <span>Request ID: {requestId}</span>
-              <button
-                onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-              >
-                Copy
-              </button>
-            </div>
-          )}
-        </Card>
+        <ErrorNotice
+          title="Compliance data is partially unavailable"
+          message={error}
+          requestId={requestId}
+          onCopyRequestId={() => copyRequestId()}
+        />
       )}
 
       {requiredWorkflows.length === 0 ? (
-        <Card className="p-6 text-sm text-slate-600">
-          No required workflows yet. Mark a workflow as required to track completion.
-        </Card>
+        <EmptyState
+          title="No required workflows yet"
+          description="Mark a workflow as required to track completion."
+          className="py-10"
+        />
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={selectedWorkflowId}
-                onChange={(event) => setSelectedWorkflowId(event.target.value)}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-              >
-                <option value="all">All required workflows</option>
-                {requiredWorkflows.map((workflow) => (
-                  <option key={workflow.workflow_id} value={workflow.workflow_id}>
-                    {workflow.title || workflow.workflow_id}
-                  </option>
-                ))}
-              </select>
+          <DataToolbar
+            summary={loadingRuns ? 'Refreshing runs…' : `${requiredWorkflows.length} required workflows`}
+            filters={
+              <div className="flex flex-wrap items-center gap-2">
+              <Select value={selectedWorkflowId} onValueChange={setSelectedWorkflowId}>
+                <SelectTrigger size="sm" className="min-w-[13rem]">
+                  <SelectValue placeholder="All required workflows" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All required workflows</SelectItem>
+                  {requiredWorkflows.map((workflow) => (
+                    <SelectItem key={workflow.workflow_id} value={workflow.workflow_id}>
+                      {workflow.title || workflow.workflow_id}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {selectedWorkflow && (
                 <Input
                   value={query}
@@ -481,24 +467,24 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                   className="w-64"
                 />
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              {loadingRuns && <span className="text-xs text-slate-400">Refreshing runs…</span>}
+              </div>
+            }
+            actions={
               <Button variant="outline" size="sm" onClick={exportCsv}>
                 Export CSV
               </Button>
-            </div>
-          </div>
+            }
+          />
 
           {selectedWorkflow ? (
             <Card className="overflow-hidden">
-              <div className="border-b border-slate-100 p-4">
+              <div className="border-b border-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="text-sm font-semibold text-foreground">
                       {selectedWorkflow.title || selectedWorkflow.workflow_id}
                     </div>
-                    <div className="text-xs text-slate-500">{selectedWorkflow.workflow_id}</div>
+                    <div className="text-xs text-muted-foreground">{selectedWorkflow.workflow_id}</div>
                   </div>
                   <Badge variant={statusVariant(selectedWorkflow.status)}>
                     {selectedWorkflow.status || 'draft'}
@@ -519,11 +505,11 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                     {memberRows.map((row) => (
                       <TableRow key={row.member.user_id}>
                         <TableCell>
-                          <div className="text-sm font-semibold text-slate-900">{row.name}</div>
-                          <div className="text-xs text-slate-400">{row.member.email ?? row.member.user_id}</div>
+                          <div className="text-sm font-semibold text-foreground">{row.name}</div>
+                          <div className="text-xs text-muted-foreground">{row.member.email ?? row.member.user_id}</div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm text-slate-600">
+                          <span className="text-sm text-muted-foreground">
                             {row.member.role.replace('org_', '')}
                           </span>
                         </TableCell>
@@ -556,10 +542,10 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                     {summaryRows.map((row) => (
                       <TableRow key={row.workflow.workflow_id}>
                         <TableCell>
-                          <div className="text-sm font-semibold text-slate-900">
+                          <div className="text-sm font-semibold text-foreground">
                             {row.workflow.title || row.workflow.workflow_id}
                           </div>
-                          <div className="text-xs text-slate-400">{row.workflow.workflow_id}</div>
+                          <div className="text-xs text-muted-foreground">{row.workflow.workflow_id}</div>
                         </TableCell>
                         <TableCell>
                           <Badge variant={statusVariant(row.workflow.status)}>
@@ -567,7 +553,7 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm text-slate-700">
+                          <div className="text-sm text-foreground">
                             {row.completedCount}/{row.totalMembers} ({row.completionRate}%)
                           </div>
                         </TableCell>

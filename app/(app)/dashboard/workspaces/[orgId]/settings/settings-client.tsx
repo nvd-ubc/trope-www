@@ -1,9 +1,15 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Alert } from '@/components/ui/alert'
+import Button from '@/components/ui/button'
+import Card from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import Input from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { PageHeader } from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -294,194 +300,197 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading settings…</div>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading settings…</Card>
   }
 
   const digestHourOptions = Array.from({ length: 24 }, (_, idx) => idx)
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Workspace settings</h1>
-          <p className="mt-1 text-sm text-slate-600">Update the workspace name and defaults.</p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Workspace settings"
+        description="Update workspace defaults, ownership context, and support access."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
+        <Alert variant="destructive">
+          <div>{error}</div>
           {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-destructive/80">
               <span>Request ID: {requestId}</span>
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
+                className="h-7 px-2 text-[10px] uppercase tracking-wide"
               >
                 Copy
-              </button>
+              </Button>
             </div>
           )}
-        </div>
+        </Alert>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Workspace name</h2>
+      <Card className="p-6">
+        <h2 className="text-base font-semibold text-foreground">Workspace name</h2>
         <form className="mt-4 space-y-3" onSubmit={handleSave}>
-          <input
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+          <Input
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="Workspace name"
             disabled={!isAdmin}
           />
-          <button
-            className="rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
+            variant="primary"
             disabled={saving || !csrfToken || !isAdmin}
             type="submit"
           >
             Save changes
-          </button>
+          </Button>
         </form>
         {!isAdmin && (
-          <p className="mt-3 text-xs text-slate-500">Admin access is required to rename a workspace.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Admin access is required to rename a workspace.</p>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Workflow defaults</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <Card className="p-6">
+        <h2 className="text-base font-semibold text-foreground">Workflow defaults</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Configure retention and alert cadence for workflow reliability reporting.
         </p>
         <form className="mt-4 space-y-4" onSubmit={handleSave}>
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-slate-700">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="space-y-2 text-sm text-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Run retention (days)
               </span>
-              <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+              <Input
                 value={runRetentionDays}
                 onChange={(event) => setRunRetentionDays(event.target.value)}
                 placeholder="e.g. 90"
                 disabled={!isAdmin}
               />
             </label>
-            <label className="space-y-2 text-sm text-slate-700">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <label className="space-y-2 text-sm text-foreground">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Alert digest hour (UTC)
               </span>
-              <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+              <Select
                 value={alertDigestHour}
-                onChange={(event) => setAlertDigestHour(event.target.value)}
+                onValueChange={setAlertDigestHour}
                 disabled={!isAdmin || !alertDigestEnabled}
               >
-                {digestHourOptions.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {hour.toString().padStart(2, '0')}:00
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {digestHourOptions.map((hour) => (
+                    <SelectItem key={hour} value={String(hour)}>
+                      {hour.toString().padStart(2, '0')}:00
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </label>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
+          <label className="flex items-center gap-2 text-sm text-foreground" htmlFor="alert-digest-enabled">
+            <Checkbox
+              id="alert-digest-enabled"
               checked={alertDigestEnabled}
-              onChange={(event) => setAlertDigestEnabled(event.target.checked)}
+              onCheckedChange={(checked) => setAlertDigestEnabled(checked === true)}
               disabled={!isAdmin}
             />
             Enable daily alert digest
           </label>
 
-          <button
-            className="rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
+          <Button
+            variant="primary"
             disabled={saving || !csrfToken || !isAdmin}
             type="submit"
           >
             {saving ? 'Saving…' : 'Save defaults'}
-          </button>
+          </Button>
         </form>
         {!isAdmin && (
-          <p className="mt-3 text-xs text-slate-500">Admin access is required to update defaults.</p>
+          <p className="mt-3 text-xs text-muted-foreground">Admin access is required to update defaults.</p>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Access</h2>
-        <div className="mt-4 space-y-3 text-sm text-slate-600">
+      <Card className="p-6">
+        <h2 className="text-base font-semibold text-foreground">Access</h2>
+        <div className="mt-4 space-y-3 text-sm text-muted-foreground">
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Your role</div>
-            <div className="text-slate-900">{membership?.role?.replace('org_', '') ?? 'Unknown'}</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Your role</div>
+            <div className="text-foreground">{membership?.role?.replace('org_', '') ?? 'Unknown'}</div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Workspace owners</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Workspace owners</div>
             {owners.length > 0 ? (
               <div className="mt-1 space-y-1">
                 {owners.map((owner) => (
-                  <div key={owner.user_id} className="text-slate-900">
+                  <div key={owner.user_id} className="text-foreground">
                     {owner.email || owner.display_name || owner.user_id}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-slate-500">{ownersError ?? 'No owners listed yet.'}</div>
+              <div className="text-muted-foreground">{ownersError ?? 'No owners listed yet.'}</div>
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Support access</h2>
-        <p className="mt-1 text-sm text-slate-600">
+      <Card className="p-6">
+        <h2 className="text-base font-semibold text-foreground">Support access</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
           Generate a time-limited support token for Trope support. Tokens are read-only and audited.
         </p>
 
         {!isAdmin && (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          <Alert className="mt-4 border-amber-200 bg-amber-50 text-amber-800">
             Only workspace admins can generate support tokens.
-          </div>
+          </Alert>
         )}
 
         {isAdmin && (
           <form className="mt-4 space-y-4" onSubmit={handleGenerateSupportToken}>
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Token duration
               </label>
-              <select
-                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+              <Select
                 value={supportTtl}
-                onChange={(event) => setSupportTtl(event.target.value)}
+                onValueChange={setSupportTtl}
               >
-                <option value="15">15 minutes</option>
-                <option value="60">1 hour</option>
-                <option value="240">4 hours</option>
-                <option value="1440">24 hours</option>
-              </select>
+                <SelectTrigger className="mt-2 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="240">4 hours</SelectItem>
+                  <SelectItem value="1440">24 hours</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Scopes</div>
-              <div className="mt-2 grid gap-2 text-sm text-slate-700">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Scopes</div>
+              <div className="mt-2 grid gap-2 text-sm text-foreground">
                 {[
                   { key: 'members', label: 'Members' },
                   { key: 'invites', label: 'Invites' },
                   { key: 'audit', label: 'Audit log' },
                 ].map((scope) => (
-                  <label key={scope.key} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
+                  <label key={scope.key} className="flex items-center gap-2" htmlFor={`support-scope-${scope.key}`}>
+                    <Checkbox
+                      id={`support-scope-${scope.key}`}
                       checked={supportScopeState[scope.key as keyof typeof supportScopeState]}
-                      onChange={() => toggleScope(scope.key)}
+                      onCheckedChange={() => toggleScope(scope.key)}
                     />
                     {scope.label}
                   </label>
@@ -490,31 +499,27 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-400" htmlFor="support-note">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="support-note">
                 Note (optional)
               </label>
-              <input
+              <Input
                 id="support-note"
-                className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
+                className="mt-2"
                 placeholder="Why are you issuing this token?"
                 value={supportNote}
                 onChange={(event) => setSupportNote(event.target.value)}
               />
             </div>
 
-            {supportError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {supportError}
-              </div>
-            )}
+            {supportError && <Alert variant="destructive">{supportError}</Alert>}
 
-            <button
-              className="rounded-full bg-[#1861C8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
+            <Button
+              variant="primary"
               disabled={supportLoading || !csrfToken}
               type="submit"
             >
               {supportLoading ? 'Generating…' : 'Generate support token'}
-            </button>
+            </Button>
           </form>
         )}
 
@@ -525,20 +530,23 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
             <div className="mt-2 text-xs text-emerald-700">
               Expires {formatDateTime(supportExpiresAt)} · Scopes {supportScopes.join(', ') || 'members, invites, audit'}
             </div>
-            <button
-              className="mt-3 rounded-full border border-emerald-200 bg-white px-3 py-1.5 text-xs font-medium text-emerald-800 hover:border-emerald-300"
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3 border-emerald-300 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900"
               onClick={handleCopySupportToken}
             >
               {supportCopied ? 'Copied' : 'Copy token'}
-            </button>
+            </Button>
           </div>
         )}
-      </div>
+      </Card>
 
       {org?.org_id && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-sm text-slate-600">
-          Workspace ID: <span className="text-slate-900">{org.org_id}</span>
-        </div>
+        <Card className="bg-muted/40 p-6 text-sm text-muted-foreground">
+          Workspace ID: <span className="text-foreground">{org.org_id}</span>
+        </Card>
       )}
     </div>
   )

@@ -1,9 +1,20 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { Alert } from '@/components/ui/alert'
+import Button from '@/components/ui/button'
+import Card from '@/components/ui/card'
+import Input from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { DataToolbar, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type MemberRecord = {
   org_id: string
@@ -205,60 +216,48 @@ export default function MembersClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading members…</div>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading members…</Card>
   }
 
   if (error && members.length === 0) {
-    return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-      </div>
-    )
+    return <ErrorNotice title="Unable to load members" message={error} />
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Members</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Manage access and roles for this workspace.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Members"
+        description="Manage access and roles for this workspace."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-        </div>
+        <ErrorNotice title="Member action failed" message={error} />
       )}
 
       {!canManage && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <Alert className="border-amber-200 bg-amber-50 text-amber-800">
           You need admin access to manage members.
-        </div>
+        </Alert>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-500">{filteredMembers.length} members</div>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search members"
-          className="w-full max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
-        />
-      </div>
+      <DataToolbar
+        summary={`${filteredMembers.length} members`}
+        filters={
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search members"
+            className="w-full max-w-xs"
+          />
+        }
+      />
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <Card className="p-6">
         <div className="space-y-4">
           {filteredMembers.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+            <div className="rounded-xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">
               No members match this search.
             </div>
           )}
@@ -271,71 +270,77 @@ export default function MembersClient({ orgId }: { orgId: string }) {
             return (
               <div
                 key={member.user_id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-4"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-4 py-4"
               >
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-sm font-semibold text-slate-900">
+                    <div className="text-sm font-semibold text-foreground">
                       {memberPrimaryLabel(member)}
                     </div>
                     {isYou && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                         You
                       </span>
                     )}
                     {isRemoved && (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                         Removed
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500">
+                  <div className="text-xs text-muted-foreground">
                     {secondaryEmail ? `${secondaryEmail} · ` : ''}
                     Joined {formatDate(member.created_at)}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 disabled:opacity-60"
+                  <Select
                     value={roleValue}
                     disabled={!canManage || isRemoved || isLastOwner}
-                    onChange={(event) => handleRoleChange(member.user_id, event.target.value)}
+                    onValueChange={(value) => handleRoleChange(member.user_id, value)}
                   >
-                    {roleOptions.map((option) => (
-                      <option
-                        key={option.value}
-                        value={option.value}
-                        disabled={option.value === 'org_owner' && !canPromoteOwner}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    <SelectTrigger size="sm" className="min-w-[8.5rem]">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roleOptions.map((option) => (
+                        <SelectItem
+                          key={option.value}
+                          value={option.value}
+                          disabled={option.value === 'org_owner' && !canPromoteOwner}
+                        >
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     disabled={!canManage || isRemoved || pendingAction === member.user_id || !csrfToken}
                     onClick={() => submitRoleChange(member)}
                   >
                     Update
-                  </button>
-                  <button
-                    className="rounded-full border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:border-rose-300 hover:text-rose-800 disabled:cursor-not-allowed disabled:opacity-50"
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
                     disabled={!canManage || isRemoved || isLastOwner || pendingAction === member.user_id || !csrfToken}
                     onClick={() => removeMember(member)}
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </div>
             )
           })}
         </div>
         {ownerCount <= 1 && (
-          <div className="mt-4 text-xs text-slate-500">
+          <div className="mt-4 text-xs text-muted-foreground">
             At least one owner is required. Promote another member before removing or demoting the last owner.
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

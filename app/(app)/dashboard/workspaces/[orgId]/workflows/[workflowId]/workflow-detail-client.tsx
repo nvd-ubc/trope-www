@@ -6,9 +6,18 @@ import { useRouter } from 'next/navigation'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import Input from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowDefinition = {
   org_id: string
@@ -65,10 +74,6 @@ type WorkflowDetailResponse = {
 
 type VersionsResponse = {
   versions: WorkflowVersion[]
-}
-
-type VersionDetailResponse = {
-  version: WorkflowVersion
 }
 
 type OrgProfileResponse = {
@@ -719,25 +724,17 @@ export default function WorkflowDetailClient({
   }, [failedRuns])
 
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading workflow…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading workflow…</Card>
   }
 
   if (error || !workflow) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error ?? 'Unable to load workflow.'}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={() => copyText(requestId)}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load workflow"
+        message={error ?? 'Unable to load workflow.'}
+        requestId={requestId}
+        onCopyRequestId={(value) => copyText(value)}
+      />
     )
   }
 
@@ -777,72 +774,69 @@ export default function WorkflowDetailClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-semibold text-slate-900">
-              {workflow.title || workflow.workflow_id}
-            </h1>
+      <PageHeader
+        title={workflow.title || workflow.workflow_id}
+        description={`Created ${formatDate(workflow.created_at)} · Updated ${formatDate(workflow.updated_at)}`}
+        badges={
+          <>
             <Badge variant={statusVariant(workflow.status)}>{formatStatus(workflow.status)}</Badge>
             <Badge variant={healthVariant(workflow.health_state)}>
               {workflow.health_state ?? 'unknown'}
             </Badge>
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Created {formatDate(workflow.created_at)} · Updated {formatDate(workflow.updated_at)}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopyWorkflowId}>
-            Copy workflow ID
-          </Button>
-          {isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCreateShare}
-              disabled={!csrfToken || pendingAction === 'share' || !selectedVersionId}
-            >
-              Create share link
+          </>
+        }
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={handleCopyWorkflowId}>
+              Copy workflow ID
             </Button>
-          )}
-          {isAdmin && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleArchive}
-              disabled={!csrfToken || pendingAction === 'archive'}
-            >
-              Archive
-            </Button>
-          )}
-          <Link
-            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
-            className="text-xs font-semibold text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-          >
-            Back to workflows
-          </Link>
-        </div>
-      </div>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCreateShare}
+                disabled={!csrfToken || pendingAction === 'share' || !selectedVersionId}
+              >
+                Create share link
+              </Button>
+            )}
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleArchive}
+                disabled={!csrfToken || pendingAction === 'archive'}
+              >
+                Archive
+              </Button>
+            )}
+          </>
+        }
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
+        backLabel="Back to workflows"
+      />
 
       {(actionError || actionMessage) && (
         <Card
           className={`px-4 py-3 text-sm ${
             actionError
-              ? 'border-rose-200 bg-rose-50 text-rose-700'
+              ? 'border-destructive/20 bg-destructive/10 text-destructive'
               : 'border-emerald-200 bg-emerald-50 text-emerald-700'
           }`}
         >
           {actionError ?? actionMessage}
           {requestId && actionError && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-destructive/80">
               <span>Request ID: {requestId}</span>
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-[10px] uppercase tracking-wide"
                 onClick={() => copyText(requestId)}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
               >
                 Copy
-              </button>
+              </Button>
             </div>
           )}
         </Card>
@@ -964,43 +958,47 @@ export default function WorkflowDetailClient({
       <div className="grid gap-4 lg:grid-cols-[0.65fr_1.35fr]">
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Settings</h2>
+            <h2 className="text-base font-semibold text-foreground">Settings</h2>
             {settingsMessage && <span className="text-xs text-emerald-600">{settingsMessage}</span>}
           </div>
           {settingsError && (
-            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {settingsError}
               {settingsRequestId && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-rose-600">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-destructive/80">
                   <span>Request ID: {settingsRequestId}</span>
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-[10px] uppercase tracking-wide"
                     onClick={() => copyText(settingsRequestId)}
-                    className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
                   >
                     Copy
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           )}
-          <div className="mt-4 grid gap-4 text-sm text-slate-700">
+          <div className="mt-4 grid gap-4 text-sm text-foreground">
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Expected run cadence</span>
-              <select
-                value={expectedCadence}
-                onChange={(event) => setExpectedCadence(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              >
-                <option value="on_demand">On demand</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="custom">Custom</option>
-              </select>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Expected run cadence</span>
+              <Select value={expectedCadence} onValueChange={setExpectedCadence}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="On demand" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="on_demand">On demand</SelectItem>
+                  <SelectItem value="daily">Daily</SelectItem>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
             </label>
             {expectedCadence === 'custom' && (
               <label className="space-y-2">
-                <span className="text-xs uppercase tracking-wide text-slate-400">Custom cadence (days)</span>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">Custom cadence (days)</span>
                 <Input
                   value={expectedCadenceDays}
                   onChange={(event) => setExpectedCadenceDays(event.target.value)}
@@ -1009,7 +1007,7 @@ export default function WorkflowDetailClient({
               </label>
             )}
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Review cadence (days)</span>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Review cadence (days)</span>
               <Input
                 value={reviewCadenceDays}
                 onChange={(event) => setReviewCadenceDays(event.target.value)}
@@ -1017,34 +1015,39 @@ export default function WorkflowDetailClient({
               />
             </label>
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Criticality</span>
-              <select
-                value={criticality}
-                onChange={(event) => setCriticality(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Criticality</span>
+              <Select value={criticality} onValueChange={setCriticality}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Medium" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
             </label>
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Owner</span>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Owner</span>
               {members.length > 0 ? (
-                <select
-                  value={ownerUserId}
-                  onChange={(event) => setOwnerUserId(event.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                <Select
+                  value={ownerUserId || '__owner_unassigned'}
+                  onValueChange={(value) => setOwnerUserId(value === '__owner_unassigned' ? '' : value)}
                 >
-                  <option value="">Unassigned</option>
-                  {members
-                    .filter((member) => member.status === 'active')
-                    .map((member) => (
-                      <option key={member.user_id} value={member.user_id}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__owner_unassigned">Unassigned</SelectItem>
+                    {members
+                      .filter((member) => member.status === 'active')
+                      .map((member) => (
+                      <SelectItem key={member.user_id} value={member.user_id}>
                         {formatMemberLabel(member)}
-                      </option>
+                      </SelectItem>
                     ))}
-                </select>
+                  </SelectContent>
+                </Select>
               ) : (
                 <Input
                   value={ownerUserId}
@@ -1054,18 +1057,16 @@ export default function WorkflowDetailClient({
               )}
             </label>
             <div className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Maintainers</span>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Maintainers</span>
               {members.length > 0 ? (
-                <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-xs">
+                <div className="grid gap-2 rounded-xl border border-border bg-muted/40 px-3 py-3 text-xs">
                   {members
                     .filter((member) => member.status === 'active')
                     .map((member) => (
                       <label key={member.user_id} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          className="h-3.5 w-3.5 rounded border-slate-300"
+                        <Checkbox
                           checked={maintainerIds.includes(member.user_id)}
-                          onChange={() => toggleMaintainer(member.user_id)}
+                          onCheckedChange={() => toggleMaintainer(member.user_id)}
                         />
                         <span>{formatMemberLabel(member)}</span>
                       </label>
@@ -1088,19 +1089,17 @@ export default function WorkflowDetailClient({
               )}
             </div>
             <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-slate-400">Contexts</span>
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Contexts</span>
               <Input
                 value={contexts}
                 onChange={(event) => setContexts(event.target.value)}
                 placeholder="e.g. workday.com, Salesforce, com.apple.Calendar"
               />
             </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-slate-300"
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <Checkbox
                 checked={requiredFlag}
-                onChange={(event) => setRequiredFlag(event.target.checked)}
+                onCheckedChange={(checked) => setRequiredFlag(checked === true)}
               />
               Required workflow
             </label>
@@ -1117,12 +1116,12 @@ export default function WorkflowDetailClient({
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Run history</h2>
+            <h2 className="text-base font-semibold text-foreground">Run history</h2>
             <Link
               href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/runs?workflow_id=${encodeURIComponent(
                 workflowId
               )}`}
-              className="text-xs font-semibold text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
+              className="text-xs font-semibold text-primary hover:text-primary/80"
             >
               View all runs
             </Link>
@@ -1133,39 +1132,42 @@ export default function WorkflowDetailClient({
             </div>
           )}
           {errorClusters.length > 0 && (
-            <div className="mt-4 text-xs text-slate-500">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <div className="mt-4 text-xs text-muted-foreground">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Top failure signals
               </div>
               <div className="mt-2 space-y-1">
                 {errorClusters.slice(0, 3).map((cluster) => (
                   <div key={cluster.label} className="flex items-center justify-between">
-                    <span className="text-slate-600">{cluster.label}</span>
-                    <span className="text-slate-400">{cluster.count}</span>
+                    <span className="text-muted-foreground">{cluster.label}</span>
+                    <span className="text-muted-foreground">{cluster.count}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-          {runsLoading && <div className="mt-4 text-sm text-slate-500">Loading runs…</div>}
+          {runsLoading && <div className="mt-4 text-sm text-muted-foreground">Loading runs…</div>}
           {runsError && (
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {runsError}
               {runsRequestId && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-destructive/80">
                   <span>Request ID: {runsRequestId}</span>
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-[10px] uppercase tracking-wide"
                     onClick={() => copyText(runsRequestId)}
-                    className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
                   >
                     Copy
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
           )}
           {!runsLoading && !runsError && runs.length === 0 && (
-            <div className="mt-4 text-sm text-slate-500">No runs logged yet.</div>
+            <div className="mt-4 text-sm text-muted-foreground">No runs logged yet.</div>
           )}
           {!runsLoading && runs.length > 0 && (
             <div className="mt-4 overflow-x-auto">
@@ -1209,35 +1211,38 @@ export default function WorkflowDetailClient({
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="p-6">
-          <h2 className="text-base font-semibold text-slate-900">Versions</h2>
+          <h2 className="text-base font-semibold text-foreground">Versions</h2>
           {versions.length === 0 && (
-            <div className="mt-4 text-sm text-slate-500">No versions yet.</div>
+            <div className="mt-4 text-sm text-muted-foreground">No versions yet.</div>
           )}
           <div className="mt-4 space-y-3">
             {versions.map((version) => (
-              <button
+              <Button
                 key={version.version_id}
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={() => setSelectedVersionId(version.version_id)}
-                className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                className={`h-auto w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
                   selectedVersionId === version.version_id
                     ? 'border-[color:var(--trope-accent)] bg-[color:var(--trope-accent)]/5'
-                    : 'border-slate-200 bg-white hover:border-slate-300'
+                    : 'border-border bg-card hover:border-border/80'
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-semibold text-slate-900">{version.version_id}</div>
-                  <div className="text-xs text-slate-500">{formatDate(version.created_at)}</div>
+                  <div className="font-semibold text-foreground">{version.version_id}</div>
+                  <div className="text-xs text-muted-foreground">{formatDate(version.created_at)}</div>
                 </div>
-                <div className="mt-1 text-xs text-slate-600">
+                <div className="mt-1 text-xs text-muted-foreground">
                   {typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown'}
                   {version.created_by ? ` · Published by ${version.created_by}` : ''}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
           {shareId && (
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-              <div className="text-xs uppercase tracking-wide text-slate-400">Share link</div>
+            <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Share link</div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span className="font-mono text-xs">{shareUrl ?? shareId}</span>
                 <Button
@@ -1255,29 +1260,29 @@ export default function WorkflowDetailClient({
         <Card className="p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-base font-semibold text-slate-900">Guide preview</h2>
+              <h2 className="text-base font-semibold text-foreground">Guide preview</h2>
               <Link
                 href={guidePageHref}
-                className="text-xs font-semibold text-[color:var(--trope-accent)] hover:underline"
+                className="text-xs font-semibold text-primary hover:underline"
               >
                 Open guide
               </Link>
             </div>
             {selectedVersion && (
-              <div className="text-xs text-slate-500">Version {selectedVersion.version_id}</div>
+              <div className="text-xs text-muted-foreground">Version {selectedVersion.version_id}</div>
             )}
           </div>
 
-          {specLoading && <div className="mt-4 text-sm text-slate-500">Loading guide spec…</div>}
+          {specLoading && <div className="mt-4 text-sm text-muted-foreground">Loading guide spec…</div>}
 
           {specError && (
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            <div className="mt-4 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {specError}
             </div>
           )}
 
           {!specLoading && !specError && !spec && (
-            <div className="mt-4 text-sm text-slate-500">Select a version to preview the guide.</div>
+            <div className="mt-4 text-sm text-muted-foreground">Select a version to preview the guide.</div>
           )}
 
           {spec && (
