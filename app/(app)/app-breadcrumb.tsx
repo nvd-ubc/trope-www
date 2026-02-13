@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -38,12 +38,35 @@ const labelForSegment = (segment: string) => {
 
 export default function AppBreadcrumb() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const segments = pathname.split('/').filter(Boolean)
 
   if (segments.length === 0) return null
 
+  const isGuideRoute =
+    segments[0] === 'dashboard' && segments[1] === 'workflows' && segments[3] === 'guide'
+  const workflowId = isGuideRoute ? segments[2] : null
+  const orgId = (searchParams.get('orgId') ?? '').trim()
+
   const crumbs = segments.map((segment, index) => {
-    const path = `/${segments.slice(0, index + 1).join('/')}`
+    let path = `/${segments.slice(0, index + 1).join('/')}`
+
+    if (isGuideRoute && index === 1) {
+      path = orgId
+        ? `/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`
+        : '/dashboard/workspaces'
+    }
+
+    if (isGuideRoute && index === 2) {
+      if (orgId && workflowId) {
+        path = `/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`
+      } else if (orgId) {
+        path = `/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`
+      } else {
+        path = '/dashboard/workspaces'
+      }
+    }
+
     return {
       path,
       label: labelForSegment(segment),
