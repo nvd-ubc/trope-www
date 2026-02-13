@@ -26,7 +26,7 @@ export default function AppLayout({
               <div className="flex min-w-0 items-center gap-2">
                 <SidebarTrigger className="md:hidden" />
                 <div className="md:hidden">
-                  <Logo />
+                  <Logo href="/dashboard" />
                 </div>
                 <Separator orientation="vertical" className="hidden h-4 md:block" />
                 <div className="hidden min-w-0 md:block">

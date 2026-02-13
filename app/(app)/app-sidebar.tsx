@@ -28,7 +28,7 @@ export default function AppSidebar() {
   return (
     <Sidebar variant="inset" collapsible="offcanvas" className="border-r border-sidebar-border/60">
       <SidebarHeader className="border-b border-sidebar-border/70 px-4 py-4">
-        <Logo />
+        <Logo href="/dashboard" />
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-3">
