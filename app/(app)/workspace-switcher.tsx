@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type OrgSummary = {
   org_id: string
@@ -71,32 +72,35 @@ export default function WorkspaceSwitcher() {
 
   if (loading || orgs.length === 0) {
     return (
-      <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-500">
+      <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground md:flex">
         Workspace
       </div>
     )
   }
 
   return (
-    <div className="hidden md:flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600">
-      <span className="text-slate-400">Workspace</span>
-      <select
-        className="bg-transparent text-slate-700 text-xs font-medium focus:outline-none"
+    <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground md:flex">
+      <span className="text-muted-foreground">Workspace</span>
+      <Select
         value={activeOrgId ?? ''}
-        onChange={(event) => {
-          const value = event.target.value
+        onValueChange={(value) => {
           if (!value) return
           router.push(`/dashboard/workspaces/${encodeURIComponent(value)}`)
         }}
       >
-        {orgs.map((org) => (
-          <option key={org.org_id} value={org.org_id}>
-            {org.name || org.org_id}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger size="sm" className="h-7 min-w-[11rem] border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0">
+          <SelectValue placeholder="Select workspace" />
+        </SelectTrigger>
+        <SelectContent>
+          {orgs.map((org) => (
+            <SelectItem key={org.org_id} value={org.org_id}>
+              {org.name || org.org_id}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       {activeOrg?.role && (
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-500">
+        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] tracking-wide uppercase text-muted-foreground">
           {activeOrg.role.replace('org_', '')}
         </span>
       )}
