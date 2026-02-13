@@ -1295,11 +1295,12 @@ export default function WorkflowDetailClient({
           )}
           <div className="mt-4 space-y-3">
             {versions.map((version, index) => {
+              const isPublishedStatus = (version.status ?? '').trim().toLowerCase() === 'published'
               const releaseMeta = [
                 formatDate(version.created_at),
                 typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown',
                 version.created_by ? `Published by ${memberMap[version.created_by] ?? 'team member'}` : null,
-                version.status ? formatStatus(version.status) : null,
+                version.status && !isPublishedStatus ? formatStatus(version.status) : null,
               ]
                 .filter((value): value is string => Boolean(value))
                 .join(' · ')
@@ -1311,13 +1312,13 @@ export default function WorkflowDetailClient({
                   variant="outline"
                   size="sm"
                   onClick={() => setSelectedVersionId(version.version_id)}
-                  className={`h-auto w-full rounded-xl border px-4 py-3 text-sm transition ${
+                  className={`h-auto w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
                     selectedVersionId === version.version_id
                       ? 'border-[color:var(--trope-accent)] bg-[color:var(--trope-accent)]/5'
                       : 'border-border bg-card hover:border-border/80'
                   }`}
                 >
-                  <div className="flex min-h-10 flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center leading-tight">
+                  <div className="flex min-h-10 flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-tight">
                     <span className="font-semibold text-foreground">Release {index + 1}</span>
                     <span className="text-sm text-muted-foreground">{releaseMeta}</span>
                   </div>
