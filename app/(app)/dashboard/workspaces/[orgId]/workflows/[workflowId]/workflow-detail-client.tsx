@@ -844,7 +844,7 @@ export default function WorkflowDetailClient({
         </Card>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Operational health</h2>
@@ -1260,12 +1260,14 @@ export default function WorkflowDetailClient({
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-semibold text-foreground">{version.version_id}</div>
+                  <div className="max-w-[18rem] truncate font-semibold text-foreground" title={version.version_id}>
+                    {version.version_id}
+                  </div>
                   <div className="text-xs text-muted-foreground">{formatDate(version.created_at)}</div>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
                   {typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown'}
-                  {version.created_by ? ` · Published by ${version.created_by}` : ''}
+                  {version.created_by ? ` · Published by ${version.created_by.slice(0, 8)}…${version.created_by.slice(-4)}` : ''}
                 </div>
               </Button>
             ))}
@@ -1274,7 +1276,7 @@ export default function WorkflowDetailClient({
             <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Share link</div>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs">{shareUrl ?? shareId}</span>
+                <span className="break-all font-mono text-xs">{shareUrl ?? shareId}</span>
                 <Button
                   variant="outline"
                   size="sm"

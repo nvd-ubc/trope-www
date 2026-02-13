@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ChevronRight, Download, ListChecks, Users, Workflow } from 'lucide-react'
 import Button from '@/components/ui/button'
 import {
   EmptyState,
@@ -140,14 +141,18 @@ export default function DashboardClient() {
   const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
   const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
   const workspaceBase = defaultOrg?.org_id ? `/dashboard/workspaces/${defaultOrg.org_id}` : '/dashboard/workspaces'
+  const identityIsEmail = Boolean(me.email)
+  const identityValue = identityIsEmail
+    ? me.email
+    : `${me.sub.slice(0, 8)}…${me.sub.slice(-6)}`
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          label="Signed in as"
-          value={me.email ?? me.sub}
-          helper="Identity tied to your workspace permissions"
+          label={identityIsEmail ? 'Signed in as' : 'Account ID'}
+          value={identityValue}
+          helper={identityIsEmail ? 'Identity tied to your workspace permissions' : 'Email is not available for this account'}
         />
         <MetricCard
           label="Plan"
@@ -187,28 +192,52 @@ export default function DashboardClient() {
         description="Keep momentum by capturing workflows and inviting teammates."
       >
         <div className="grid gap-2 text-sm">
-          <Button asChild variant="outline" className="justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href="/download">
-              <span>Download the desktop app</span>
-              <span className="text-xs text-muted-foreground">macOS / Windows</span>
+              <span className="flex items-center gap-2">
+                <Download className="size-4 text-muted-foreground" />
+                Download the desktop app
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                macOS / Windows
+                <ChevronRight className="size-3.5" />
+              </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/workflows`}>
-              <span>Record your first workflow</span>
-              <span className="text-xs text-muted-foreground">Workflows</span>
+              <span className="flex items-center gap-2">
+                <Workflow className="size-4 text-muted-foreground" />
+                Record your first workflow
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Workflows
+                <ChevronRight className="size-3.5" />
+              </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/members`}>
-              <span>Invite teammates</span>
-              <span className="text-xs text-muted-foreground">Members</span>
+              <span className="flex items-center gap-2">
+                <Users className="size-4 text-muted-foreground" />
+                Invite teammates
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Members
+                <ChevronRight className="size-3.5" />
+              </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/runs`}>
-              <span>Review run history</span>
-              <span className="text-xs text-muted-foreground">Runs</span>
+              <span className="flex items-center gap-2">
+                <ListChecks className="size-4 text-muted-foreground" />
+                Review run history
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Runs
+                <ChevronRight className="size-3.5" />
+              </span>
             </Link>
           </Button>
         </div>

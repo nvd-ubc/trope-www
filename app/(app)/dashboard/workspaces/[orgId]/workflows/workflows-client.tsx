@@ -113,6 +113,16 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const toTitleCase = (value?: string | null) => {
+  if (!value) return 'Unknown'
+  return value
+    .replace(/[_-]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .join(' ')
+}
+
 const statusVariant = (status?: string | null) => {
   const normalized = (status ?? 'unknown').toLowerCase()
   if (normalized === 'published') return 'success'
@@ -131,14 +141,7 @@ const healthVariant = (health?: string | null) => {
 }
 
 const formatStatus = (status?: string | null) => {
-  if (!status) return 'Unknown'
-  return status.replace(/_/g, ' ')
-}
-
-const formatSource = (source?: string | null) => {
-  if (!source) return '-'
-  if (source === 'share') return 'Imported'
-  return source.replace(/_/g, ' ')
+  return toTitleCase(status)
 }
 
 const resolveCadenceDays = (cadence?: string | null, customDays?: number | null) => {
@@ -376,6 +379,14 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
     return sorted
   }, [workflows, query, statusFilter, healthFilter, viewFilter, sortBy])
 
+  const activeFilters = useMemo(() => {
+    const filters: string[] = []
+    if (viewFilter !== 'all') filters.push(`View: ${toTitleCase(viewFilter)}`)
+    if (statusFilter !== 'all') filters.push(`Status: ${toTitleCase(statusFilter)}`)
+    if (healthFilter !== 'all') filters.push(`Health: ${toTitleCase(healthFilter)}`)
+    return filters
+  }, [healthFilter, statusFilter, viewFilter])
+
   const allSelected = filtered.length > 0 && selectedIds.length === filtered.length
 
   const toggleSelectAll = (checked: boolean) => {
@@ -561,9 +572,14 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
       <DataToolbar
         summary={
           <div className="flex flex-wrap items-center gap-2">
-            {filtered.length} workflows
-            <Badge variant="neutral">{statusFilter}</Badge>
-            <Badge variant="neutral">{healthFilter}</Badge>
+            <span>
+              {filtered.length} workflow{filtered.length === 1 ? '' : 's'}
+            </span>
+            {activeFilters.map((filter) => (
+              <Badge key={filter} variant="outline">
+                {filter}
+              </Badge>
+            ))}
           </div>
         }
         filters={
@@ -822,41 +838,31 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                         />
                       </TableCell>
                       <TableCell>
-                        <Link
-                          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-                            workflow.workflow_id
-                          )}`}
-                          className="text-sm font-semibold text-foreground hover:text-primary"
-                        >
-                          {workflow.title || workflow.workflow_id}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">{workflow.workflow_id}</div>
-                        {workflow.contexts && workflow.contexts.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {workflow.contexts.slice(0, 2).map((context) => (
-                              <span
-                                key={context}
-                                className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
-                              >
-                                {context}
-                              </span>
-                            ))}
-                            {workflow.contexts.length > 2 && (
-                              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
-                                +{workflow.contexts.length - 2}
-                              </span>
+                        <div className="space-y-1">
+                          <Link
+                            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                              workflow.workflow_id
+                            )}`}
+                            className="block text-sm font-semibold text-foreground hover:text-primary"
+                          >
+                            {workflow.title || workflow.workflow_id}
+                          </Link>
+                          <div className="max-w-[30rem] truncate text-xs text-muted-foreground">
+                            {workflow.workflow_id}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <span>{typeof latest?.steps_count === 'number' ? `${latest.steps_count} steps` : 'Steps -'}</span>
+                            <span>•</span>
+                            <span>Views {workflow.metrics_7d?.views ?? 0}</span>
+                            {workflow.contexts && workflow.contexts.length > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="max-w-[14rem] truncate">{workflow.contexts[0]}</span>
+                                {workflow.contexts.length > 1 && <span>+{workflow.contexts.length - 1}</span>}
+                              </>
                             )}
                           </div>
-                        )}
-                        <div className="mt-2 text-[11px] text-muted-foreground">
-                          Source: {formatSource(workflow.source)} · Views 7d: {workflow.metrics_7d?.views ?? 0}
                         </div>
-                        {latest?.version_id && (
-                          <div className="text-[11px] text-muted-foreground">Latest version: {latest.version_id}</div>
-                        )}
-                        {latest?.steps_count !== undefined && (
-                          <div className="text-[11px] text-muted-foreground">Steps: {latest.steps_count}</div>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={statusVariant(workflow.status)}>{formatStatus(workflow.status)}</Badge>
@@ -868,7 +874,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                       </TableCell>
                       <TableCell>
                         <Badge variant={healthVariant(workflow.health_state ?? undefined)}>
-                          {workflow.health_state ?? 'unknown'}
+                          {toTitleCase(workflow.health_state ?? 'unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>{ownerLabel}</TableCell>

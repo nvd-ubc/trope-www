@@ -29,6 +29,9 @@ const labelForSegment = (segment: string) => {
   }
 
   if (map[normalized]) return map[normalized]
+  if (/^org_[0-9a-f-]{8,}$/i.test(normalized)) return 'Workspace'
+  if (/^wf_[0-9a-f-]{8,}$/i.test(normalized)) return 'Workflow'
+  if (/^v_[0-9a-f-]{8,}$/i.test(normalized)) return 'Version'
   if (/^[0-9a-f-]{8,}$/i.test(normalized)) return 'Detail'
   return normalized
 }
@@ -49,16 +52,20 @@ export default function AppBreadcrumb() {
   })
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
+    <Breadcrumb className="max-w-full overflow-x-auto">
+      <BreadcrumbList className="flex-nowrap whitespace-nowrap">
         {crumbs.map((crumb, index) => (
           <div key={crumb.path} className="flex items-center gap-1.5">
             <BreadcrumbItem>
               {crumb.isLast ? (
-                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                <BreadcrumbPage className="max-w-[18rem] truncate" title={crumb.label}>
+                  {crumb.label}
+                </BreadcrumbPage>
               ) : (
                 <BreadcrumbLink asChild>
-                  <Link href={crumb.path}>{crumb.label}</Link>
+                  <Link href={crumb.path} className="max-w-[14rem] truncate" title={crumb.label}>
+                    {crumb.label}
+                  </Link>
                 </BreadcrumbLink>
               )}
             </BreadcrumbItem>

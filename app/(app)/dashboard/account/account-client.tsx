@@ -200,6 +200,8 @@ export default function AccountClient() {
     )
   }
 
+  const emailDisplay = me.email?.trim() ? me.email : null
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -260,7 +262,9 @@ export default function AccountClient() {
           <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Email</div>
-              <div className="text-foreground">{me.email ?? me.sub}</div>
+              <div className={emailDisplay ? 'text-foreground' : 'text-muted-foreground'}>
+                {emailDisplay ?? 'Not available'}
+              </div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Display name</div>
@@ -268,7 +272,7 @@ export default function AccountClient() {
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Account ID</div>
-              <div className="text-foreground">{me.sub}</div>
+              <div className="break-all font-mono text-xs text-foreground">{me.sub}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Plan</div>
