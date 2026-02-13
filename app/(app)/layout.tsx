@@ -30,7 +30,9 @@ export default function AppLayout({
                 </div>
                 <Separator orientation="vertical" className="hidden h-4 md:block" />
                 <div className="hidden min-w-0 md:block">
-                  <AppBreadcrumb />
+                  <Suspense fallback={<div className="h-5 w-40 rounded bg-muted/60" aria-hidden="true" />}>
+                    <AppBreadcrumb />
+                  </Suspense>
                 </div>
               </div>
               <div className="flex items-center gap-3">
