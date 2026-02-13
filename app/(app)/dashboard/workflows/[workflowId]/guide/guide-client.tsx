@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -245,12 +246,14 @@ const StepImageCard = ({
         <div>
           <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
           {isEditing ? (
-            <Input
-              value={step.title}
-              onChange={(event) => onStepTitleChange(event.target.value)}
-              className="mt-1 text-base font-semibold text-slate-900"
-              placeholder={`Step ${index + 1}`}
-            />
+            <InputGroup className="mt-1">
+              <InputGroupInput
+                value={step.title}
+                onChange={(event) => onStepTitleChange(event.target.value)}
+                className="text-base font-semibold text-slate-900"
+                placeholder={`Step ${index + 1}`}
+              />
+            </InputGroup>
           ) : (
             <div className="text-base font-semibold text-slate-900">{step.title}</div>
           )}
@@ -262,7 +265,7 @@ const StepImageCard = ({
             </Badge>
           )}
           {isEditing && (
-            <div className="flex items-center gap-1">
+            <ButtonGroup>
               <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
                 Up
               </Button>
@@ -275,7 +278,7 @@ const StepImageCard = ({
               <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
                 Delete
               </Button>
-            </div>
+            </ButtonGroup>
           )}
         </div>
       </div>
@@ -823,7 +826,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         title={workflow?.title ?? workflowId}
         description={`Workspace: ${orgId}`}
         actions={
-          <>
+          <ButtonGroup>
             <Button
               variant="outline"
               size="sm"
@@ -862,7 +865,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                 </Button>
               </>
             )}
-          </>
+          </ButtonGroup>
         }
         badges={
           isEditing && draftIsDirty ? (

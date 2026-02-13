@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import Input from '@/components/ui/input'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -935,23 +937,27 @@ export default function WorkflowDetailClient({
               </div>
             )}
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {workflow.status !== 'review' && isAdmin && (
-              <Button variant="secondary" size="sm" onClick={handleRequestReview}>
-                Request review
-              </Button>
-            )}
-            {workflow.status === 'review' && isAdmin && (
-              <Button variant="primary" size="sm" onClick={handleApprove}>
-                Approve publish
-              </Button>
-            )}
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={handleMarkReviewed}>
-                Mark reviewed
-              </Button>
-            )}
-          </div>
+          {(workflow.status !== 'review' || isAdmin) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <ButtonGroup>
+                {workflow.status !== 'review' && isAdmin && (
+                  <Button variant="secondary" size="sm" onClick={handleRequestReview}>
+                    Request review
+                  </Button>
+                )}
+                {workflow.status === 'review' && isAdmin && (
+                  <Button variant="primary" size="sm" onClick={handleApprove}>
+                    Approve publish
+                  </Button>
+                )}
+                {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={handleMarkReviewed}>
+                    Mark reviewed
+                  </Button>
+                )}
+              </ButtonGroup>
+            </div>
+          )}
         </Card>
       </div>
 
@@ -980,11 +986,11 @@ export default function WorkflowDetailClient({
               )}
             </div>
           )}
-          <div className="mt-4 grid gap-4 text-sm text-foreground">
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Expected run cadence</span>
+          <FieldGroup className="mt-4 gap-4 text-sm text-foreground">
+            <Field>
+              <FieldLabel htmlFor="expected-run-cadence">Expected run cadence</FieldLabel>
               <Select value={expectedCadence} onValueChange={setExpectedCadence}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="expected-run-cadence" className="w-full">
                   <SelectValue placeholder="On demand" />
                 </SelectTrigger>
                 <SelectContent>
@@ -995,29 +1001,35 @@ export default function WorkflowDetailClient({
                   <SelectItem value="custom">Custom</SelectItem>
                 </SelectContent>
               </Select>
-            </label>
+            </Field>
             {expectedCadence === 'custom' && (
-              <label className="space-y-2">
-                <span className="text-xs uppercase tracking-wide text-muted-foreground">Custom cadence (days)</span>
-                <Input
-                  value={expectedCadenceDays}
-                  onChange={(event) => setExpectedCadenceDays(event.target.value)}
-                  placeholder="e.g. 10"
-                />
-              </label>
+              <Field>
+                <FieldLabel htmlFor="custom-cadence-days">Custom cadence (days)</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="custom-cadence-days"
+                    value={expectedCadenceDays}
+                    onChange={(event) => setExpectedCadenceDays(event.target.value)}
+                    placeholder="e.g. 10"
+                  />
+                </InputGroup>
+              </Field>
             )}
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Review cadence (days)</span>
-              <Input
-                value={reviewCadenceDays}
-                onChange={(event) => setReviewCadenceDays(event.target.value)}
-                placeholder="e.g. 30"
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Criticality</span>
+            <Field>
+              <FieldLabel htmlFor="review-cadence-days">Review cadence (days)</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="review-cadence-days"
+                  value={reviewCadenceDays}
+                  onChange={(event) => setReviewCadenceDays(event.target.value)}
+                  placeholder="e.g. 30"
+                />
+              </InputGroup>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="workflow-criticality">Criticality</FieldLabel>
               <Select value={criticality} onValueChange={setCriticality}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="workflow-criticality" className="w-full">
                   <SelectValue placeholder="Medium" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1026,15 +1038,15 @@ export default function WorkflowDetailClient({
                   <SelectItem value="high">High</SelectItem>
                 </SelectContent>
               </Select>
-            </label>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Owner</span>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="workflow-owner">Owner</FieldLabel>
               {members.length > 0 ? (
                 <Select
                   value={ownerUserId || '__owner_unassigned'}
                   onValueChange={(value) => setOwnerUserId(value === '__owner_unassigned' ? '' : value)}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger id="workflow-owner" className="w-full">
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1042,22 +1054,25 @@ export default function WorkflowDetailClient({
                     {members
                       .filter((member) => member.status === 'active')
                       .map((member) => (
-                      <SelectItem key={member.user_id} value={member.user_id}>
-                        {formatMemberLabel(member)}
-                      </SelectItem>
-                    ))}
+                        <SelectItem key={member.user_id} value={member.user_id}>
+                          {formatMemberLabel(member)}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <Input
-                  value={ownerUserId}
-                  onChange={(event) => setOwnerUserId(event.target.value)}
-                  placeholder="Owner user ID"
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    id="workflow-owner"
+                    value={ownerUserId}
+                    onChange={(event) => setOwnerUserId(event.target.value)}
+                    placeholder="Owner user ID"
+                  />
+                </InputGroup>
               )}
-            </label>
-            <div className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Maintainers</span>
+            </Field>
+            <Field>
+              <FieldLabel>Maintainers</FieldLabel>
               {members.length > 0 ? (
                 <div className="grid gap-2 rounded-xl border border-border bg-muted/40 px-3 py-3 text-xs">
                   {members
@@ -1074,40 +1089,55 @@ export default function WorkflowDetailClient({
                   {members.length === 0 && <span>No active members found.</span>}
                 </div>
               ) : (
-                <Input
-                  value={maintainerIds.join(', ')}
-                  onChange={(event) =>
-                    setMaintainerIds(
-                      event.target.value
-                        .split(',')
-                        .map((value) => value.trim())
-                        .filter(Boolean)
-                    )
-                  }
-                  placeholder="Maintainer user IDs, comma separated"
-                />
+                <InputGroup>
+                  <InputGroupInput
+                    value={maintainerIds.join(', ')}
+                    onChange={(event) =>
+                      setMaintainerIds(
+                        event.target.value
+                          .split(',')
+                          .map((value) => value.trim())
+                          .filter(Boolean)
+                      )
+                    }
+                    placeholder="Maintainer user IDs, comma separated"
+                  />
+                </InputGroup>
               )}
-            </div>
-            <label className="space-y-2">
-              <span className="text-xs uppercase tracking-wide text-muted-foreground">Contexts</span>
-              <Input
-                value={contexts}
-                onChange={(event) => setContexts(event.target.value)}
-                placeholder="e.g. workday.com, Salesforce, com.apple.Calendar"
-              />
-            </label>
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <Checkbox
-                checked={requiredFlag}
-                onCheckedChange={(checked) => setRequiredFlag(checked === true)}
-              />
-              Required workflow
-            </label>
-          </div>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="workflow-contexts">Contexts</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="workflow-contexts"
+                  value={contexts}
+                  onChange={(event) => setContexts(event.target.value)}
+                  placeholder="e.g. workday.com, Salesforce, com.apple.Calendar"
+                />
+              </InputGroup>
+            </Field>
+            <Field>
+              <label className="flex items-center gap-2 text-sm text-foreground">
+                <Checkbox
+                  checked={requiredFlag}
+                  onCheckedChange={(checked) => setRequiredFlag(checked === true)}
+                />
+                Required workflow
+              </label>
+              <FieldDescription>Required workflows are tracked in compliance reporting.</FieldDescription>
+            </Field>
+          </FieldGroup>
           <div className="mt-4 flex justify-end">
-            <Button variant="primary" size="md" onClick={handleSettingsSave} disabled={settingsSaving || !isAdmin}>
-              {settingsSaving ? 'Saving…' : 'Save settings'}
-            </Button>
+            <ButtonGroup>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleSettingsSave}
+                disabled={settingsSaving || !isAdmin}
+              >
+                {settingsSaving ? 'Saving…' : 'Save settings'}
+              </Button>
+            </ButtonGroup>
           </div>
           {!isAdmin && (
             <div className="mt-3 text-xs text-amber-600">Admin access required to edit settings.</div>
