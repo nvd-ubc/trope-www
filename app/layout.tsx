@@ -88,7 +88,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={`${circularStd.variable} font-sans antialiased bg-[#F8FAFC] text-slate-900`} style={{ letterSpacing: '-0.03em' }}>
+      <body className={`${circularStd.variable} bg-background font-sans text-foreground antialiased`} style={{ letterSpacing: '-0.03em' }}>
         <div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
           {children}
         </div>

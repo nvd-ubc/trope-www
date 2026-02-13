@@ -115,15 +115,26 @@ export const refreshTokens = async (
 export const signUp = async (params: {
   email: string
   password: string
-  name?: string
+  firstName: string
+  lastName: string
   company?: string
 }): Promise<void> => {
   const client = getCognitoClient()
   const config = getAuthConfig()
 
   const attributes = [{ Name: 'email', Value: params.email }]
-  if (params.name) {
-    attributes.push({ Name: 'name', Value: params.name })
+  const firstName = params.firstName.trim()
+  const lastName = params.lastName.trim()
+  const displayName = `${firstName} ${lastName}`.trim()
+
+  if (firstName) {
+    attributes.push({ Name: 'given_name', Value: firstName })
+  }
+  if (lastName) {
+    attributes.push({ Name: 'family_name', Value: lastName })
+  }
+  if (displayName) {
+    attributes.push({ Name: 'name', Value: displayName })
   }
 
   const command = new SignUpCommand({

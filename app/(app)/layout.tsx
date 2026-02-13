@@ -1,9 +1,14 @@
-import Link from 'next/link'
+import { Suspense } from 'react'
+import Button from '@/components/ui/button'
 import Logo from '@/components/ui/logo'
-import SignOutForm from './signout-form'
+import { Separator } from '@/components/ui/separator'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import AppBreadcrumb from './app-breadcrumb'
+import AppSidebar from './app-sidebar'
 import WorkspaceSwitcher from './workspace-switcher'
-import WorkspaceNavLink from './workspace-nav-link'
 import CommandPalette from './command-palette'
+import ProfileCompletionGate from './profile-completion-gate'
+import AppUserMenu from './app-user-menu'
 
 export default function AppLayout({
   children,
@@ -11,69 +16,50 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-[color:var(--trope-surface)] text-slate-900">
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 text-foreground">
       <CommandPalette />
-      <div className="flex min-h-screen">
-        <aside className="hidden w-64 flex-col border-r border-slate-200/80 bg-white lg:flex">
-          <div className="flex items-center justify-between px-6 py-6">
-            <Logo />
-          </div>
-          <nav className="flex-1 space-y-1 px-4 text-sm text-slate-600">
-            <Link
-              className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
-              href="/dashboard"
-            >
-              Dashboard
-            </Link>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="workflows">
-              Workflows
-            </WorkspaceNavLink>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="runs">
-              Runs
-            </WorkspaceNavLink>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="alerts">
-              Alerts
-            </WorkspaceNavLink>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="compliance">
-              Compliance
-            </WorkspaceNavLink>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="members">
-              Members
-            </WorkspaceNavLink>
-            <WorkspaceNavLink className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100" path="settings">
-              Settings
-            </WorkspaceNavLink>
-            <Link
-              className="flex items-center justify-between rounded-xl px-3 py-2 font-medium text-slate-700 hover:bg-slate-100"
-              href="/dashboard/account"
-            >
-              Account
-            </Link>
-          </nav>
-          <div className="px-6 py-6 text-xs text-slate-400">
-            Tip: Press <span className="font-semibold text-slate-600">⌘K</span> to jump around.
-          </div>
-        </aside>
-        <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/80 backdrop-blur">
-            <div className="flex items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
-              <div className="flex items-center gap-3">
-                <div className="lg:hidden">
-                  <Logo />
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset className="bg-transparent">
+          <header className="sticky top-0 z-40 border-b border-border/70 bg-background/90 backdrop-blur">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
+              <div className="flex min-w-0 items-center gap-2">
+                <SidebarTrigger className="md:hidden" />
+                <div className="md:hidden">
+                  <Logo href="/dashboard" />
                 </div>
-                <div className="hidden rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500 sm:flex">
-                  Press ⌘K to search
+                <Separator orientation="vertical" className="hidden h-4 md:block" />
+                <div className="hidden min-w-0 md:block">
+                  <Suspense fallback={<div className="h-5 w-40 rounded bg-muted/60" aria-hidden="true" />}>
+                    <AppBreadcrumb />
+                  </Suspense>
                 </div>
               </div>
               <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" className="hidden h-8 px-2 text-xs text-muted-foreground sm:flex">
+                  Press <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-foreground">⌘K</span>{' '}
+                  to search
+                </Button>
                 <WorkspaceSwitcher />
-                <SignOutForm />
+                <AppUserMenu />
               </div>
             </div>
           </header>
-          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
-        </div>
-      </div>
+          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">
+            <Suspense
+              fallback={
+                <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
+                  Loading dashboard…
+                </div>
+              }
+            >
+              <div className="mx-auto w-full max-w-[1200px]">
+                <ProfileCompletionGate>{children}</ProfileCompletionGate>
+              </div>
+            </Suspense>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   )
 }

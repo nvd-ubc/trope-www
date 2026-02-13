@@ -1,4 +1,6 @@
 import DashboardClient from './dashboard-client'
+import Badge from '@/components/ui/badge'
+import PageHeader from '@/components/dashboard/page-header'
 
 export const metadata = {
   title: 'Dashboard',
@@ -8,12 +10,16 @@ export const metadata = {
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-          <p className="text-sm text-slate-600">Account details and monthly usage.</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Dashboard"
+        description="Account health, usage, and onboarding status."
+        badges={
+          <>
+            <Badge variant="neutral">Operations</Badge>
+            <Badge variant="info">Live data</Badge>
+          </>
+        }
+      />
 
       <DashboardClient />
     </div>

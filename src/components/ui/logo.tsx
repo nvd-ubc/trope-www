@@ -1,9 +1,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default function Logo() {
+type LogoProps = {
+  href?: string
+}
+
+export default function Logo({ href = '/' }: LogoProps) {
   return (
-    <Link className="inline-flex items-center gap-1" href="/" aria-label="Trope">
+    <Link className="inline-flex items-center gap-1" href={href} aria-label="Trope">
       {/* Logomark */}
       <Image
         src="/logo/trope_logomark_dark.svg"

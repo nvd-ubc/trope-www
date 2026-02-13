@@ -1,12 +1,39 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Copy, Filter, MoreHorizontal, Search } from 'lucide-react'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
+import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type AuditEvent = {
   actor_user_id: string
@@ -230,60 +257,36 @@ export default function AuditClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading audit log…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading audit log…</Card>
   }
 
   if (error && events.length === 0) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load audit log"
+        message={error}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Audit log</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Track membership changes, invite actions, and workflow governance updates.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Audit log"
+        description="Track membership changes, invite actions, and governance updates."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-          {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-              <span>Request ID: {requestId}</span>
-              <button
-                onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-              >
-                Copy
-              </button>
-            </div>
-          )}
-        </Card>
+        <ErrorNotice
+          title="Audit data is partially unavailable"
+          message={error}
+          requestId={requestId}
+          onCopyRequestId={() => copyRequestId()}
+        />
       )}
 
       {forbidden && events.length === 0 && (
@@ -292,33 +295,48 @@ export default function AuditClient({ orgId }: { orgId: string }) {
         </Card>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-500">{filtered.length} events</div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="action">Action A-Z</option>
-          </select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search actions, actors, resources"
-            className="w-72"
-          />
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
-        </div>
-      </div>
+      <DataToolbar
+        summary={`${filtered.length} events`}
+        filters={
+          <>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger size="sm" className="min-w-[10rem]">
+              <SelectValue placeholder="Newest first" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest first</SelectItem>
+              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="action">Action A-Z</SelectItem>
+            </SelectContent>
+          </Select>
+          <InputGroup className="w-72">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search actions, actors, resources"
+            />
+          </InputGroup>
+          </>
+        }
+        actions={
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
+        }
+      />
 
       <Card className="overflow-hidden">
         {events.length === 0 && !forbidden ? (
-          <div className="p-6 text-sm text-slate-500">No audit events yet.</div>
+          <div className="p-6">
+            <EmptyState title="No audit events yet" description="Events appear as membership and workflow actions happen." className="py-8" />
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -330,9 +348,10 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Resource</TableHeaderCell>
                   <TableHeaderCell>IP</TableHeaderCell>
                   <TableHeaderCell>User agent</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((event, index) => {
                   const resourceLabel = buildResourceLabel(event)
                   const actorLabel = memberMap[event.actor_user_id] ?? event.actor_user_id
@@ -340,11 +359,11 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                     <TableRow key={`${event.created_at}-${event.action}-${index}`}>
                       <TableCell>{formatDateTime(event.created_at)}</TableCell>
                       <TableCell>
-                        <div className="text-sm font-semibold text-slate-900">
+                        <div className="text-sm font-semibold text-foreground">
                           {formatAction(event.action)}
                         </div>
                         {event.metadata && Object.keys(event.metadata).length > 0 && (
-                          <div className="mt-1 text-xs text-slate-500">
+                          <div className="mt-1 text-xs text-muted-foreground">
                             {Object.entries(event.metadata)
                               .map(([key, value]) => `${key}: ${value}`)
                               .join(' · ')}
@@ -352,23 +371,57 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="text-sm text-slate-700">{actorLabel}</div>
-                        <button
-                          onClick={() => navigator.clipboard.writeText(event.actor_user_id)}
-                          className="mt-1 rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-500"
-                        >
-                          Copy ID
-                        </button>
+                        <div className="text-sm text-foreground">{actorLabel}</div>
                       </TableCell>
                       <TableCell>{resourceLabel ?? '-'}</TableCell>
                       <TableCell>{event.ip ?? '-'}</TableCell>
-                      <TableCell className="max-w-[220px] truncate text-xs text-slate-500">
+                      <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">
                         {event.user_agent ?? '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" aria-label="Audit event actions">
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={(dropdownEvent) => {
+                                dropdownEvent.preventDefault()
+                                void navigator.clipboard.writeText(event.actor_user_id)
+                              }}
+                            >
+                              <Copy />
+                              Copy actor ID
+                            </DropdownMenuItem>
+                            {event.resource_id && (
+                              <DropdownMenuItem
+                                onSelect={(dropdownEvent) => {
+                                  dropdownEvent.preventDefault()
+                                  void navigator.clipboard.writeText(event.resource_id ?? '')
+                                }}
+                              >
+                                <Copy />
+                                Copy resource ID
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onSelect={(dropdownEvent) => {
+                                dropdownEvent.preventDefault()
+                                setQuery(event.actor_user_id)
+                              }}
+                            >
+                              <Filter />
+                              Filter by actor
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

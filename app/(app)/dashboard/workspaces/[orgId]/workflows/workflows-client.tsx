@@ -3,12 +3,41 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Copy, ExternalLink, MoreHorizontal, Search } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowDefinition = {
   org_id: string
@@ -84,6 +113,16 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+const toTitleCase = (value?: string | null) => {
+  if (!value) return 'Unknown'
+  return value
+    .replace(/[_-]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+    .join(' ')
+}
+
 const statusVariant = (status?: string | null) => {
   const normalized = (status ?? 'unknown').toLowerCase()
   if (normalized === 'published') return 'success'
@@ -102,14 +141,7 @@ const healthVariant = (health?: string | null) => {
 }
 
 const formatStatus = (status?: string | null) => {
-  if (!status) return 'Unknown'
-  return status.replace(/_/g, ' ')
-}
-
-const formatSource = (source?: string | null) => {
-  if (!source) return '-'
-  if (source === 'share') return 'Imported'
-  return source.replace(/_/g, ' ')
+  return toTitleCase(status)
 }
 
 const resolveCadenceDays = (cadence?: string | null, customDays?: number | null) => {
@@ -168,6 +200,14 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
       await navigator.clipboard.writeText(requestId)
     } catch {
       // ignore
+    }
+  }
+
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore clipboard failures
     }
   }
 
@@ -339,6 +379,14 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
     return sorted
   }, [workflows, query, statusFilter, healthFilter, viewFilter, sortBy])
 
+  const activeFilters = useMemo(() => {
+    const filters: string[] = []
+    if (viewFilter !== 'all') filters.push(`View: ${toTitleCase(viewFilter)}`)
+    if (statusFilter !== 'all') filters.push(`Status: ${toTitleCase(statusFilter)}`)
+    if (healthFilter !== 'all') filters.push(`Health: ${toTitleCase(healthFilter)}`)
+    return filters
+  }, [healthFilter, statusFilter, viewFilter])
+
   const allSelected = filtered.length > 0 && selectedIds.length === filtered.length
 
   const toggleSelectAll = (checked: boolean) => {
@@ -489,190 +537,203 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading workflows…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading workflows…</Card>
   }
 
   if (error && workflows.length === 0) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load workflows"
+        message={error}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Workflows</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Browse the SOP library for this workspace.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Workflows"
+        description="Browse the SOP library for this workspace."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-          {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-              <span>Request ID: {requestId}</span>
-              <button
-                onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-              >
-                Copy
-              </button>
-            </div>
-          )}
-        </Card>
+        <ErrorNotice
+          title="Workflow data is partially unavailable"
+          message={error}
+          requestId={requestId}
+          onCopyRequestId={() => copyRequestId()}
+        />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          {filtered.length} workflows
-          <Badge variant="neutral">{statusFilter}</Badge>
-          <Badge variant="neutral">{healthFilter}</Badge>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={viewFilter}
-            onChange={(event) => setViewFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="all">All workflows</option>
-            <option value="needs-review">Needs review</option>
-            <option value="overdue">Overdue runs</option>
-            <option value="failing">Failing</option>
-            <option value="unowned">Unowned</option>
-            <option value="critical">Critical</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="all">All statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="review">Review</option>
-            <option value="archived">Archived</option>
-          </select>
-          <select
-            value={healthFilter}
-            onChange={(event) => setHealthFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="all">All health</option>
-            <option value="healthy">Healthy</option>
-            <option value="warning">Warning</option>
-            <option value="failing">Failing</option>
-            <option value="unknown">Unknown</option>
-          </select>
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="updated_desc">Newest updated</option>
-            <option value="title_asc">Title A-Z</option>
-            <option value="last_success_desc">Last success</option>
-            <option value="runs_desc">Runs (7d)</option>
-            <option value="health">Health</option>
-          </select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by title or ID"
-            className="w-64"
-          />
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
-        </div>
-      </div>
+      <DataToolbar
+        summary={
+          <div className="flex flex-wrap items-center gap-2">
+            <span>
+              {filtered.length} workflow{filtered.length === 1 ? '' : 's'}
+            </span>
+            {activeFilters.map((filter) => (
+              <Badge key={filter} variant="outline">
+                {filter}
+              </Badge>
+            ))}
+          </div>
+        }
+        filters={
+          <>
+          <Select value={viewFilter} onValueChange={setViewFilter}>
+            <SelectTrigger size="sm" className="min-w-[11rem]">
+              <SelectValue placeholder="All workflows" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All workflows</SelectItem>
+              <SelectItem value="needs-review">Needs review</SelectItem>
+              <SelectItem value="overdue">Overdue runs</SelectItem>
+              <SelectItem value="failing">Failing</SelectItem>
+              <SelectItem value="unowned">Unowned</SelectItem>
+              <SelectItem value="critical">Critical</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger size="sm" className="min-w-[9.5rem]">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="review">Review</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={healthFilter} onValueChange={setHealthFilter}>
+            <SelectTrigger size="sm" className="min-w-[8.5rem]">
+              <SelectValue placeholder="All health" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All health</SelectItem>
+              <SelectItem value="healthy">Healthy</SelectItem>
+              <SelectItem value="warning">Warning</SelectItem>
+              <SelectItem value="failing">Failing</SelectItem>
+              <SelectItem value="unknown">Unknown</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger size="sm" className="min-w-[11rem]">
+              <SelectValue placeholder="Newest updated" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="updated_desc">Newest updated</SelectItem>
+              <SelectItem value="title_asc">Title A-Z</SelectItem>
+              <SelectItem value="last_success_desc">Last success</SelectItem>
+              <SelectItem value="runs_desc">Runs (7d)</SelectItem>
+              <SelectItem value="health">Health</SelectItem>
+            </SelectContent>
+          </Select>
+          <InputGroup className="w-64">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search workflows"
+            />
+          </InputGroup>
+          </>
+        }
+        actions={
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
+        }
+      />
 
       {selectedIds.length > 0 && (
-        <Card className="border-slate-200 bg-slate-50 p-4">
-          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-            <div className="font-semibold text-slate-800">
+        <Card className="border-border bg-muted/40 p-4">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <div className="font-semibold text-foreground">
               {selectedIds.length} selected
             </div>
-            <select
-              value={bulkAction}
-              onChange={(event) => setBulkAction(event.target.value)}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
+            <Select
+              value={bulkAction || '__bulk_action_none'}
+              onValueChange={(value) => setBulkAction(value === '__bulk_action_none' ? '' : value)}
               disabled={!isAdmin}
             >
-              <option value="">Bulk actions</option>
-              <option value="owner">Set owner</option>
-              <option value="cadence">Set run cadence</option>
-              <option value="review">Set review cadence</option>
-              <option value="archive">Archive</option>
-            </select>
+              <SelectTrigger size="sm" className="min-w-[10rem]">
+                <SelectValue placeholder="Bulk actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__bulk_action_none">Bulk actions</SelectItem>
+                <SelectItem value="owner">Set owner</SelectItem>
+                <SelectItem value="cadence">Set run cadence</SelectItem>
+                <SelectItem value="review">Set review cadence</SelectItem>
+                <SelectItem value="archive">Archive</SelectItem>
+              </SelectContent>
+            </Select>
             {bulkAction === 'owner' && (
-              <select
-                value={bulkOwner}
-                onChange={(event) => setBulkOwner(event.target.value)}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
+              <Select
+                value={bulkOwner || '__bulk_owner_unassigned'}
+                onValueChange={(value) => setBulkOwner(value === '__bulk_owner_unassigned' ? '' : value)}
                 disabled={!isAdmin}
               >
-                <option value="">Unassigned</option>
-                {members.map((member) => (
-                  <option key={member.user_id} value={member.user_id}>
-                    {formatMemberLabel(member)}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger size="sm" className="min-w-[11rem]">
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__bulk_owner_unassigned">Unassigned</SelectItem>
+                  {members.map((member) => (
+                    <SelectItem key={member.user_id} value={member.user_id}>
+                      {formatMemberLabel(member)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
             {bulkAction === 'cadence' && (
               <>
-                <select
+                <Select
                   value={bulkCadence}
-                  onChange={(event) => setBulkCadence(event.target.value)}
-                  className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
+                  onValueChange={setBulkCadence}
                   disabled={!isAdmin}
                 >
-                  <option value="on_demand">On demand</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                  <option value="custom">Custom</option>
-                </select>
+                  <SelectTrigger size="sm" className="min-w-[10rem]">
+                    <SelectValue placeholder="On demand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on_demand">On demand</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
                 {bulkCadence === 'custom' && (
-                  <Input
-                    value={bulkCadenceDays}
-                    onChange={(event) => setBulkCadenceDays(event.target.value)}
-                    placeholder="Days"
-                    className="w-24"
-                  />
+                  <InputGroup className="w-24">
+                    <InputGroupInput
+                      value={bulkCadenceDays}
+                      onChange={(event) => setBulkCadenceDays(event.target.value)}
+                      placeholder="Days"
+                    />
+                  </InputGroup>
                 )}
               </>
             )}
             {bulkAction === 'review' && (
-              <Input
-                value={bulkReviewDays}
-                onChange={(event) => setBulkReviewDays(event.target.value)}
-                placeholder="Review days"
-                className="w-28"
-              />
+              <InputGroup className="w-28">
+                <InputGroupInput
+                  value={bulkReviewDays}
+                  onChange={(event) => setBulkReviewDays(event.target.value)}
+                  placeholder="Review days"
+                />
+              </InputGroup>
             )}
             <Button
               variant="primary"
@@ -687,17 +748,20 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
             )}
           </div>
           {bulkError && (
-            <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+            <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
               {bulkError}
               {bulkRequestId && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-rose-600">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-destructive/80">
                   <span>Request ID: {bulkRequestId}</span>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(bulkRequestId)}
-                    className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 px-2 text-[10px] uppercase tracking-wide"
+                    onClick={() => void copyToClipboard(bulkRequestId)}
                   >
                     Copy
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -707,16 +771,22 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
 
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">
-            <p>No workflows yet. Publish a guide from the desktop app to populate the library.</p>
-            <div className="mt-3 flex flex-wrap gap-3 text-xs">
-              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/download">
-                Download desktop app
-              </Link>
-              <Link className="rounded-full border border-slate-200 px-3 py-1 text-slate-600" href="/get-started">
-                Getting started
-              </Link>
-            </div>
+          <div className="p-6">
+            <EmptyState
+              title="No workflows yet"
+              description="Publish a guide from the desktop app to populate the library."
+              actions={
+                <>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/download">Download desktop app</Link>
+                  </Button>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/get-started">Getting started</Link>
+                  </Button>
+                </>
+              }
+              className="py-10"
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -724,11 +794,9 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={allSelected}
-                      onChange={(event) => toggleSelectAll(event.target.checked)}
-                      className="h-4 w-4"
+                      onCheckedChange={(checked) => toggleSelectAll(checked === true)}
                     />
                   </TableHeaderCell>
                   <TableHeaderCell>Workflow</TableHeaderCell>
@@ -738,9 +806,10 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Review due</TableHeaderCell>
                   <TableHeaderCell>Last success</TableHeaderCell>
                   <TableHeaderCell>Runs (7d)</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((workflow) => {
                   const latest = latestVersions[workflow.workflow_id]
                   const runStats = workflow.run_stats_7d
@@ -758,54 +827,39 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                     }
                   }
                   const ownerLabel = workflow.owner_user_id
-                    ? memberMap[workflow.owner_user_id] ?? workflow.owner_user_id
+                    ? memberMap[workflow.owner_user_id] ?? 'Assigned member'
                     : 'Unassigned'
                   return (
                     <TableRow key={workflow.workflow_id}>
                       <TableCell>
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={selectedIds.includes(workflow.workflow_id)}
-                          onChange={() => toggleSelected(workflow.workflow_id)}
-                          className="h-4 w-4"
+                          onCheckedChange={() => toggleSelected(workflow.workflow_id)}
                         />
                       </TableCell>
                       <TableCell>
-                        <Link
-                          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-                            workflow.workflow_id
-                          )}`}
-                          className="text-sm font-semibold text-slate-900 hover:text-[color:var(--trope-accent)]"
-                        >
-                          {workflow.title || workflow.workflow_id}
-                        </Link>
-                        <div className="text-xs text-slate-500">{workflow.workflow_id}</div>
-                        {workflow.contexts && workflow.contexts.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {workflow.contexts.slice(0, 2).map((context) => (
-                              <span
-                                key={context}
-                                className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500"
-                              >
-                                {context}
-                              </span>
-                            ))}
-                            {workflow.contexts.length > 2 && (
-                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500">
-                                +{workflow.contexts.length - 2}
-                              </span>
+                        <div className="space-y-1">
+                          <Link
+                            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                              workflow.workflow_id
+                            )}`}
+                            className="block text-sm font-semibold text-foreground hover:text-primary"
+                          >
+                            {workflow.title || 'Untitled workflow'}
+                          </Link>
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                            <span>{typeof latest?.steps_count === 'number' ? `${latest.steps_count} steps` : 'Steps -'}</span>
+                            <span>•</span>
+                            <span>Views {workflow.metrics_7d?.views ?? 0}</span>
+                            {workflow.contexts && workflow.contexts.length > 0 && (
+                              <>
+                                <span>•</span>
+                                <span className="max-w-[14rem] truncate">{workflow.contexts[0]}</span>
+                                {workflow.contexts.length > 1 && <span>+{workflow.contexts.length - 1}</span>}
+                              </>
                             )}
                           </div>
-                        )}
-                        <div className="mt-2 text-[11px] text-slate-500">
-                          Source: {formatSource(workflow.source)} · Views 7d: {workflow.metrics_7d?.views ?? 0}
                         </div>
-                        {latest?.version_id && (
-                          <div className="text-[11px] text-slate-400">Latest version: {latest.version_id}</div>
-                        )}
-                        {latest?.steps_count !== undefined && (
-                          <div className="text-[11px] text-slate-400">Steps: {latest.steps_count}</div>
-                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={statusVariant(workflow.status)}>{formatStatus(workflow.status)}</Badge>
@@ -817,20 +871,50 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                       </TableCell>
                       <TableCell>
                         <Badge variant={healthVariant(workflow.health_state ?? undefined)}>
-                          {workflow.health_state ?? 'unknown'}
+                          {toTitleCase(workflow.health_state ?? 'unknown')}
                         </Badge>
                       </TableCell>
                       <TableCell>{ownerLabel}</TableCell>
                       <TableCell>{reviewDue}</TableCell>
                       <TableCell>{formatDate(workflow.last_success_at ?? undefined)}</TableCell>
                       <TableCell>
-                        <div className="text-sm text-slate-700">{runStats?.total ?? '-'}</div>
-                        <div className="text-xs text-slate-400">Success {successRate}</div>
+                        <div className="text-sm text-foreground">{runStats?.total ?? '-'}</div>
+                        <div className="text-xs text-muted-foreground">Success {successRate}</div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" aria-label="Workflow actions">
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void copyToClipboard(workflow.workflow_id)
+                              }}
+                            >
+                              <Copy />
+                              Copy workflow reference
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                                  workflow.workflow_id
+                                )}`}
+                              >
+                                <ExternalLink />
+                                Open workflow
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

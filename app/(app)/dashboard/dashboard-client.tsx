@@ -3,6 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ChevronRight, Download, ListChecks, Users, Workflow } from 'lucide-react'
+import Button from '@/components/ui/button'
+import {
+  EmptyState,
+  ErrorNotice,
+  MetricCard,
+  SectionCard,
+} from '@/components/dashboard'
 
 type PlanInfo = {
   name: string
@@ -12,6 +20,9 @@ type PlanInfo = {
 type MeResponse = {
   sub: string
   email?: string | null
+  display_name?: string | null
+  first_name?: string | null
+  last_name?: string | null
   plan: PlanInfo
   personal_org_id?: string | null
   default_org_id?: string | null
@@ -113,19 +124,16 @@ export default function DashboardClient() {
 
   if (loading) {
     return (
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="h-48 rounded-2xl border border-slate-200 bg-white shadow-sm" />
-        <div className="h-48 rounded-2xl border border-slate-200 bg-white shadow-sm" />
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
+        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
+        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
       </div>
     )
   }
 
   if (error) {
-    return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-700 shadow-sm">
-        {error}
-      </div>
-    )
+    return <ErrorNotice message={error} title="Unable to load dashboard" />
   }
 
   if (!me || !usage || !orgs) {
@@ -136,107 +144,157 @@ export default function DashboardClient() {
   const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
   const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
   const workspaceBase = defaultOrg?.org_id ? `/dashboard/workspaces/${defaultOrg.org_id}` : '/dashboard/workspaces'
+  const accountDisplayName =
+    me.display_name?.trim() ||
+    `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim() ||
+    me.email?.trim() ||
+    'Workspace member'
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Account</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Signed in as</div>
-              <div className="text-slate-900">{me.email ?? me.sub}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Plan</div>
-              <div className="text-slate-900">{me.plan?.name ?? 'Unknown'}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Default org</div>
-              <div className="text-slate-900">{defaultOrg?.name ?? me.default_org_id ?? 'Not set'}</div>
-              <Link className="text-xs text-[#1861C8] hover:text-[#1861C8]/80" href="/dashboard/workspaces">
-                Manage workspaces
-              </Link>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Personal org</div>
-              <div className="text-slate-900">{personalOrg?.name ?? me.personal_org_id ?? 'Not set'}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Next steps</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Keep your pilot moving by capturing workflows and inviting your team.
-          </p>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
-            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href="/download">
-              <span>Download the desktop app</span>
-              <span className="text-xs text-slate-400">macOS / Windows</span>
-            </Link>
-            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/workflows`}>
-              <span>Record your first workflow</span>
-              <span className="text-xs text-slate-400">Workflows</span>
-            </Link>
-            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/members`}>
-              <span>Invite teammates</span>
-              <span className="text-xs text-slate-400">Members</span>
-            </Link>
-            <Link className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50 px-4 py-3" href={`${workspaceBase}/runs`}>
-              <span>Review run history</span>
-              <span className="text-xs text-slate-400">Runs</span>
-            </Link>
-          </div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Account"
+          value={accountDisplayName}
+          helper={me.email ? me.email : 'Profile email not yet configured'}
+        />
+        <MetricCard
+          label="Plan"
+          value={me.plan?.name ?? 'Unknown'}
+          helper={`${me.plan?.monthly_credits ?? 0} monthly credits`}
+        />
+        <MetricCard
+          label="Credits remaining"
+          value={creditsRemaining}
+          helper={`${usage.credits_used} used this period`}
+        />
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Usage</h2>
-        <div className="mt-4 grid gap-4 text-sm text-slate-600">
-          <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3">
-            <div className="text-xs uppercase tracking-wide text-slate-400">Credits remaining</div>
-            <div className="text-2xl font-semibold text-slate-900">{creditsRemaining}</div>
-            <div className="text-xs text-slate-500">{usage.credits_used} used this period</div>
+      <SectionCard
+        title="Account"
+        description="Workspace defaults and profile context used across Trope Cloud."
+        contentClassName="pt-2"
+        action={
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/workspaces">Manage workspaces</Link>
+          </Button>
+        }
+      >
+        <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Default workspace</div>
+            <div className="text-foreground">{defaultOrg?.name ?? 'Not set'}</div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-slate-100 bg-white px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-slate-400">Prompt tokens</div>
-              <div className="text-lg font-semibold text-slate-900">{usage.prompt_tokens}</div>
-            </div>
-            <div className="rounded-xl border border-slate-100 bg-white px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-slate-400">Completion tokens</div>
-              <div className="text-lg font-semibold text-slate-900">{usage.completion_tokens}</div>
-            </div>
+          <div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Personal workspace</div>
+            <div className="text-foreground">{personalOrg?.name ?? 'Not set'}</div>
           </div>
-          <div className="text-xs text-slate-500">Period: {usage.period ?? 'Current month'}</div>
         </div>
-      </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Next steps"
+        description="Keep momentum by capturing workflows and inviting teammates."
+        contentClassName="pt-2"
+      >
+        <div className="grid gap-2 text-sm">
+          <Button asChild variant="outline" className="h-12 justify-between">
+            <Link href="/download">
+              <span className="flex items-center gap-2">
+                <Download className="size-4 text-muted-foreground" />
+                Download the desktop app
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                macOS / Windows
+                <ChevronRight className="size-3.5" />
+              </span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-12 justify-between">
+            <Link href={`${workspaceBase}/workflows`}>
+              <span className="flex items-center gap-2">
+                <Workflow className="size-4 text-muted-foreground" />
+                Record your first workflow
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Workflows
+                <ChevronRight className="size-3.5" />
+              </span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-12 justify-between">
+            <Link href={`${workspaceBase}/members`}>
+              <span className="flex items-center gap-2">
+                <Users className="size-4 text-muted-foreground" />
+                Invite teammates
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Members
+                <ChevronRight className="size-3.5" />
+              </span>
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="h-12 justify-between">
+            <Link href={`${workspaceBase}/runs`}>
+              <span className="flex items-center gap-2">
+                <ListChecks className="size-4 text-muted-foreground" />
+                Review run history
+              </span>
+              <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                Runs
+                <ChevronRight className="size-3.5" />
+              </span>
+            </Link>
+          </Button>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Usage"
+        description={`Period: ${usage.period ?? 'Current month'}`}
+        contentClassName="pt-2"
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <MetricCard label="Prompt tokens" value={usage.prompt_tokens} />
+          <MetricCard label="Completion tokens" value={usage.completion_tokens} />
+          <MetricCard label="Credits reserved" value={usage.credits_reserved} />
+        </div>
+      </SectionCard>
 
       {invites.length > 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Pending invites</h2>
-          <p className="mt-2 text-sm text-slate-600">
-            You have {invites.length} invite{invites.length === 1 ? '' : 's'} waiting.
-          </p>
-          <div className="mt-4 space-y-3">
+        <SectionCard
+          title="Pending invites"
+          description={`You have ${invites.length} invite${invites.length === 1 ? '' : 's'} waiting.`}
+        >
+          <div className="space-y-2">
             {invites.map((invite) => (
-              <Link
+              <Button
                 key={invite.invite_id}
-                href={`/invite?org_id=${encodeURIComponent(invite.org_id)}&invite_id=${encodeURIComponent(invite.invite_id)}`}
-                className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 hover:border-slate-300"
+                asChild
+                variant="outline"
+                className="h-auto w-full justify-between py-3 text-left"
               >
-                <div>
-                  <div className="font-semibold text-slate-900">{invite.org_name || invite.org_id}</div>
-                  <div className="text-xs text-slate-500">
-                    Role {invite.role.replace('org_', '')}
+                <Link
+                  href={`/invite?org_id=${encodeURIComponent(invite.org_id)}&invite_id=${encodeURIComponent(invite.invite_id)}`}
+                >
+                  <div>
+                    <div className="font-semibold text-foreground">{invite.org_name || 'Workspace invite'}</div>
+                    <div className="text-xs text-muted-foreground">Role {invite.role.replace('org_', '')}</div>
                   </div>
-                </div>
-                <span className="text-xs font-medium text-[#1861C8]">Review</span>
-              </Link>
+                  <span className="text-xs font-medium text-primary">Review</span>
+                </Link>
+              </Button>
             ))}
           </div>
-        </div>
+        </SectionCard>
+      )}
+
+      {invites.length === 0 && (
+        <EmptyState
+          title="No pending invites"
+          description="You are fully onboarded. Invite activity will appear here when teammates add you."
+          className="py-8"
+        />
       )}
     </div>
   )

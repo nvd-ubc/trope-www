@@ -1,8 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { safeInternalPath } from '@/lib/profile-identity'
+import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
+import Card from '@/components/ui/card'
+import { Alert } from '@/components/ui/alert'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import {
+  ErrorNotice,
+  PageHeader,
+  SectionCard,
+} from '@/components/dashboard'
 
 type PlanInfo = {
   name: string
@@ -12,6 +25,9 @@ type PlanInfo = {
 type MeResponse = {
   sub: string
   email?: string | null
+  first_name?: string | null
+  last_name?: string | null
+  display_name?: string | null
   plan?: PlanInfo
   personal_org_id?: string | null
   default_org_id?: string | null
@@ -31,12 +47,31 @@ type OrgsResponse = {
   default_org_id?: string | null
 }
 
+type ProfileUpdateResponse = {
+  first_name?: string | null
+  last_name?: string | null
+  display_name?: string | null
+  message?: string
+  error?: string
+}
+
 export default function AccountClient() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [me, setMe] = useState<MeResponse | null>(null)
   const [orgs, setOrgs] = useState<OrgsResponse | null>(null)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [savePending, setSavePending] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [saveRequestId, setSaveRequestId] = useState<string | null>(null)
+
+  const completeProfile = searchParams.get('completeProfile') === '1'
+  const nextPath = safeInternalPath(searchParams.get('next'))
 
   useEffect(() => {
     let active = true
@@ -62,6 +97,8 @@ export default function AccountClient() {
         if (!active) return
         setMe(mePayload)
         setOrgs(orgsPayload)
+        setFirstName(mePayload.first_name ?? '')
+        setLastName(mePayload.last_name ?? '')
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -76,86 +113,202 @@ export default function AccountClient() {
     }
   }, [router])
 
+  const defaultOrg = useMemo(
+    () => orgs?.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null,
+    [orgs]
+  )
+  const personalOrg = useMemo(
+    () => orgs?.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null,
+    [orgs]
+  )
+
+  const trimmedFirstName = firstName.trim()
+  const trimmedLastName = lastName.trim()
+  const isDirty =
+    trimmedFirstName !== (me?.first_name ?? '').trim() || trimmedLastName !== (me?.last_name ?? '').trim()
+
+  const submitProfile = async () => {
+    if (!csrfToken) return
+
+    if (!trimmedFirstName) {
+      setSaveError('First name is required.')
+      setSaveMessage(null)
+      return
+    }
+    if (!trimmedLastName) {
+      setSaveError('Last name is required.')
+      setSaveMessage(null)
+      return
+    }
+
+    setSavePending(true)
+    setSaveError(null)
+    setSaveMessage(null)
+    setSaveRequestId(null)
+    try {
+      const response = await fetch('/api/me/profile', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({
+          first_name: trimmedFirstName,
+          last_name: trimmedLastName,
+        }),
+      })
+      const payload = (await response.json().catch(() => null)) as ProfileUpdateResponse | null
+      const requestId = response.headers.get('x-trope-request-id')
+      setSaveRequestId(requestId)
+      if (!response.ok) {
+        throw new Error(payload?.message || payload?.error || 'Unable to update profile.')
+      }
+
+      setMe((previous) =>
+        previous
+          ? {
+              ...previous,
+              first_name: payload?.first_name ?? trimmedFirstName,
+              last_name: payload?.last_name ?? trimmedLastName,
+              display_name: payload?.display_name ?? previous.display_name ?? null,
+            }
+          : previous
+      )
+      setFirstName(payload?.first_name ?? trimmedFirstName)
+      setLastName(payload?.last_name ?? trimmedLastName)
+
+      if (completeProfile) {
+        router.replace(nextPath ?? '/dashboard')
+        return
+      }
+
+      setSaveMessage('Profile updated.')
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Unable to update profile.')
+    } finally {
+      setSavePending(false)
+    }
+  }
+
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading account…</div>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading account…</Card>
   }
 
   if (error || !me || !orgs) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error ?? 'Unable to load account details.'}
-      </div>
+      <ErrorNotice message={error ?? 'Unable to load account details.'} title="Unable to load account" />
     )
   }
 
-  const defaultOrg = orgs.orgs?.find((org) => org.org_id === orgs.default_org_id) ?? null
-  const personalOrg = orgs.orgs?.find((org) => org.org_id === orgs.personal_org_id) ?? null
+  const emailDisplay = me.email?.trim() ? me.email : null
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Account</h1>
-        <p className="mt-1 text-sm text-slate-600">Manage your profile, plan, and security settings.</p>
-      </div>
+      <PageHeader
+        title="Account"
+        description="Manage your profile, plan, and security settings."
+        backHref="/dashboard"
+        backLabel="Back to dashboard"
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Profile</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Email</div>
-              <div className="text-slate-900">{me.email ?? me.sub}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Account ID</div>
-              <div className="text-slate-900">{me.sub}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Plan</div>
-              <div className="text-slate-900">{me.plan?.name ?? 'Unknown'}</div>
-            </div>
+        <SectionCard title="Profile">
+          {completeProfile && (
+            <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+              Add your first and last name to continue using workspace pages.
+            </Alert>
+          )}
+          {saveError && <ErrorNotice message={saveError} title="Profile update failed" />}
+          {saveMessage && (
+            <Alert className="border-emerald-200 bg-emerald-50 text-emerald-700">
+              {saveMessage}
+            </Alert>
+          )}
+          <FieldGroup className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="account-first-name">First Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="account-first-name"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  placeholder="First name"
+                />
+              </InputGroup>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="account-last-name">Last Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="account-last-name"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  placeholder="Last name"
+                />
+              </InputGroup>
+            </Field>
+          </FieldGroup>
+          <div className="flex flex-wrap items-center gap-3">
+            <ButtonGroup>
+              <Button disabled={savePending || csrfLoading || !csrfToken || !isDirty} onClick={submitProfile}>
+                {savePending ? 'Saving…' : 'Save profile'}
+              </Button>
+            </ButtonGroup>
+            {saveRequestId && (
+              <span className="text-xs text-muted-foreground">Request ID {saveRequestId}</span>
+            )}
           </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Workspaces</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
+          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Default workspace</div>
-              <div className="text-slate-900">
-                {defaultOrg?.name ?? orgs.default_org_id ?? 'Not set'}
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Email</div>
+              <div className={emailDisplay ? 'text-foreground' : 'text-muted-foreground'}>
+                {emailDisplay ?? 'Not available'}
               </div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Personal workspace</div>
-              <div className="text-slate-900">
-                {personalOrg?.name ?? orgs.personal_org_id ?? 'Not set'}
-              </div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Display name</div>
+              <div className="text-foreground">{me.display_name ?? 'Not set'}</div>
             </div>
-            <Link className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80" href="/dashboard/workspaces">
-              Manage workspaces
-            </Link>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Account ID</div>
+              <div className="break-all font-mono text-xs text-foreground">{me.sub}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Plan</div>
+              <div className="text-foreground">{me.plan?.name ?? 'Unknown'}</div>
+            </div>
           </div>
-        </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Workspaces"
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/workspaces">Manage workspaces</Link>
+            </Button>
+          }
+        >
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Default workspace</div>
+              <div className="text-foreground">{defaultOrg?.name ?? orgs.default_org_id ?? 'Not set'}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Personal workspace</div>
+              <div className="text-foreground">{personalOrg?.name ?? orgs.personal_org_id ?? 'Not set'}</div>
+            </div>
+          </div>
+        </SectionCard>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Security</h2>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Link
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
-            href="/reset-password"
-          >
-            Reset password
-          </Link>
-          <Link
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
-            href="/dashboard"
-          >
-            Back to dashboard
-          </Link>
+      <SectionCard title="Security">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button asChild variant="outline">
+            <Link href="/reset-password">Reset password</Link>
+          </Button>
         </div>
-      </div>
+      </SectionCard>
     </div>
   )
 }
