@@ -29,6 +29,12 @@ import {
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader } from '@/components/dashboard'
+import { getRadarPercent } from '@/lib/guide-editor'
+import {
+  formatCaptureTimestamp,
+  resolveStepImageVariant,
+  type GuideMediaStepImage as StepImage,
+} from '@/lib/guide-media'
 
 type WorkflowDefinition = {
   org_id: string
@@ -78,9 +84,19 @@ type WorkflowVersion = {
   guide_spec?: { download_url?: string | null } | null
 }
 
+type GuideMedia = {
+  step_images: StepImage[]
+}
+
 type WorkflowDetailResponse = {
   workflow: WorkflowDefinition
   latest_version?: WorkflowVersion | null
+}
+
+type VersionDetailResponse = {
+  version: WorkflowVersion & {
+    guide_media?: GuideMedia | null
+  }
 }
 
 type VersionsResponse = {
@@ -272,6 +288,7 @@ export default function WorkflowDetailClient({
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null)
   const [versions, setVersions] = useState<WorkflowVersion[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
+  const [versionDetail, setVersionDetail] = useState<VersionDetailResponse['version'] | null>(null)
   const [spec, setSpec] = useState<GuideSpec | null>(null)
   const [specLoading, setSpecLoading] = useState(false)
   const [specError, setSpecError] = useState<string | null>(null)
@@ -479,6 +496,16 @@ export default function WorkflowDetailClient({
     () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
     [versions, selectedVersionId]
   )
+  const stepImageMap = useMemo(() => {
+    const map: Record<string, StepImage> = {}
+    const images = versionDetail?.guide_media?.step_images ?? []
+    for (const image of images) {
+      if (image?.step_id) {
+        map[image.step_id] = image
+      }
+    }
+    return map
+  }, [versionDetail?.guide_media?.step_images])
   const guidePageHref = useMemo(() => {
     const base = `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide`
     if (!selectedVersionId) return base
@@ -488,6 +515,7 @@ export default function WorkflowDetailClient({
   useEffect(() => {
     if (!selectedVersionId) {
       setSpec(null)
+      setVersionDetail(null)
       return
     }
 
@@ -496,24 +524,42 @@ export default function WorkflowDetailClient({
       setSpecLoading(true)
       setSpecError(null)
       try {
-        const response = await fetch(
-          `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-            workflowId
-          )}/versions/${encodeURIComponent(selectedVersionId)}/guide-spec`,
-          { cache: 'no-store' }
-        )
-        if (!response.ok) {
+        const [specResponse, versionResponse] = await Promise.all([
+          fetch(
+            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+              workflowId
+            )}/versions/${encodeURIComponent(selectedVersionId)}/guide-spec`,
+            { cache: 'no-store' }
+          ),
+          fetch(
+            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+              workflowId
+            )}/versions/${encodeURIComponent(selectedVersionId)}`,
+            { cache: 'no-store' }
+          ),
+        ])
+        if (!specResponse.ok) {
           throw new Error('Guide spec is not available for this version.')
         }
-        const specJson = (await response.json().catch(() => null)) as GuideSpec | null
+        if (!versionResponse.ok) {
+          throw new Error('Version detail is unavailable for this version.')
+        }
+
+        const specJson = (await specResponse.json().catch(() => null)) as GuideSpec | null
         if (!specJson) {
           throw new Error('Guide spec is empty.')
         }
+        const versionJson = (await versionResponse.json().catch(() => null)) as VersionDetailResponse | null
+        if (!versionJson?.version) {
+          throw new Error('Version detail is unavailable for this version.')
+        }
         if (!active) return
         setSpec(specJson)
+        setVersionDetail(versionJson.version)
       } catch (err) {
         if (!active) return
         setSpec(null)
+        setVersionDetail(null)
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
         if (active) {
@@ -1407,6 +1453,39 @@ export default function WorkflowDetailClient({
                   const layoutText = step.anchors?.layout
                     ?.map((layout) => layout.region || layout.relative_to || layout.position_hint)
                     .filter((value): value is string => Boolean(value))
+                  const image = stepImageMap[step.id] ?? null
+                  const previewImage = image
+                    ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
+                    : null
+                  const radar = image?.radar ?? null
+                  const radarWidth = previewImage?.width ?? image?.width ?? null
+                  const radarHeight = previewImage?.height ?? image?.height ?? null
+                  const radarPercent = getRadarPercent(radar, radarWidth, radarHeight)
+                  const imageAspectRatio =
+                    typeof radarWidth === 'number' &&
+                    Number.isFinite(radarWidth) &&
+                    radarWidth > 0 &&
+                    typeof radarHeight === 'number' &&
+                    Number.isFinite(radarHeight) &&
+                    radarHeight > 0
+                      ? `${radarWidth} / ${radarHeight}`
+                      : undefined
+                  const previewSrc = image
+                    ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                        workflowId
+                      )}/versions/${encodeURIComponent(selectedVersionId ?? '')}/media/steps/${encodeURIComponent(
+                        step.id
+                      )}?variant=preview`
+                    : null
+                  const fullSrc = image
+                    ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                        workflowId
+                      )}/versions/${encodeURIComponent(selectedVersionId ?? '')}/media/steps/${encodeURIComponent(
+                        step.id
+                      )}?variant=full`
+                    : null
+                  const hasImage = Boolean(previewSrc && (previewImage?.downloadUrl || image?.download_url))
+                  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
 
                   return (
                     <div key={step.id} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -1415,12 +1494,57 @@ export default function WorkflowDetailClient({
                           <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
                           <div className="text-sm font-semibold text-slate-900">{step.title}</div>
                         </div>
-                        {kindLabel && (
-                          <Badge variant="info" className="text-[10px]">
-                            {kindLabel}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {kindLabel && (
+                            <Badge variant="info" className="text-[10px]">
+                              {kindLabel}
+                            </Badge>
+                          )}
+                          {captureTimestamp && (
+                            <Badge variant="neutral" className="text-[10px]">
+                              t={captureTimestamp}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
+                      {hasImage && previewSrc && fullSrc && (
+                        <a
+                          href={fullSrc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="group mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+                        >
+                          <div
+                            className="relative mx-auto w-full overflow-hidden bg-slate-100"
+                            style={imageAspectRatio ? { aspectRatio: imageAspectRatio } : undefined}
+                          >
+                            <img
+                              src={previewSrc}
+                              alt={step.title}
+                              loading="lazy"
+                              className="block max-h-[20rem] w-full object-contain transition group-hover:scale-[1.01]"
+                            />
+                            {radarPercent && (
+                              <div className="pointer-events-none absolute inset-0">
+                                <div
+                                  className="absolute -translate-x-1/2 -translate-y-1/2"
+                                  style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
+                                >
+                                  <div className="relative h-5 w-5">
+                                    <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
+                                    <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      )}
+                      {!hasImage && (
+                        <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                          No screenshot available for this step.
+                        </div>
+                      )}
                       <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                       {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
 

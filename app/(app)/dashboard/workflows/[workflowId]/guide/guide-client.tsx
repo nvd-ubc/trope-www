@@ -24,6 +24,11 @@ import {
   getRadarPercent,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
+import {
+  formatCaptureTimestamp,
+  resolveStepImageVariant,
+  type GuideMediaStepImage as StepImage,
+} from '@/lib/guide-media'
 
 type ResolveResponse = {
   org_id: string
@@ -65,22 +70,6 @@ type WorkflowDetailResponse = {
 
 type VersionsResponse = {
   versions: WorkflowVersionSummary[]
-}
-
-type Radar = {
-  x: number
-  y: number
-  coordinate_space: string
-  confidence?: number | null
-  reason_code?: string | null
-}
-
-type StepImage = {
-  step_id: string
-  content_type?: string | null
-  width?: number | null
-  height?: number | null
-  radar?: Radar | null
 }
 
 type GuideMedia = {
@@ -229,16 +218,46 @@ const StepImageCard = ({
     })
     .filter((value): value is string => Boolean(value))
 
+  const cardImage = useMemo(
+    () =>
+      image
+        ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
+        : null,
+    [image]
+  )
+  const fullImage = useMemo(
+    () =>
+      image
+        ? resolveStepImageVariant(image, { surface: 'detail', requestedVariant: 'full' })
+        : null,
+    [image]
+  )
+
   const imgSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
         workflowId
-      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(step.id)}`
+      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
+        step.id
+      )}?variant=preview`
+    : null
+  const openImageHref = image
+    ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+        workflowId
+      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
+        step.id
+      )}?variant=full`
     : null
 
   const radar = image?.radar ?? null
-  const width = image?.width ?? null
-  const height = image?.height ?? null
+  const width = cardImage?.width ?? image?.width ?? null
+  const height = cardImage?.height ?? image?.height ?? null
   const radarPercent = useMemo(() => getRadarPercent(radar, width, height), [height, radar, width])
+  const imageAspectRatio =
+    isFiniteNumber(width) && isFiniteNumber(height) && width > 0 && height > 0
+      ? `${width} / ${height}`
+      : undefined
+  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
+  const hasImage = Boolean(imgSrc && (cardImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url))
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -264,6 +283,11 @@ const StepImageCard = ({
               {kindLabel}
             </Badge>
           )}
+          {captureTimestamp && (
+            <Badge variant="neutral" className="text-[10px]">
+              t={captureTimestamp}
+            </Badge>
+          )}
           {isEditing && (
             <ButtonGroup>
               <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
@@ -283,19 +307,22 @@ const StepImageCard = ({
         </div>
       </div>
 
-      {imgSrc && (
+      {hasImage && imgSrc && openImageHref && (
         <a
-          href={imgSrc}
+          href={openImageHref}
           target="_blank"
           rel="noreferrer"
           className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
         >
-          <div className="relative">
+          <div
+            className="relative mx-auto w-full overflow-hidden bg-slate-100"
+            style={imageAspectRatio ? { aspectRatio: imageAspectRatio } : undefined}
+          >
             <img
               src={imgSrc}
               alt={step.title}
               loading="lazy"
-              className="block h-auto w-full transition group-hover:scale-[1.01]"
+              className="block max-h-[27rem] w-full object-contain transition group-hover:scale-[1.01]"
             />
             {radarPercent && (
               <div className="pointer-events-none absolute inset-0">
@@ -314,7 +341,7 @@ const StepImageCard = ({
         </a>
       )}
 
-      {!imgSrc && (
+      {!hasImage && (
         <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
           No screenshot available for this step.
         </div>
