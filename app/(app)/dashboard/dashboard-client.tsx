@@ -182,11 +182,11 @@ export default function DashboardClient() {
         <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
           <div>
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Default workspace</div>
-            <div className="text-foreground">{defaultOrg?.name ?? me.default_org_id ?? 'Not set'}</div>
+            <div className="text-foreground">{defaultOrg?.name ?? 'Not set'}</div>
           </div>
           <div>
             <div className="text-xs uppercase tracking-wide text-muted-foreground">Personal workspace</div>
-            <div className="text-foreground">{personalOrg?.name ?? me.personal_org_id ?? 'Not set'}</div>
+            <div className="text-foreground">{personalOrg?.name ?? 'Not set'}</div>
           </div>
         </div>
       </SectionCard>
@@ -272,7 +272,7 @@ export default function DashboardClient() {
                   href={`/invite?org_id=${encodeURIComponent(invite.org_id)}&invite_id=${encodeURIComponent(invite.invite_id)}`}
                 >
                   <div>
-                    <div className="font-semibold text-foreground">{invite.org_name || invite.org_id}</div>
+                    <div className="font-semibold text-foreground">{invite.org_name || 'Workspace invite'}</div>
                     <div className="text-xs text-muted-foreground">Role {invite.role.replace('org_', '')}</div>
                   </div>
                   <span className="text-xs font-medium text-primary">Review</span>

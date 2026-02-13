@@ -642,7 +642,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
             <InputGroupInput
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search by title or ID"
+              placeholder="Search workflows"
             />
           </InputGroup>
           </>
@@ -827,7 +827,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                     }
                   }
                   const ownerLabel = workflow.owner_user_id
-                    ? memberMap[workflow.owner_user_id] ?? workflow.owner_user_id
+                    ? memberMap[workflow.owner_user_id] ?? 'Assigned member'
                     : 'Unassigned'
                   return (
                     <TableRow key={workflow.workflow_id}>
@@ -896,7 +896,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                               }}
                             >
                               <Copy />
-                              Copy workflow ID
+                              Copy workflow reference
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link

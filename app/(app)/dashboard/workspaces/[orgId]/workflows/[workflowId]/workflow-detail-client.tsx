@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { MoreHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Badge from '@/components/ui/badge'
@@ -8,8 +9,16 @@ import Button from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -195,9 +204,16 @@ const runStatusVariant = (status?: string | null) => {
   return 'neutral'
 }
 
+const toTitleCase = (value: string) =>
+  value
+    .split(' ')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+
 const formatStatus = (status?: string | null) => {
   if (!status) return 'Unknown'
-  return status.replace(/_/g, ' ')
+  return toTitleCase(status.replace(/_/g, ' '))
 }
 
 const formatKind = (kind?: string | null) => {
@@ -454,6 +470,10 @@ export default function WorkflowDetailClient({
     }
     return map
   }, [members])
+  const activeMembers = useMemo(
+    () => members.filter((member) => member.status === 'active'),
+    [members]
+  )
 
   const selectedVersion = useMemo(
     () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
@@ -545,9 +565,9 @@ export default function WorkflowDetailClient({
     setActionMessage(null)
     try {
       await navigator.clipboard.writeText(workflowId)
-      setActionMessage('Workflow ID copied.')
+      setActionMessage('Workflow reference copied.')
     } catch {
-      setActionError('Unable to copy workflow ID.')
+      setActionError('Unable to copy workflow reference.')
     }
   }
 
@@ -770,28 +790,38 @@ export default function WorkflowDetailClient({
     return due
   })()
   const isReviewOverdue = reviewDue ? Date.now() > reviewDue.getTime() : false
-  const ownerLabel = ownerUserId ? memberMap[ownerUserId] ?? ownerUserId : 'Unassigned'
-  const maintainerLabels = maintainerIds.map((id) => memberMap[id] ?? id)
+  const ownerLabel = ownerUserId ? memberMap[ownerUserId] ?? 'Assigned member' : 'Unassigned'
+  const maintainerLabels = maintainerIds
+    .map((id) => memberMap[id])
+    .filter((value): value is string => Boolean(value))
+  const maintainerSummary = maintainerLabels.length
+    ? maintainerLabels.join(', ')
+    : maintainerIds.length
+      ? `${maintainerIds.length} teammate${maintainerIds.length === 1 ? '' : 's'}`
+      : '-'
   const contextLabel = (workflow.contexts ?? []).join(', ')
+  const selectedVersionIndex = selectedVersion
+    ? versions.findIndex((version) => version.version_id === selectedVersion.version_id)
+    : -1
+  const selectedVersionLabel = selectedVersion
+    ? `${selectedVersionIndex >= 0 ? `Release ${selectedVersionIndex + 1} · ` : ''}${formatDate(selectedVersion.created_at)}`
+    : null
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title={workflow.title || workflow.workflow_id}
+        title={workflow.title || 'Untitled workflow'}
         description={`Created ${formatDate(workflow.created_at)} · Updated ${formatDate(workflow.updated_at)}`}
         badges={
           <>
             <Badge variant={statusVariant(workflow.status)}>{formatStatus(workflow.status)}</Badge>
             <Badge variant={healthVariant(workflow.health_state)}>
-              {workflow.health_state ?? 'unknown'}
+              {formatStatus(workflow.health_state ?? 'unknown')}
             </Badge>
           </>
         }
         actions={
           <>
-            <Button variant="outline" size="sm" onClick={handleCopyWorkflowId}>
-              Copy workflow ID
-            </Button>
             {isAdmin && (
               <Button
                 variant="outline"
@@ -802,16 +832,36 @@ export default function WorkflowDetailClient({
                 Create share link
               </Button>
             )}
-            {isAdmin && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleArchive}
-                disabled={!csrfToken || pendingAction === 'archive'}
-              >
-                Archive
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon-sm" aria-label="Workflow actions">
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    void handleCopyWorkflowId()
+                  }}
+                >
+                  Copy workflow reference
+                </DropdownMenuItem>
+                {isAdmin && <DropdownMenuSeparator />}
+                {isAdmin && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    disabled={!csrfToken || pendingAction === 'archive'}
+                    onSelect={(event) => {
+                      event.preventDefault()
+                      void handleArchive()
+                    }}
+                  >
+                    Archive workflow
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
         backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
@@ -849,7 +899,7 @@ export default function WorkflowDetailClient({
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-slate-900">Operational health</h2>
             <Badge variant={healthVariant(workflow.health_state)}>
-              {workflow.health_state ?? 'unknown'}
+              {formatStatus(workflow.health_state ?? 'unknown')}
             </Badge>
           </div>
           <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
@@ -899,20 +949,18 @@ export default function WorkflowDetailClient({
             <h2 className="text-base font-semibold text-slate-900">Governance</h2>
             {workflow.required && <Badge variant="warning">Required</Badge>}
           </div>
-          <div className="mt-4 grid gap-3 text-sm text-slate-600">
+          <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2 sm:gap-x-6">
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Owner</div>
               <div className="text-slate-900">{ownerLabel}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Maintainers</div>
-              <div className="text-slate-900">
-                {maintainerLabels.length ? maintainerLabels.join(', ') : '-'}
-              </div>
+              <div className="text-slate-900">{maintainerSummary}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Criticality</div>
-              <div className="text-slate-900">{workflow.criticality ?? 'medium'}</div>
+              <div className="text-slate-900">{formatStatus(workflow.criticality ?? 'medium')}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Contexts</div>
@@ -961,7 +1009,7 @@ export default function WorkflowDetailClient({
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[0.65fr_1.35fr]">
+      <div className="grid gap-4 lg:grid-cols-[0.65fr_1.35fr] lg:items-start">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Settings</h2>
@@ -1051,13 +1099,11 @@ export default function WorkflowDetailClient({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__owner_unassigned">Unassigned</SelectItem>
-                    {members
-                      .filter((member) => member.status === 'active')
-                      .map((member) => (
-                        <SelectItem key={member.user_id} value={member.user_id}>
-                          {formatMemberLabel(member)}
-                        </SelectItem>
-                      ))}
+                    {activeMembers.map((member) => (
+                      <SelectItem key={member.user_id} value={member.user_id}>
+                        {formatMemberLabel(member)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               ) : (
@@ -1074,19 +1120,21 @@ export default function WorkflowDetailClient({
             <Field>
               <FieldLabel>Maintainers</FieldLabel>
               {members.length > 0 ? (
-                <div className="grid gap-2 rounded-xl border border-border bg-muted/40 px-3 py-3 text-xs">
-                  {members
-                    .filter((member) => member.status === 'active')
-                    .map((member) => (
-                      <label key={member.user_id} className="flex items-center gap-2">
-                        <Checkbox
-                          checked={maintainerIds.includes(member.user_id)}
-                          onCheckedChange={() => toggleMaintainer(member.user_id)}
-                        />
-                        <span>{formatMemberLabel(member)}</span>
-                      </label>
-                    ))}
-                  {members.length === 0 && <span>No active members found.</span>}
+                <div className="rounded-xl border border-border bg-muted/40 px-3 py-3 text-xs">
+                  <ScrollArea className="h-40 pr-2">
+                    <div className="grid gap-2">
+                      {activeMembers.map((member) => (
+                        <label key={member.user_id} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={maintainerIds.includes(member.user_id)}
+                            onCheckedChange={() => toggleMaintainer(member.user_id)}
+                          />
+                          <span>{formatMemberLabel(member)}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  {activeMembers.length === 0 && <span>No active members found.</span>}
                 </div>
               ) : (
                 <InputGroup>
@@ -1216,14 +1264,13 @@ export default function WorkflowDetailClient({
                   {runs.map((run) => (
                     <TableRow key={run.run_id}>
                       <TableCell>
-                        <Badge variant={runStatusVariant(run.status)}>{run.status}</Badge>
+                        <Badge variant={runStatusVariant(run.status)}>{formatStatus(run.status)}</Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
-                        <div className="text-xs text-slate-400">{run.run_id}</div>
                       </TableCell>
                       <TableCell>{formatDuration(run.duration_ms)}</TableCell>
-                      <TableCell>{run.actor_email ?? run.actor_user_id ?? '-'}</TableCell>
+                      <TableCell>{run.actor_email ?? (run.actor_user_id ? 'Team member' : '-')}</TableCell>
                       <TableCell>
                         {run.steps_total
                           ? `${run.steps_completed ?? 0}/${run.steps_total}`
@@ -1239,14 +1286,14 @@ export default function WorkflowDetailClient({
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
         <Card className="p-6">
           <h2 className="text-base font-semibold text-foreground">Versions</h2>
           {versions.length === 0 && (
             <div className="mt-4 text-sm text-muted-foreground">No versions yet.</div>
           )}
           <div className="mt-4 space-y-3">
-            {versions.map((version) => (
+            {versions.map((version, index) => (
               <Button
                 key={version.version_id}
                 type="button"
@@ -1260,14 +1307,15 @@ export default function WorkflowDetailClient({
                 }`}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="max-w-[18rem] truncate font-semibold text-foreground" title={version.version_id}>
-                    {version.version_id}
-                  </div>
+                  <div className="max-w-[18rem] truncate font-semibold text-foreground">Release {index + 1}</div>
                   <div className="text-xs text-muted-foreground">{formatDate(version.created_at)}</div>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
                   {typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown'}
-                  {version.created_by ? ` · Published by ${version.created_by.slice(0, 8)}…${version.created_by.slice(-4)}` : ''}
+                  {version.created_by
+                    ? ` · Published by ${memberMap[version.created_by] ?? 'team member'}`
+                    : ''}
+                  {version.status ? ` · ${formatStatus(version.status)}` : ''}
                 </div>
               </Button>
             ))}
@@ -1275,16 +1323,18 @@ export default function WorkflowDetailClient({
           {shareId && (
             <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Share link</div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="break-all font-mono text-xs">{shareUrl ?? shareId}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigator.clipboard.writeText(shareUrl ?? shareId)}
-                >
-                  Copy
-                </Button>
-              </div>
+              {shareUrl ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="break-all font-mono text-xs">{shareUrl}</span>
+                  <Button variant="outline" size="sm" onClick={() => copyText(shareUrl)}>
+                    Copy
+                  </Button>
+                </div>
+              ) : (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Share URL unavailable. Create a new share link to continue.
+                </div>
+              )}
             </div>
           )}
         </Card>
@@ -1301,7 +1351,7 @@ export default function WorkflowDetailClient({
               </Link>
             </div>
             {selectedVersion && (
-              <div className="text-xs text-muted-foreground">Version {selectedVersion.version_id}</div>
+              <div className="text-xs text-muted-foreground">{selectedVersionLabel}</div>
             )}
           </div>
 

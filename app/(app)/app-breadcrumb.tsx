@@ -29,10 +29,10 @@ const labelForSegment = (segment: string) => {
   }
 
   if (map[normalized]) return map[normalized]
-  if (/^org_[0-9a-f-]{8,}$/i.test(normalized)) return 'Workspace'
-  if (/^wf_[0-9a-f-]{8,}$/i.test(normalized)) return 'Workflow'
-  if (/^v_[0-9a-f-]{8,}$/i.test(normalized)) return 'Version'
-  if (/^[0-9a-f-]{8,}$/i.test(normalized)) return 'Detail'
+  if (/^org_[a-z0-9-]{6,}$/i.test(normalized)) return 'Workspace'
+  if (/^wf_[a-z0-9-]{6,}$/i.test(normalized)) return 'Workflow'
+  if (/^v_[a-z0-9-]{6,}$/i.test(normalized)) return 'Version'
+  if (/^[a-z0-9-]{16,}$/i.test(normalized)) return 'Detail'
   return normalized
 }
 
