@@ -264,10 +264,6 @@ const StepImageCard = ({
         : null,
     [height, radar, step, width]
   )
-  const imageAspectRatio =
-    isFiniteNumber(width) && isFiniteNumber(height) && width > 0 && height > 0
-      ? `${width} / ${height}`
-      : undefined
   const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
   const hasImage = Boolean(imgSrc && (cardImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url))
 
@@ -326,15 +322,12 @@ const StepImageCard = ({
           rel="noreferrer"
           className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
         >
-          <div
-            className="relative mx-auto w-full overflow-hidden bg-slate-100"
-            style={imageAspectRatio ? { aspectRatio: imageAspectRatio } : undefined}
-          >
+          <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
             <img
               src={imgSrc}
               alt={step.title}
               loading="lazy"
-              className="block max-h-[27rem] w-full object-contain transition group-hover:scale-[1.01]"
+              className="block h-auto max-h-[27rem] w-auto max-w-full transition group-hover:scale-[1.01]"
             />
             {radarPercent && (
               <div className="pointer-events-none absolute inset-0">
@@ -449,6 +442,16 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         }
         if (!active) return
         setOrgId(payload.org_id)
+
+        const params = new URLSearchParams(window.location.search)
+        const currentOrgId = (params.get('orgId') ?? '').trim()
+        if (currentOrgId !== payload.org_id) {
+          params.set('orgId', payload.org_id)
+          const query = params.toString()
+          router.replace(
+            `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide${query ? `?${query}` : ''}`
+          )
+        }
       } catch (err) {
         if (!active) return
         setResolveError(err instanceof Error ? err.message : 'Unable to resolve workflow.')
@@ -460,7 +463,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return () => {
       active = false
     }
-  }, [workflowId])
+  }, [router, workflowId])
 
   useEffect(() => {
     if (!orgId) return

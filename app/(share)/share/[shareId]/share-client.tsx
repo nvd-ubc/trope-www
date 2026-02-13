@@ -339,15 +339,6 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                 })
                   ? getRadarPercent(radar, radarWidth, radarHeight)
                   : null
-                const imageAspectRatio =
-                  typeof radarWidth === 'number' &&
-                  Number.isFinite(radarWidth) &&
-                  radarWidth > 0 &&
-                  typeof radarHeight === 'number' &&
-                  Number.isFinite(radarHeight) &&
-                  radarHeight > 0
-                    ? `${radarWidth} / ${radarHeight}`
-                    : undefined
                 const previewSrc = image
                   ? `/api/shares/${encodeURIComponent(shareId)}/media/steps/${encodeURIComponent(
                       step.id
@@ -387,15 +378,12 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                         rel="noreferrer"
                         className="group mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
                       >
-                        <div
-                          className="relative mx-auto w-full overflow-hidden bg-slate-100"
-                          style={imageAspectRatio ? { aspectRatio: imageAspectRatio } : undefined}
-                        >
+                        <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
                           <img
                             src={previewSrc}
                             alt={step.title}
                             loading="lazy"
-                            className="block max-h-[22rem] w-full object-contain transition group-hover:scale-[1.01]"
+                            className="block h-auto max-h-[22rem] w-auto max-w-full transition group-hover:scale-[1.01]"
                           />
                           {radarPercent && (
                             <div className="pointer-events-none absolute inset-0">
