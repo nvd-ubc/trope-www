@@ -1,6 +1,7 @@
 import './css/style.css'
 
 import localFont from 'next/font/local'
+import { Analytics } from '@vercel/analytics/next'
 
 const circularStd = localFont({
   src: [
@@ -92,6 +93,7 @@ export default function RootLayout({
         <div className="flex flex-col min-h-screen overflow-hidden supports-[overflow:clip]:overflow-clip">
           {children}
         </div>
+        <Analytics />
       </body>
     </html>
   )
