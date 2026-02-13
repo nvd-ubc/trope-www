@@ -1009,7 +1009,8 @@ export default function WorkflowDetailClient({
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[0.65fr_1.35fr] lg:items-start">
+      <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div className="space-y-4">
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-semibold text-foreground">Settings</h2>
@@ -1284,9 +1285,9 @@ export default function WorkflowDetailClient({
             </div>
           )}
         </Card>
-      </div>
+        </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
+        <div className="space-y-4">
         <Card className="p-6">
           <h2 className="text-base font-semibold text-foreground">Versions</h2>
           {versions.length === 0 && (
@@ -1447,6 +1448,7 @@ export default function WorkflowDetailClient({
             </div>
           )}
         </Card>
+      </div>
       </div>
     </div>
   )
