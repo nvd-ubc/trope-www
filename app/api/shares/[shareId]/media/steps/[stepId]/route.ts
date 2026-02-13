@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { proxyBackendRequest } from '@/lib/server/backend'
+import { publicBackendRequest } from '@/lib/server/backend'
 import {
   resolveStepImageVariant,
-  type RequestedGuideMediaVariant,
   type GuideMediaStepImage,
+  type RequestedGuideMediaVariant,
 } from '@/lib/guide-media'
 
 export const runtime = 'nodejs'
@@ -12,26 +12,21 @@ export const dynamic = 'force-dynamic'
 export async function GET(
   request: Request,
   context: {
-    params: Promise<{ orgId: string; workflowId: string; versionId: string; stepId: string }>
+    params: Promise<{ shareId: string; stepId: string }>
   }
 ) {
-  const { orgId, workflowId, versionId, stepId } = await context.params
+  const { shareId, stepId } = await context.params
   const url = new URL(request.url)
   const variantParam = (url.searchParams.get('variant') ?? '').toLowerCase()
   const requestedVariant: RequestedGuideMediaVariant =
     variantParam === 'preview' || variantParam === 'full' ? variantParam : 'auto'
 
-  const versionResponse = await proxyBackendRequest(
-    `/v1/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-      workflowId
-    )}/versions/${encodeURIComponent(versionId)}`
-  )
-
-  if (!versionResponse.ok) {
-    return versionResponse
+  const shareResponse = await publicBackendRequest(`/v1/shares/${encodeURIComponent(shareId)}`)
+  if (!shareResponse.ok) {
+    return shareResponse
   }
 
-  const payload = (await versionResponse.json().catch(() => null)) as unknown
+  const payload = (await shareResponse.json().catch(() => null)) as unknown
   const version =
     payload && typeof payload === 'object' && !Array.isArray(payload)
       ? (payload as { version?: unknown }).version
@@ -50,6 +45,7 @@ export async function GET(
         return (entry as { step_id?: unknown }).step_id === stepId
       })
     : null) as GuideMediaStepImage | null
+
   const resolved = match
     ? resolveStepImageVariant(match, {
         requestedVariant,
@@ -70,7 +66,7 @@ export async function GET(
       { error: 'step_image_download_failed', message: 'Unable to download step image.' },
       { status: 502 }
     )
-    const requestId = versionResponse.headers.get('X-Trope-Request-Id')
+    const requestId = shareResponse.headers.get('X-Trope-Request-Id')
     if (requestId) {
       next.headers.set('X-Trope-Request-Id', requestId)
     }
@@ -83,7 +79,7 @@ export async function GET(
     'content-type',
     artifactResponse.headers.get('content-type') || resolved?.contentType || 'image/jpeg'
   )
-  const requestId = versionResponse.headers.get('X-Trope-Request-Id')
+  const requestId = shareResponse.headers.get('X-Trope-Request-Id')
   if (requestId) {
     headers.set('X-Trope-Request-Id', requestId)
   }
