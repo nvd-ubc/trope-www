@@ -151,22 +151,19 @@ export default function DashboardClient() {
     'Workspace member'
 
   return (
-    <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-3">
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          className="gap-3 py-4"
           label="Account"
           value={accountDisplayName}
           helper={me.email ? me.email : 'Profile email not yet configured'}
         />
         <MetricCard
-          className="gap-3 py-4"
           label="Plan"
           value={me.plan?.name ?? 'Unknown'}
           helper={`${me.plan?.monthly_credits ?? 0} monthly credits`}
         />
         <MetricCard
-          className="gap-3 py-4"
           label="Credits remaining"
           value={creditsRemaining}
           helper={`${usage.credits_used} used this period`}
@@ -176,8 +173,6 @@ export default function DashboardClient() {
       <SectionCard
         title="Account"
         description="Workspace defaults and profile context used across Trope Cloud."
-        className="py-4"
-        contentClassName="space-y-3"
         action={
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/workspaces">Manage workspaces</Link>
@@ -199,11 +194,9 @@ export default function DashboardClient() {
       <SectionCard
         title="Next steps"
         description="Keep momentum by capturing workflows and inviting teammates."
-        className="py-4"
-        contentClassName="space-y-3"
       >
-        <div className="grid gap-1.5 text-sm">
-          <Button asChild variant="outline" className="h-11 justify-between">
+        <div className="grid gap-2 text-sm">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href="/download">
               <span className="flex items-center gap-2">
                 <Download className="size-4 text-muted-foreground" />
@@ -215,7 +208,7 @@ export default function DashboardClient() {
               </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="h-11 justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/workflows`}>
               <span className="flex items-center gap-2">
                 <Workflow className="size-4 text-muted-foreground" />
@@ -227,7 +220,7 @@ export default function DashboardClient() {
               </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="h-11 justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/members`}>
               <span className="flex items-center gap-2">
                 <Users className="size-4 text-muted-foreground" />
@@ -239,7 +232,7 @@ export default function DashboardClient() {
               </span>
             </Link>
           </Button>
-          <Button asChild variant="outline" className="h-11 justify-between">
+          <Button asChild variant="outline" className="h-12 justify-between">
             <Link href={`${workspaceBase}/runs`}>
               <span className="flex items-center gap-2">
                 <ListChecks className="size-4 text-muted-foreground" />
@@ -254,16 +247,11 @@ export default function DashboardClient() {
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="Usage"
-        description={`Period: ${usage.period ?? 'Current month'}`}
-        className="py-4"
-        contentClassName="space-y-3"
-      >
-        <div className="grid gap-3 lg:grid-cols-3">
-          <MetricCard className="gap-3 py-4" label="Prompt tokens" value={usage.prompt_tokens} />
-          <MetricCard className="gap-3 py-4" label="Completion tokens" value={usage.completion_tokens} />
-          <MetricCard className="gap-3 py-4" label="Credits reserved" value={usage.credits_reserved} />
+      <SectionCard title="Usage" description={`Period: ${usage.period ?? 'Current month'}`}>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <MetricCard label="Prompt tokens" value={usage.prompt_tokens} />
+          <MetricCard label="Completion tokens" value={usage.completion_tokens} />
+          <MetricCard label="Credits reserved" value={usage.credits_reserved} />
         </div>
       </SectionCard>
 
