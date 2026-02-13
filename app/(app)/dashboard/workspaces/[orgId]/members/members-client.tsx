@@ -2,11 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Search } from 'lucide-react'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { Alert } from '@/components/ui/alert'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -245,12 +252,18 @@ export default function MembersClient({ orgId }: { orgId: string }) {
       <DataToolbar
         summary={`${filteredMembers.length} members`}
         filters={
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search members"
-            className="w-full max-w-xs"
-          />
+          <InputGroup className="w-full max-w-xs">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search members"
+            />
+          </InputGroup>
         }
       />
 
@@ -314,22 +327,26 @@ export default function MembersClient({ orgId }: { orgId: string }) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!canManage || isRemoved || pendingAction === member.user_id || !csrfToken}
-                    onClick={() => submitRoleChange(member)}
-                  >
-                    Update
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    disabled={!canManage || isRemoved || isLastOwner || pendingAction === member.user_id || !csrfToken}
-                    onClick={() => removeMember(member)}
-                  >
-                    Remove
-                  </Button>
+                  <ButtonGroup>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!canManage || isRemoved || pendingAction === member.user_id || !csrfToken}
+                      onClick={() => submitRoleChange(member)}
+                    >
+                      Update
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      disabled={
+                        !canManage || isRemoved || isLastOwner || pendingAction === member.user_id || !csrfToken
+                      }
+                      onClick={() => removeMember(member)}
+                    >
+                      Remove
+                    </Button>
+                  </ButtonGroup>
                 </div>
               </div>
             )

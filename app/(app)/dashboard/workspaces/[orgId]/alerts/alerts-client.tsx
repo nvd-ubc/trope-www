@@ -2,10 +2,24 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { BellRing, CheckCheck, Copy, MoreHorizontal, Search, UserMinus, UserPlus } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -13,7 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
@@ -297,6 +318,14 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
     }
   }
 
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore clipboard failures
+    }
+  }
+
   if (loading) {
     return <Card className="p-6 text-sm text-muted-foreground">Loading alerts…</Card>
   }
@@ -355,18 +384,26 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
               <SelectItem value="status">Status</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search alerts"
-            className="w-64"
-          />
+          <InputGroup className="w-64">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search alerts"
+            />
+          </InputGroup>
           </>
         }
         actions={
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
         }
       />
 
@@ -389,10 +426,10 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Severity</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
                   <TableHeaderCell>Triggered</TableHeaderCell>
-                  <TableHeaderCell className="text-right">Actions</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((alert) => (
                   <TableRow key={alert.alert_id}>
                     <TableCell>
@@ -425,66 +462,89 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {currentUserId && alert.assigned_to !== currentUserId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() =>
-                              postAlertAction(alert.alert_id, 'assign', {
-                                assigned_to: currentUserId,
-                                note: currentUserEmail ? `Assigned to ${currentUserEmail}` : undefined,
-                              })
-                            }
-                          >
-                            Assign to me
-                          </Button>
-                        )}
-                        {alert.assigned_to && currentUserId === alert.assigned_to && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon-sm"
+                            aria-label="Alert actions"
                             disabled={pendingAction !== null}
-                            onClick={() =>
-                              postAlertAction(alert.alert_id, 'assign', { assigned_to: '' })
-                            }
                           >
-                            Clear
+                            <MoreHorizontal />
                           </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pendingAction !== null}
-                          onClick={() => postAlertAction(alert.alert_id, 'snooze', { snooze_hours: 24 })}
-                        >
-                          Snooze
-                        </Button>
-                        {alert.status !== 'resolved' ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() => postAlertAction(alert.alert_id, 'resolve')}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void copyToClipboard(alert.alert_id)
+                            }}
                           >
-                            Resolve
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() => postAlertAction(alert.alert_id, 'reopen')}
+                            <Copy />
+                            Copy alert ID
+                          </DropdownMenuItem>
+                          {currentUserId && alert.assigned_to !== currentUserId && (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'assign', {
+                                  assigned_to: currentUserId,
+                                  note: currentUserEmail ? `Assigned to ${currentUserEmail}` : undefined,
+                                })
+                              }}
+                            >
+                              <UserPlus />
+                              Assign to me
+                            </DropdownMenuItem>
+                          )}
+                          {alert.assigned_to && currentUserId === alert.assigned_to && (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'assign', { assigned_to: '' })
+                              }}
+                            >
+                              <UserMinus />
+                              Clear assignee
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void postAlertAction(alert.alert_id, 'snooze', { snooze_hours: 24 })
+                            }}
                           >
-                            Reopen
-                          </Button>
-                        )}
-                      </div>
+                            <BellRing />
+                            Snooze 24 hours
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {alert.status !== 'resolved' ? (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'resolve')
+                              }}
+                            >
+                              <CheckCheck />
+                              Resolve alert
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'reopen')
+                              }}
+                            >
+                              <BellRing />
+                              Reopen alert
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

@@ -2,10 +2,23 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Copy, Filter, MoreHorizontal, Search, Workflow } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -13,7 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowRun = {
@@ -214,6 +234,14 @@ export default function RunsClient({ orgId }: { orgId: string }) {
     }
   }
 
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore clipboard failures
+    }
+  }
+
   const exportCsv = () => {
     const rows = [
       [
@@ -330,18 +358,26 @@ export default function RunsClient({ orgId }: { orgId: string }) {
               <SelectItem value="status">Status A-Z</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search workflow or run ID"
-            className="w-64"
-          />
+          <InputGroup className="w-64">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search workflow or run ID"
+            />
+          </InputGroup>
           </>
         }
         actions={
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
         }
       />
 
@@ -366,9 +402,10 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Actor</TableHeaderCell>
                   <TableHeaderCell>Client</TableHeaderCell>
                   <TableHeaderCell>Error</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((run) => (
                   <TableRow key={run.run_id}>
                     <TableCell>
@@ -392,9 +429,64 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                     </TableCell>
                     <TableCell>{run.client ?? '-'}</TableCell>
                     <TableCell>{run.error_summary ?? '-'}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon-sm" aria-label="Run actions">
+                            <MoreHorizontal />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void copyToClipboard(run.run_id)
+                            }}
+                          >
+                            <Copy />
+                            Copy run ID
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void copyToClipboard(run.workflow_id)
+                            }}
+                          >
+                            <Copy />
+                            Copy workflow ID
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              router.push(
+                                `/dashboard/workspaces/${encodeURIComponent(
+                                  orgId
+                                )}/runs?workflow_id=${encodeURIComponent(run.workflow_id)}`
+                              )
+                            }}
+                          >
+                            <Filter />
+                            Filter to this workflow
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              router.push(
+                                `/dashboard/workspaces/${encodeURIComponent(
+                                  orgId
+                                )}/workflows/${encodeURIComponent(run.workflow_id)}`
+                              )
+                            }}
+                          >
+                            <Workflow />
+                            Open workflow
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

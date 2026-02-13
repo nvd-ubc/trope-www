@@ -2,9 +2,21 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Ban, Copy, Mail, MoreHorizontal } from 'lucide-react'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  InputGroup,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader } from '@/components/dashboard'
@@ -256,32 +268,45 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleCopyLink(invite)}
-                    >
-                      {copiedId === invite.invite_id ? 'Copied' : 'Copy link'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={submitting || !csrfToken}
-                      onClick={() => handleResend(invite)}
-                    >
-                      {resentId === invite.invite_id ? 'Sent' : 'Resend email'}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      disabled={submitting || !csrfToken}
-                      onClick={() => handleRevoke(invite)}
-                    >
-                      Revoke
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" variant="ghost" size="icon-sm" aria-label="Invite actions">
+                          <MoreHorizontal />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onSelect={(event) => {
+                            event.preventDefault()
+                            void handleCopyLink(invite)
+                          }}
+                        >
+                          <Copy />
+                          {copiedId === invite.invite_id ? 'Copied link' : 'Copy link'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={submitting || !csrfToken}
+                          onSelect={(event) => {
+                            event.preventDefault()
+                            void handleResend(invite)
+                          }}
+                        >
+                          <Mail />
+                          {resentId === invite.invite_id ? 'Email sent' : 'Resend email'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          variant="destructive"
+                          disabled={submitting || !csrfToken}
+                          onSelect={(event) => {
+                            event.preventDefault()
+                            void handleRevoke(invite)
+                          }}
+                        >
+                          <Ban />
+                          Revoke invite
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               ))}
@@ -343,37 +368,47 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
             <p className="mt-1 text-sm text-muted-foreground">
               Send a secure link and onboard them to this workspace.
             </p>
-            <form className="mt-4 space-y-3" onSubmit={handleCreateInvite}>
-              <Input
-                placeholder="person@company.com"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-              <Select
-                value={role}
-                onValueChange={setRole}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roleOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                className="w-full"
-                variant="primary"
-                disabled={submitting || !csrfToken}
-                type="submit"
-              >
-                Send invite
-              </Button>
+            <form className="mt-4" onSubmit={handleCreateInvite}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+                  <InputGroup>
+                    <InputGroupInput
+                      id="invite-email"
+                      placeholder="person@company.com"
+                      type="email"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                      required
+                    />
+                  </InputGroup>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="invite-role">Role</FieldLabel>
+                  <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger id="invite-role" className="w-full">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roleOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <ButtonGroup className="w-full">
+                  <Button
+                    className="w-full"
+                    variant="primary"
+                    disabled={submitting || !csrfToken}
+                    type="submit"
+                  >
+                    Send invite
+                  </Button>
+                </ButtonGroup>
+              </FieldGroup>
             </form>
           </Card>
 

@@ -2,9 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Copy, Filter, MoreHorizontal, Search } from 'lucide-react'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -12,7 +25,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type AuditEvent = {
@@ -289,18 +309,26 @@ export default function AuditClient({ orgId }: { orgId: string }) {
               <SelectItem value="action">Action A-Z</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search actions, actors, resources"
-            className="w-72"
-          />
+          <InputGroup className="w-72">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search actions, actors, resources"
+            />
+          </InputGroup>
           </>
         }
         actions={
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
         }
       />
 
@@ -320,9 +348,10 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Resource</TableHeaderCell>
                   <TableHeaderCell>IP</TableHeaderCell>
                   <TableHeaderCell>User agent</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((event, index) => {
                   const resourceLabel = buildResourceLabel(event)
                   const actorLabel = memberMap[event.actor_user_id] ?? event.actor_user_id
@@ -343,25 +372,56 @@ export default function AuditClient({ orgId }: { orgId: string }) {
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-foreground">{actorLabel}</div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-1 h-6 px-2 text-[10px] uppercase tracking-wide"
-                          onClick={() => navigator.clipboard.writeText(event.actor_user_id)}
-                        >
-                          Copy ID
-                        </Button>
                       </TableCell>
                       <TableCell>{resourceLabel ?? '-'}</TableCell>
                       <TableCell>{event.ip ?? '-'}</TableCell>
                       <TableCell className="max-w-[220px] truncate text-xs text-muted-foreground">
                         {event.user_agent ?? '-'}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" aria-label="Audit event actions">
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={(dropdownEvent) => {
+                                dropdownEvent.preventDefault()
+                                void navigator.clipboard.writeText(event.actor_user_id)
+                              }}
+                            >
+                              <Copy />
+                              Copy actor ID
+                            </DropdownMenuItem>
+                            {event.resource_id && (
+                              <DropdownMenuItem
+                                onSelect={(dropdownEvent) => {
+                                  dropdownEvent.preventDefault()
+                                  void navigator.clipboard.writeText(event.resource_id ?? '')
+                                }}
+                              >
+                                <Copy />
+                                Copy resource ID
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onSelect={(dropdownEvent) => {
+                                dropdownEvent.preventDefault()
+                                setQuery(event.actor_user_id)
+                              }}
+                            >
+                              <Filter />
+                              Filter by actor
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

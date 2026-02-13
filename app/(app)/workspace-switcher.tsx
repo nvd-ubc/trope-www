@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import Badge from '@/components/ui/badge'
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 type OrgSummary = {
@@ -72,37 +74,49 @@ export default function WorkspaceSwitcher() {
 
   if (loading || orgs.length === 0) {
     return (
-      <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground md:flex">
-        Workspace
-      </div>
+      <ButtonGroup className="hidden md:flex">
+        <ButtonGroupText className="h-8 rounded-r-none px-3 text-xs font-medium text-muted-foreground">
+          Workspace
+        </ButtonGroupText>
+        <ButtonGroupText className="h-8 rounded-l-none border-l-0 px-3 text-xs text-muted-foreground">
+          Loading...
+        </ButtonGroupText>
+      </ButtonGroup>
     )
   }
 
   return (
-    <div className="hidden items-center gap-2 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground md:flex">
-      <span className="text-muted-foreground">Workspace</span>
-      <Select
-        value={activeOrgId ?? ''}
-        onValueChange={(value) => {
-          if (!value) return
-          router.push(`/dashboard/workspaces/${encodeURIComponent(value)}`)
-        }}
-      >
-        <SelectTrigger size="sm" className="h-7 min-w-[11rem] border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0">
-          <SelectValue placeholder="Select workspace" />
-        </SelectTrigger>
-        <SelectContent>
-          {orgs.map((org) => (
-            <SelectItem key={org.org_id} value={org.org_id}>
-              {org.name || org.org_id}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className="hidden items-center gap-2 md:flex">
+      <ButtonGroup>
+        <ButtonGroupText className="h-8 rounded-r-none px-3 text-xs font-medium text-muted-foreground">
+          Workspace
+        </ButtonGroupText>
+        <Select
+          value={activeOrgId ?? ''}
+          onValueChange={(value) => {
+            if (!value) return
+            router.push(`/dashboard/workspaces/${encodeURIComponent(value)}`)
+          }}
+        >
+          <SelectTrigger
+            size="sm"
+            className="h-8 min-w-[11.5rem] rounded-l-none border-l-0 text-xs shadow-none focus-visible:ring-0"
+          >
+            <SelectValue placeholder="Select workspace" />
+          </SelectTrigger>
+          <SelectContent>
+            {orgs.map((org) => (
+              <SelectItem key={org.org_id} value={org.org_id}>
+                {org.name || org.org_id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </ButtonGroup>
       {activeOrg?.role && (
-        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] tracking-wide uppercase text-muted-foreground">
+        <Badge variant="outline" className="text-[10px] tracking-wide uppercase">
           {activeOrg.role.replace('org_', '')}
-        </span>
+        </Badge>
       )}
     </div>
   )

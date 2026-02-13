@@ -1,13 +1,14 @@
 import { Suspense } from 'react'
+import Button from '@/components/ui/button'
 import Logo from '@/components/ui/logo'
 import { Separator } from '@/components/ui/separator'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import AppBreadcrumb from './app-breadcrumb'
 import AppSidebar from './app-sidebar'
-import SignOutForm from './signout-form'
 import WorkspaceSwitcher from './workspace-switcher'
 import CommandPalette from './command-palette'
 import ProfileCompletionGate from './profile-completion-gate'
+import AppUserMenu from './app-user-menu'
 
 export default function AppLayout({
   children,
@@ -33,11 +34,12 @@ export default function AppLayout({
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="hidden rounded-md border border-border bg-card px-3 py-1 text-xs text-muted-foreground sm:flex">
-                  Press ⌘K to search
-                </div>
+                <Button variant="outline" size="sm" className="hidden h-8 px-2 text-xs text-muted-foreground sm:flex">
+                  Press <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-foreground">⌘K</span>{' '}
+                  to search
+                </Button>
                 <WorkspaceSwitcher />
-                <SignOutForm />
+                <AppUserMenu />
               </div>
             </div>
           </header>

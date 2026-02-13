@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert } from '@/components/ui/alert'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import Input from '@/components/ui/input'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { PageHeader } from '@/components/dashboard'
@@ -336,20 +338,30 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
 
       <Card className="p-6">
         <h2 className="text-base font-semibold text-foreground">Workspace name</h2>
-        <form className="mt-4 space-y-3" onSubmit={handleSave}>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Workspace name"
-            disabled={!isAdmin}
-          />
-          <Button
-            variant="primary"
-            disabled={saving || !csrfToken || !isAdmin}
-            type="submit"
-          >
-            Save changes
-          </Button>
+        <form className="mt-4" onSubmit={handleSave}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="workspace-name">Workspace name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="workspace-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  placeholder="Workspace name"
+                  disabled={!isAdmin}
+                />
+              </InputGroup>
+            </Field>
+            <ButtonGroup>
+              <Button
+                variant="primary"
+                disabled={saving || !csrfToken || !isAdmin}
+                type="submit"
+              >
+                Save changes
+              </Button>
+            </ButtonGroup>
+          </FieldGroup>
         </form>
         {!isAdmin && (
           <p className="mt-3 text-xs text-muted-foreground">Admin access is required to rename a workspace.</p>
@@ -361,59 +373,67 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
         <p className="mt-1 text-sm text-muted-foreground">
           Configure retention and alert cadence for workflow reliability reporting.
         </p>
-        <form className="mt-4 space-y-4" onSubmit={handleSave}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-foreground">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Run retention (days)
-              </span>
-              <Input
-                value={runRetentionDays}
-                onChange={(event) => setRunRetentionDays(event.target.value)}
-                placeholder="e.g. 90"
-                disabled={!isAdmin}
-              />
-            </label>
-            <label className="space-y-2 text-sm text-foreground">
-              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Alert digest hour (UTC)
-              </span>
-              <Select
-                value={alertDigestHour}
-                onValueChange={setAlertDigestHour}
-                disabled={!isAdmin || !alertDigestEnabled}
+        <form className="mt-4" onSubmit={handleSave}>
+          <FieldGroup className="gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="run-retention-days">Run retention (days)</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="run-retention-days"
+                    value={runRetentionDays}
+                    onChange={(event) => setRunRetentionDays(event.target.value)}
+                    placeholder="e.g. 90"
+                    disabled={!isAdmin}
+                  />
+                </InputGroup>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="alert-digest-hour">Alert digest hour (UTC)</FieldLabel>
+                <Select
+                  value={alertDigestHour}
+                  onValueChange={setAlertDigestHour}
+                  disabled={!isAdmin || !alertDigestEnabled}
+                >
+                  <SelectTrigger id="alert-digest-hour" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {digestHourOptions.map((hour) => (
+                      <SelectItem key={hour} value={String(hour)}>
+                        {hour.toString().padStart(2, '0')}:00
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            </div>
+
+            <Field>
+              <label className="flex items-center gap-2 text-sm text-foreground" htmlFor="alert-digest-enabled">
+                <Checkbox
+                  id="alert-digest-enabled"
+                  checked={alertDigestEnabled}
+                  onCheckedChange={(checked) => setAlertDigestEnabled(checked === true)}
+                  disabled={!isAdmin}
+                />
+                Enable daily alert digest
+              </label>
+              <FieldDescription>
+                Send one daily summary of unresolved alerts to workspace admins.
+              </FieldDescription>
+            </Field>
+
+            <ButtonGroup>
+              <Button
+                variant="primary"
+                disabled={saving || !csrfToken || !isAdmin}
+                type="submit"
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {digestHourOptions.map((hour) => (
-                    <SelectItem key={hour} value={String(hour)}>
-                      {hour.toString().padStart(2, '0')}:00
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm text-foreground" htmlFor="alert-digest-enabled">
-            <Checkbox
-              id="alert-digest-enabled"
-              checked={alertDigestEnabled}
-              onCheckedChange={(checked) => setAlertDigestEnabled(checked === true)}
-              disabled={!isAdmin}
-            />
-            Enable daily alert digest
-          </label>
-
-          <Button
-            variant="primary"
-            disabled={saving || !csrfToken || !isAdmin}
-            type="submit"
-          >
-            {saving ? 'Saving…' : 'Save defaults'}
-          </Button>
+                {saving ? 'Saving…' : 'Save defaults'}
+              </Button>
+            </ButtonGroup>
+          </FieldGroup>
         </form>
         {!isAdmin && (
           <p className="mt-3 text-xs text-muted-foreground">Admin access is required to update defaults.</p>
@@ -457,69 +477,67 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
         )}
 
         {isAdmin && (
-          <form className="mt-4 space-y-4" onSubmit={handleGenerateSupportToken}>
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Token duration
-              </label>
-              <Select
-                value={supportTtl}
-                onValueChange={setSupportTtl}
-              >
-                <SelectTrigger className="mt-2 w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 minutes</SelectItem>
-                  <SelectItem value="60">1 hour</SelectItem>
-                  <SelectItem value="240">4 hours</SelectItem>
-                  <SelectItem value="1440">24 hours</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <form className="mt-4" onSubmit={handleGenerateSupportToken}>
+            <FieldGroup className="gap-4">
+              <Field>
+                <FieldLabel htmlFor="support-token-duration">Token duration</FieldLabel>
+                <Select value={supportTtl} onValueChange={setSupportTtl}>
+                  <SelectTrigger id="support-token-duration" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="60">1 hour</SelectItem>
+                    <SelectItem value="240">4 hours</SelectItem>
+                    <SelectItem value="1440">24 hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
 
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Scopes</div>
-              <div className="mt-2 grid gap-2 text-sm text-foreground">
-                {[
-                  { key: 'members', label: 'Members' },
-                  { key: 'invites', label: 'Invites' },
-                  { key: 'audit', label: 'Audit log' },
-                ].map((scope) => (
-                  <label key={scope.key} className="flex items-center gap-2" htmlFor={`support-scope-${scope.key}`}>
-                    <Checkbox
-                      id={`support-scope-${scope.key}`}
-                      checked={supportScopeState[scope.key as keyof typeof supportScopeState]}
-                      onCheckedChange={() => toggleScope(scope.key)}
-                    />
-                    {scope.label}
-                  </label>
-                ))}
-              </div>
-            </div>
+              <Field>
+                <FieldLabel>Scopes</FieldLabel>
+                <div className="grid gap-2 text-sm text-foreground">
+                  {[
+                    { key: 'members', label: 'Members' },
+                    { key: 'invites', label: 'Invites' },
+                    { key: 'audit', label: 'Audit log' },
+                  ].map((scope) => (
+                    <label key={scope.key} className="flex items-center gap-2" htmlFor={`support-scope-${scope.key}`}>
+                      <Checkbox
+                        id={`support-scope-${scope.key}`}
+                        checked={supportScopeState[scope.key as keyof typeof supportScopeState]}
+                        onCheckedChange={() => toggleScope(scope.key)}
+                      />
+                      {scope.label}
+                    </label>
+                  ))}
+                </div>
+              </Field>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground" htmlFor="support-note">
-                Note (optional)
-              </label>
-              <Input
-                id="support-note"
-                className="mt-2"
-                placeholder="Why are you issuing this token?"
-                value={supportNote}
-                onChange={(event) => setSupportNote(event.target.value)}
-              />
-            </div>
+              <Field>
+                <FieldLabel htmlFor="support-note">Note (optional)</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="support-note"
+                    placeholder="Why are you issuing this token?"
+                    value={supportNote}
+                    onChange={(event) => setSupportNote(event.target.value)}
+                  />
+                </InputGroup>
+              </Field>
 
-            {supportError && <Alert variant="destructive">{supportError}</Alert>}
+              {supportError && <Alert variant="destructive">{supportError}</Alert>}
 
-            <Button
-              variant="primary"
-              disabled={supportLoading || !csrfToken}
-              type="submit"
-            >
-              {supportLoading ? 'Generating…' : 'Generate support token'}
-            </Button>
+              <ButtonGroup>
+                <Button
+                  variant="primary"
+                  disabled={supportLoading || !csrfToken}
+                  type="submit"
+                >
+                  {supportLoading ? 'Generating…' : 'Generate support token'}
+                </Button>
+              </ButtonGroup>
+            </FieldGroup>
           </form>
         )}
 
@@ -530,15 +548,17 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
             <div className="mt-2 text-xs text-emerald-700">
               Expires {formatDateTime(supportExpiresAt)} · Scopes {supportScopes.join(', ') || 'members, invites, audit'}
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="mt-3 border-emerald-300 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900"
-              onClick={handleCopySupportToken}
-            >
-              {supportCopied ? 'Copied' : 'Copy token'}
-            </Button>
+            <ButtonGroup className="mt-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="border-emerald-300 text-emerald-800 hover:bg-emerald-100 hover:text-emerald-900"
+                onClick={handleCopySupportToken}
+              >
+                {supportCopied ? 'Copied' : 'Copy token'}
+              </Button>
+            </ButtonGroup>
           </div>
         )}
       </Card>

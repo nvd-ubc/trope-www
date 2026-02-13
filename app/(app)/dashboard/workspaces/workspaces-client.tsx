@@ -6,8 +6,10 @@ import Link from 'next/link'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { notifyOrgListUpdated } from '../../org-list-cache'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
   EmptyState,
   ErrorNotice,
@@ -207,7 +209,7 @@ export default function WorkspacesClient() {
                     </div>
                     <div className="text-xs text-muted-foreground">Created {formatDate(org.created_at)}</div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <ButtonGroup>
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/dashboard/workspaces/${encodeURIComponent(org.org_id)}`}>Open</Link>
                     </Button>
@@ -219,7 +221,7 @@ export default function WorkspacesClient() {
                     >
                       Make default
                     </Button>
-                  </div>
+                  </ButtonGroup>
                 </div>
               )
             })}
@@ -232,15 +234,25 @@ export default function WorkspacesClient() {
           title="Create a workspace"
           description="Workspaces let you invite teammates and share workflows."
         >
-          <form className="space-y-3" onSubmit={handleCreate}>
-            <Input
-              placeholder="Workspace name"
-              value={createName}
-              onChange={(event) => setCreateName(event.target.value)}
-            />
-            <Button className="w-full" disabled={submitting || !csrfToken} type="submit">
-              Create workspace
-            </Button>
+          <form onSubmit={handleCreate}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="create-workspace-name">Workspace name</FieldLabel>
+                <InputGroup>
+                  <InputGroupInput
+                    id="create-workspace-name"
+                    placeholder="Workspace name"
+                    value={createName}
+                    onChange={(event) => setCreateName(event.target.value)}
+                  />
+                </InputGroup>
+              </Field>
+              <ButtonGroup className="w-full">
+                <Button className="w-full" disabled={submitting || !csrfToken} type="submit">
+                  Create workspace
+                </Button>
+              </ButtonGroup>
+            </FieldGroup>
           </form>
         </SectionCard>
 

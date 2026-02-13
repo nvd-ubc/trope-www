@@ -3,11 +3,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Copy, ExternalLink, MoreHorizontal, Search } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -15,7 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
@@ -177,6 +197,14 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
       await navigator.clipboard.writeText(requestId)
     } catch {
       // ignore
+    }
+  }
+
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore clipboard failures
     }
   }
 
@@ -589,18 +617,26 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
               <SelectItem value="health">Health</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search by title or ID"
-            className="w-64"
-          />
+          <InputGroup className="w-64">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search by title or ID"
+            />
+          </InputGroup>
           </>
         }
         actions={
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
         }
       />
 
@@ -664,22 +700,24 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                   </SelectContent>
                 </Select>
                 {bulkCadence === 'custom' && (
-                  <Input
-                    value={bulkCadenceDays}
-                    onChange={(event) => setBulkCadenceDays(event.target.value)}
-                    placeholder="Days"
-                    className="w-24"
-                  />
+                  <InputGroup className="w-24">
+                    <InputGroupInput
+                      value={bulkCadenceDays}
+                      onChange={(event) => setBulkCadenceDays(event.target.value)}
+                      placeholder="Days"
+                    />
+                  </InputGroup>
                 )}
               </>
             )}
             {bulkAction === 'review' && (
-              <Input
-                value={bulkReviewDays}
-                onChange={(event) => setBulkReviewDays(event.target.value)}
-                placeholder="Review days"
-                className="w-28"
-              />
+              <InputGroup className="w-28">
+                <InputGroupInput
+                  value={bulkReviewDays}
+                  onChange={(event) => setBulkReviewDays(event.target.value)}
+                  placeholder="Review days"
+                />
+              </InputGroup>
             )}
             <Button
               variant="primary"
@@ -704,7 +742,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                     variant="outline"
                     size="sm"
                     className="h-6 px-2 text-[10px] uppercase tracking-wide"
-                    onClick={() => navigator.clipboard.writeText(bulkRequestId)}
+                    onClick={() => void copyToClipboard(bulkRequestId)}
                   >
                     Copy
                   </Button>
@@ -752,9 +790,10 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Review due</TableHeaderCell>
                   <TableHeaderCell>Last success</TableHeaderCell>
                   <TableHeaderCell>Runs (7d)</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((workflow) => {
                   const latest = latestVersions[workflow.workflow_id]
                   const runStats = workflow.run_stats_7d
@@ -839,10 +878,40 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                         <div className="text-sm text-foreground">{runStats?.total ?? '-'}</div>
                         <div className="text-xs text-muted-foreground">Success {successRate}</div>
                       </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon-sm" aria-label="Workflow actions">
+                              <MoreHorizontal />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void copyToClipboard(workflow.workflow_id)
+                              }}
+                            >
+                              <Copy />
+                              Copy workflow ID
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                                  workflow.workflow_id
+                                )}`}
+                              >
+                                <ExternalLink />
+                                Open workflow
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
                     </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

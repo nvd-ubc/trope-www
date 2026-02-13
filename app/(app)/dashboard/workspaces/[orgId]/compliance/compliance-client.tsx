@@ -1,12 +1,24 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { ExternalLink, MoreHorizontal, Search, Users } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import {
   Select,
   SelectContent,
@@ -14,7 +26,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type OrgProfile = {
@@ -460,19 +479,27 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                 </SelectContent>
               </Select>
               {selectedWorkflow && (
-                <Input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search members"
-                  className="w-64"
-                />
+                <InputGroup className="w-64">
+                  <InputGroupAddon>
+                    <InputGroupText>
+                      <Search />
+                    </InputGroupText>
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Search members"
+                  />
+                </InputGroup>
               )}
               </div>
             }
             actions={
-              <Button variant="outline" size="sm" onClick={exportCsv}>
-                Export CSV
-              </Button>
+              <ButtonGroup>
+                <Button variant="outline" size="sm" onClick={exportCsv}>
+                  Export CSV
+                </Button>
+              </ButtonGroup>
             }
           />
 
@@ -501,7 +528,7 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                       <TableHeaderCell>Last success</TableHeaderCell>
                     </TableRow>
                   </TableHead>
-                  <tbody>
+                  <TableBody>
                     {memberRows.map((row) => (
                       <TableRow key={row.member.user_id}>
                         <TableCell>
@@ -521,7 +548,7 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                         <TableCell>{formatDateTime(row.lastSuccessAt)}</TableCell>
                       </TableRow>
                     ))}
-                  </tbody>
+                  </TableBody>
                 </Table>
               </div>
             </Card>
@@ -535,10 +562,10 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                       <TableHeaderCell>Status</TableHeaderCell>
                       <TableHeaderCell>Completion</TableHeaderCell>
                       <TableHeaderCell>Latest success</TableHeaderCell>
-                      <TableHeaderCell className="text-right">Action</TableHeaderCell>
+                      <TableHeaderCell className="w-[3rem] text-right">Action</TableHeaderCell>
                     </TableRow>
                   </TableHead>
-                  <tbody>
+                  <TableBody>
                     {summaryRows.map((row) => (
                       <TableRow key={row.workflow.workflow_id}>
                         <TableCell>
@@ -559,19 +586,41 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
                         </TableCell>
                         <TableCell>{formatDate(row.latestSuccessAt)}</TableCell>
                         <TableCell className="text-right">
-                          <Link
-                            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-                              row.workflow.workflow_id
-                            )}`}
-                          >
-                            <Button variant="ghost" size="sm">
-                              View workflow
-                            </Button>
-                          </Link>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon-sm" aria-label="Workflow actions">
+                                <MoreHorizontal />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  setSelectedWorkflowId(row.workflow.workflow_id)
+                                }}
+                              >
+                                <Users />
+                                View completion by member
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  router.push(
+                                    `/dashboard/workspaces/${encodeURIComponent(
+                                      orgId
+                                    )}/workflows/${encodeURIComponent(row.workflow.workflow_id)}`
+                                  )
+                                }}
+                              >
+                                <ExternalLink />
+                                Open workflow
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                     ))}
-                  </tbody>
+                  </TableBody>
                 </Table>
               </div>
             </Card>

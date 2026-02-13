@@ -6,9 +6,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { safeInternalPath } from '@/lib/profile-identity'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
 import { Alert } from '@/components/ui/alert'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
   ErrorNotice,
   PageHeader,
@@ -220,34 +222,36 @@ export default function AccountClient() {
               {saveMessage}
             </Alert>
           )}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground" htmlFor="account-first-name">
-                First Name
-              </label>
-              <Input
-                id="account-first-name"
-                value={firstName}
-                onChange={(event) => setFirstName(event.target.value)}
-                placeholder="First name"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground" htmlFor="account-last-name">
-                Last Name
-              </label>
-              <Input
-                id="account-last-name"
-                value={lastName}
-                onChange={(event) => setLastName(event.target.value)}
-                placeholder="Last name"
-              />
-            </div>
-          </div>
+          <FieldGroup className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="account-first-name">First Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="account-first-name"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  placeholder="First name"
+                />
+              </InputGroup>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="account-last-name">Last Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
+                  id="account-last-name"
+                  value={lastName}
+                  onChange={(event) => setLastName(event.target.value)}
+                  placeholder="Last name"
+                />
+              </InputGroup>
+            </Field>
+          </FieldGroup>
           <div className="flex flex-wrap items-center gap-3">
-            <Button disabled={savePending || csrfLoading || !csrfToken || !isDirty} onClick={submitProfile}>
-              {savePending ? 'Saving…' : 'Save profile'}
-            </Button>
+            <ButtonGroup>
+              <Button disabled={savePending || csrfLoading || !csrfToken || !isDirty} onClick={submitProfile}>
+                {savePending ? 'Saving…' : 'Save profile'}
+              </Button>
+            </ButtonGroup>
             {saveRequestId && (
               <span className="text-xs text-muted-foreground">Request ID {saveRequestId}</span>
             )}
