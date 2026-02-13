@@ -1301,17 +1301,17 @@ export default function WorkflowDetailClient({
                 variant="outline"
                 size="sm"
                 onClick={() => setSelectedVersionId(version.version_id)}
-                className={`h-auto w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                className={`h-auto w-full rounded-xl border px-4 py-3 text-sm transition ${
                   selectedVersionId === version.version_id
                     ? 'border-[color:var(--trope-accent)] bg-[color:var(--trope-accent)]/5'
                     : 'border-border bg-card hover:border-border/80'
                 }`}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="max-w-[18rem] truncate font-semibold text-foreground">Release {index + 1}</div>
+                <div className="flex flex-wrap items-center justify-center gap-2 text-center">
+                  <div className="font-semibold text-foreground">Release {index + 1}</div>
                   <div className="text-xs text-muted-foreground">{formatDate(version.created_at)}</div>
                 </div>
-                <div className="mt-1 text-xs text-muted-foreground">
+                <div className="mt-1 text-center text-xs text-muted-foreground">
                   {typeof version.steps_count === 'number' ? `${version.steps_count} steps` : 'Steps unknown'}
                   {version.created_by
                     ? ` · Published by ${memberMap[version.created_by] ?? 'team member'}`
