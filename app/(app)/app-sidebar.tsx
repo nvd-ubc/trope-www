@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import {
   BellRing,
+  Cog,
   Gauge,
   ListChecks,
   ShieldCheck,
-  UserCog,
+  User,
   Users,
   Workflow,
 } from 'lucide-react'
@@ -92,7 +93,7 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Settings">
                   <WorkspaceNavLink path="settings">
-                    <UserCog />
+                    <Cog />
                     <span>Settings</span>
                   </WorkspaceNavLink>
                 </SidebarMenuButton>
@@ -101,7 +102,7 @@ export default function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Account">
                   <Link href="/dashboard/account">
-                    <UserCog />
+                    <User />
                     <span>Account</span>
                   </Link>
                 </SidebarMenuButton>
