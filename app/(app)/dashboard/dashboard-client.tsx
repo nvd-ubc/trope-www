@@ -173,6 +173,7 @@ export default function DashboardClient() {
       <SectionCard
         title="Account"
         description="Workspace defaults and profile context used across Trope Cloud."
+        contentClassName="pt-2"
         action={
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/workspaces">Manage workspaces</Link>
@@ -194,6 +195,7 @@ export default function DashboardClient() {
       <SectionCard
         title="Next steps"
         description="Keep momentum by capturing workflows and inviting teammates."
+        contentClassName="pt-2"
       >
         <div className="grid gap-2 text-sm">
           <Button asChild variant="outline" className="h-12 justify-between">
@@ -247,7 +249,11 @@ export default function DashboardClient() {
         </div>
       </SectionCard>
 
-      <SectionCard title="Usage" description={`Period: ${usage.period ?? 'Current month'}`}>
+      <SectionCard
+        title="Usage"
+        description={`Period: ${usage.period ?? 'Current month'}`}
+        contentClassName="pt-2"
+      >
         <div className="grid gap-4 lg:grid-cols-3">
           <MetricCard label="Prompt tokens" value={usage.prompt_tokens} />
           <MetricCard label="Completion tokens" value={usage.completion_tokens} />
