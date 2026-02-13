@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { type ComponentProps, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { loadOrgList, subscribeOrgListUpdates } from './org-list-cache'
@@ -10,15 +10,11 @@ const parseActiveOrgId = (pathname: string) => {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-export default function WorkspaceNavLink({
-  path,
-  className,
-  children,
-}: {
+type WorkspaceNavLinkProps = Omit<ComponentProps<typeof Link>, 'href'> & {
   path: string
-  className?: string
-  children: React.ReactNode
-}) {
+}
+
+export default function WorkspaceNavLink({ path, ...props }: WorkspaceNavLinkProps) {
   const pathname = usePathname()
   const [defaultOrgId, setDefaultOrgId] = useState<string | null>(null)
 
@@ -50,8 +46,6 @@ export default function WorkspaceNavLink({
     : '/dashboard/workspaces'
 
   return (
-    <Link className={className} href={href}>
-      {children}
-    </Link>
+    <Link href={href} {...props} />
   )
 }

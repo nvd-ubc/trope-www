@@ -5,14 +5,31 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { ErrorNotice, PageHeader } from '@/components/dashboard'
 import {
   buildSaveFingerprint,
   createDraftStep,
   getRadarPercent,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
+import {
+  formatCaptureTimestamp,
+  resolveStepImageVariant,
+  shouldRenderStepRadar,
+  type GuideMediaStepImage as StepImage,
+} from '@/lib/guide-media'
 
 type ResolveResponse = {
   org_id: string
@@ -54,22 +71,6 @@ type WorkflowDetailResponse = {
 
 type VersionsResponse = {
   versions: WorkflowVersionSummary[]
-}
-
-type Radar = {
-  x: number
-  y: number
-  coordinate_space: string
-  confidence?: number | null
-  reason_code?: string | null
-}
-
-type StepImage = {
-  step_id: string
-  content_type?: string | null
-  width?: number | null
-  height?: number | null
-  radar?: Radar | null
 }
 
 type GuideMedia = {
@@ -218,16 +219,53 @@ const StepImageCard = ({
     })
     .filter((value): value is string => Boolean(value))
 
+  const cardImage = useMemo(
+    () =>
+      image
+        ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
+        : null,
+    [image]
+  )
+  const fullImage = useMemo(
+    () =>
+      image
+        ? resolveStepImageVariant(image, { surface: 'detail', requestedVariant: 'full' })
+        : null,
+    [image]
+  )
+
   const imgSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
         workflowId
-      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(step.id)}`
+      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
+        step.id
+      )}?variant=preview`
+    : null
+  const openImageHref = image
+    ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+        workflowId
+      )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
+        step.id
+      )}?variant=full`
     : null
 
   const radar = image?.radar ?? null
-  const width = image?.width ?? null
-  const height = image?.height ?? null
-  const radarPercent = useMemo(() => getRadarPercent(radar, width, height), [height, radar, width])
+  const width = cardImage?.width ?? image?.width ?? null
+  const height = cardImage?.height ?? image?.height ?? null
+  const radarPercent = useMemo(
+    () =>
+      shouldRenderStepRadar({
+        step,
+        radar,
+        width,
+        height,
+      })
+        ? getRadarPercent(radar, width, height)
+        : null,
+    [height, radar, step, width]
+  )
+  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
+  const hasImage = Boolean(imgSrc && (cardImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url))
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -235,12 +273,14 @@ const StepImageCard = ({
         <div>
           <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
           {isEditing ? (
-            <input
-              value={step.title}
-              onChange={(event) => onStepTitleChange(event.target.value)}
-              className="mt-1 w-full rounded-lg border border-slate-300 px-2 py-1 text-base font-semibold text-slate-900 focus:border-[color:var(--trope-accent)] focus:outline-none"
-              placeholder={`Step ${index + 1}`}
-            />
+            <InputGroup className="mt-1">
+              <InputGroupInput
+                value={step.title}
+                onChange={(event) => onStepTitleChange(event.target.value)}
+                className="text-base font-semibold text-slate-900"
+                placeholder={`Step ${index + 1}`}
+              />
+            </InputGroup>
           ) : (
             <div className="text-base font-semibold text-slate-900">{step.title}</div>
           )}
@@ -251,8 +291,13 @@ const StepImageCard = ({
               {kindLabel}
             </Badge>
           )}
+          {captureTimestamp && (
+            <Badge variant="neutral" className="text-[10px]">
+              t={captureTimestamp}
+            </Badge>
+          )}
           {isEditing && (
-            <div className="flex items-center gap-1">
+            <ButtonGroup>
               <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
                 Up
               </Button>
@@ -265,24 +310,24 @@ const StepImageCard = ({
               <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
                 Delete
               </Button>
-            </div>
+            </ButtonGroup>
           )}
         </div>
       </div>
 
-      {imgSrc && (
+      {hasImage && imgSrc && openImageHref && (
         <a
-          href={imgSrc}
+          href={openImageHref}
           target="_blank"
           rel="noreferrer"
           className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
         >
-          <div className="relative">
+          <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
             <img
               src={imgSrc}
               alt={step.title}
               loading="lazy"
-              className="block h-auto w-full transition group-hover:scale-[1.01]"
+              className="block h-auto max-h-[27rem] w-auto max-w-full transition group-hover:scale-[1.01]"
             />
             {radarPercent && (
               <div className="pointer-events-none absolute inset-0">
@@ -301,7 +346,7 @@ const StepImageCard = ({
         </a>
       )}
 
-      {!imgSrc && (
+      {!hasImage && (
         <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
           No screenshot available for this step.
         </div>
@@ -314,10 +359,10 @@ const StepImageCard = ({
       )}
 
       {isEditing ? (
-        <textarea
+        <Textarea
           value={step.instructions}
           onChange={(event) => onStepInstructionChange(event.target.value)}
-          className="mt-4 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-[color:var(--trope-accent)] focus:outline-none"
+          className="mt-4 text-sm text-slate-700"
           rows={3}
           placeholder="Describe the action clearly."
         />
@@ -397,6 +442,16 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         }
         if (!active) return
         setOrgId(payload.org_id)
+
+        const params = new URLSearchParams(window.location.search)
+        const currentOrgId = (params.get('orgId') ?? '').trim()
+        if (currentOrgId !== payload.org_id) {
+          params.set('orgId', payload.org_id)
+          const query = params.toString()
+          router.replace(
+            `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide${query ? `?${query}` : ''}`
+          )
+        }
       } catch (err) {
         if (!active) return
         setResolveError(err instanceof Error ? err.message : 'Unable to resolve workflow.')
@@ -408,7 +463,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return () => {
       active = false
     }
-  }, [workflowId])
+  }, [router, workflowId])
 
   useEffect(() => {
     if (!orgId) return
@@ -798,99 +853,85 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
   if (resolveError || !orgId) {
     return (
-      <div className="flex items-center justify-center">
-        <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-          {resolveError ?? 'Workflow not found or you do not have access.'}
-          {requestId && <div className="mt-2 text-xs text-rose-600">Request ID: {requestId}</div>}
-        </Card>
-      </div>
+      <ErrorNotice
+        title="Unable to load workflow guide"
+        message={resolveError ?? 'Workflow not found or you do not have access.'}
+        requestId={requestId}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="text-xs uppercase tracking-wide text-slate-400">
-            {isEditing ? 'Workflow guide editor' : 'Workflow guide'}
-          </div>
-          <h1 className="text-2xl font-semibold text-slate-900">{workflow?.title ?? workflowId}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs text-slate-500">
-              Workspace: {orgId}
-            </span>
-            <Link
-              href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`}
-              className="text-[color:var(--trope-accent)] hover:underline"
+      <PageHeader
+        eyebrow={isEditing ? 'Workflow guide editor' : 'Workflow guide'}
+        title={workflow?.title ?? workflowId}
+        description={`Workspace: ${orgId}`}
+        actions={
+          <ButtonGroup>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(window.location.href)
+                } catch {
+                  // ignore
+                }
+              }}
             >
-              View workflow
-            </Link>
-            {isEditing && draftIsDirty && (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs text-amber-700">
-                Unsaved edits
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(window.location.href)
-              } catch {
-                // ignore
-              }
-            }}
-          >
-            Copy link
-          </Button>
-          <Link
-            href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`}
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-slate-300 hover:text-slate-900"
-          >
-            Share
-          </Link>
-          {isAdmin && !isEditing && spec && (
-            <Button variant="primary" size="sm" onClick={handleStartEditing}>
-              Edit
+              Copy link
             </Button>
-          )}
-          {isAdmin && isEditing && (
-            <>
-              <Button variant="outline" size="sm" onClick={handleDoneEditing} disabled={saving}>
-                Done editing
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`}>
+                View workflow
+              </Link>
+            </Button>
+            {isAdmin && !isEditing && spec && (
+              <Button variant="primary" size="sm" onClick={handleStartEditing}>
+                Edit
               </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleSaveEdits}
-                disabled={saving || !draftIsDirty}
-              >
-                {saving ? 'Saving…' : 'Save as new version'}
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
+            )}
+            {isAdmin && isEditing && (
+              <>
+                <Button variant="outline" size="sm" onClick={handleDoneEditing} disabled={saving}>
+                  Done editing
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSaveEdits}
+                  disabled={saving || !draftIsDirty}
+                >
+                  {saving ? 'Saving…' : 'Save as new version'}
+                </Button>
+              </>
+            )}
+          </ButtonGroup>
+        }
+        badges={
+          isEditing && draftIsDirty ? (
+            <Badge variant="warning">Unsaved edits</Badge>
+          ) : undefined
+        }
+      />
 
       <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="text-sm font-semibold text-slate-900">Version</div>
           <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={selectedVersionId ?? ''}
-              onChange={(event) => onSelectVersion(event.target.value)}
-              className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm"
-            >
-              {versions.map((version) => (
-                <option key={version.version_id} value={version.version_id}>
-                  {version.version_id} ({formatDate(version.created_at)})
-                </option>
-              ))}
-            </select>
+            <Select value={selectedVersionId ?? undefined} onValueChange={onSelectVersion}>
+              <SelectTrigger className="h-9 min-w-[17rem] bg-white text-sm text-slate-800 shadow-sm">
+                <SelectValue placeholder="Select a version" />
+              </SelectTrigger>
+              <SelectContent>
+                {versions.map((version) => (
+                  <SelectItem key={version.version_id} value={version.version_id}>
+                    {version.version_id} ({formatDate(version.created_at)})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {selectedVersionId && (
               <span className="text-xs text-slate-500">
                 {versions.find((version) => version.version_id === selectedVersionId)?.steps_count
@@ -909,10 +950,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       )}
 
       {saveError && (
-        <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-          {saveError}
-          {saveRequestId && <div className="mt-2 text-xs text-rose-600">Request ID: {saveRequestId}</div>}
-        </Card>
+        <ErrorNotice title="Unable to save edits" message={saveError} requestId={saveRequestId} />
       )}
 
       {saveMessage && (

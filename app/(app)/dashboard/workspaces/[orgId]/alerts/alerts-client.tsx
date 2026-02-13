@@ -1,14 +1,42 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { BellRing, CheckCheck, Copy, MoreHorizontal, Search, UserMinus, UserPlus } from 'lucide-react'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 import Card from '@/components/ui/card'
-import Input from '@/components/ui/input'
-import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupText,
+} from '@/components/ui/input-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowAlert = {
   alert_id: string
@@ -290,101 +318,103 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
     }
   }
 
+  const copyToClipboard = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+    } catch {
+      // ignore clipboard failures
+    }
+  }
+
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading alerts…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading alerts…</Card>
   }
 
   if (error && alerts.length === 0) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load alerts"
+        message={error}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Alerts</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Resolve staleness, failures, and governance risks.
-          </p>
-        </div>
-        <Link
-          href={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
-          className="text-sm font-medium text-[color:var(--trope-accent)] hover:text-[color:var(--trope-accent)]/80"
-        >
-          Back to workspace
-        </Link>
-      </div>
+      <PageHeader
+        title="Alerts"
+        description="Resolve staleness, failures, and governance risks."
+        backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+        backLabel="Back to workspace"
+      />
 
       {error && (
-        <Card className="border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-          {requestId && (
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-              <span>Request ID: {requestId}</span>
-              <button
-                onClick={copyRequestId}
-                className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-              >
-                Copy
-              </button>
-            </div>
-          )}
-        </Card>
+        <ErrorNotice
+          title="Alerts data is partially unavailable"
+          message={error}
+          requestId={requestId}
+          onCopyRequestId={() => copyRequestId()}
+        />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-sm text-slate-500">{filtered.length} alerts</div>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="open">Open</option>
-            <option value="snoozed">Snoozed</option>
-            <option value="resolved">Resolved</option>
-            <option value="all">All</option>
-          </select>
-          <select
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs text-slate-600"
-          >
-            <option value="triggered_desc">Most recent</option>
-            <option value="severity">Severity</option>
-            <option value="status">Status</option>
-          </select>
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search alerts"
-            className="w-64"
-          />
-          <Button variant="outline" size="sm" onClick={exportCsv}>
-            Export CSV
-          </Button>
-        </div>
-      </div>
+      <DataToolbar
+        summary={`${filtered.length} alerts`}
+        filters={
+          <>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger size="sm" className="min-w-[8.5rem]">
+              <SelectValue placeholder="Open" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="snoozed">Snoozed</SelectItem>
+              <SelectItem value="resolved">Resolved</SelectItem>
+              <SelectItem value="all">All</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger size="sm" className="min-w-[10rem]">
+              <SelectValue placeholder="Most recent" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="triggered_desc">Most recent</SelectItem>
+              <SelectItem value="severity">Severity</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+            </SelectContent>
+          </Select>
+          <InputGroup className="w-64">
+            <InputGroupAddon>
+              <InputGroupText>
+                <Search />
+              </InputGroupText>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search alerts"
+            />
+          </InputGroup>
+          </>
+        }
+        actions={
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              Export CSV
+            </Button>
+          </ButtonGroup>
+        }
+      />
 
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">
-            No alerts for this filter. You are in the clear.
+          <div className="p-6">
+            <EmptyState
+              title="No alerts for this filter"
+              description="You are in the clear."
+              className="py-8"
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -396,26 +426,26 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Severity</TableHeaderCell>
                   <TableHeaderCell>Status</TableHeaderCell>
                   <TableHeaderCell>Triggered</TableHeaderCell>
-                  <TableHeaderCell className="text-right">Actions</TableHeaderCell>
+                  <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
-              <tbody>
+              <TableBody>
                 {filtered.map((alert) => (
                   <TableRow key={alert.alert_id}>
                     <TableCell>
-                      <div className="text-sm font-semibold text-slate-900">{alert.title}</div>
-                      <div className="text-xs text-slate-500">{alert.description}</div>
+                      <div className="text-sm font-semibold text-foreground">{alert.title}</div>
+                      <div className="text-xs text-muted-foreground">{alert.description}</div>
                       {alert.assigned_to && (
-                        <div className="mt-2 text-xs text-slate-500">
+                        <div className="mt-2 text-xs text-muted-foreground">
                           Assigned to {memberMap[alert.assigned_to] ?? alert.assigned_to}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm text-slate-700">
+                      <div className="text-sm text-foreground">
                         {workflowMap[alert.workflow_id] ?? alert.workflow_id}
                       </div>
-                      <div className="text-xs text-slate-400">{alert.workflow_id}</div>
+                      <div className="text-xs text-muted-foreground">{alert.workflow_id}</div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={severityVariant(alert.severity)}>{alert.severity}</Badge>
@@ -426,72 +456,95 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
                     <TableCell>
                       {formatDateTime(alert.last_triggered_at)}
                       {alert.snoozed_until && (
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-muted-foreground">
                           Snoozed until {formatDateTime(alert.snoozed_until)}
                         </div>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {currentUserId && alert.assigned_to !== currentUserId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() =>
-                              postAlertAction(alert.alert_id, 'assign', {
-                                assigned_to: currentUserId,
-                                note: currentUserEmail ? `Assigned to ${currentUserEmail}` : undefined,
-                              })
-                            }
-                          >
-                            Assign to me
-                          </Button>
-                        )}
-                        {alert.assigned_to && currentUserId === alert.assigned_to && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon-sm"
+                            aria-label="Alert actions"
                             disabled={pendingAction !== null}
-                            onClick={() =>
-                              postAlertAction(alert.alert_id, 'assign', { assigned_to: '' })
-                            }
                           >
-                            Clear
+                            <MoreHorizontal />
                           </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={pendingAction !== null}
-                          onClick={() => postAlertAction(alert.alert_id, 'snooze', { snooze_hours: 24 })}
-                        >
-                          Snooze
-                        </Button>
-                        {alert.status !== 'resolved' ? (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() => postAlertAction(alert.alert_id, 'resolve')}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void copyToClipboard(alert.alert_id)
+                            }}
                           >
-                            Resolve
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            disabled={pendingAction !== null}
-                            onClick={() => postAlertAction(alert.alert_id, 'reopen')}
+                            <Copy />
+                            Copy alert ID
+                          </DropdownMenuItem>
+                          {currentUserId && alert.assigned_to !== currentUserId && (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'assign', {
+                                  assigned_to: currentUserId,
+                                  note: currentUserEmail ? `Assigned to ${currentUserEmail}` : undefined,
+                                })
+                              }}
+                            >
+                              <UserPlus />
+                              Assign to me
+                            </DropdownMenuItem>
+                          )}
+                          {alert.assigned_to && currentUserId === alert.assigned_to && (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'assign', { assigned_to: '' })
+                              }}
+                            >
+                              <UserMinus />
+                              Clear assignee
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onSelect={(event) => {
+                              event.preventDefault()
+                              void postAlertAction(alert.alert_id, 'snooze', { snooze_hours: 24 })
+                            }}
                           >
-                            Reopen
-                          </Button>
-                        )}
-                      </div>
+                            <BellRing />
+                            Snooze 24 hours
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {alert.status !== 'resolved' ? (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'resolve')
+                              }}
+                            >
+                              <CheckCheck />
+                              Resolve alert
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault()
+                                void postAlertAction(alert.alert_id, 'reopen')
+                              }}
+                            >
+                              <BellRing />
+                              Reopen alert
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           </div>
         )}

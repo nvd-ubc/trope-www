@@ -6,6 +6,12 @@ import { useRouter } from 'next/navigation'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
+import {
+  ErrorNotice,
+  MetricCard,
+  PageHeader,
+  SectionCard,
+} from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -207,25 +213,17 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   }, [alerts, workflows])
 
   if (loading) {
-    return <Card className="p-6 text-sm text-slate-600">Loading workspace…</Card>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading workspace…</Card>
   }
 
   if (error || !org || !membership) {
     return (
-      <Card className="border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error ?? 'Unable to load workspace.'}
-        {requestId && (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-rose-600">
-            <span>Request ID: {requestId}</span>
-            <button
-              onClick={copyRequestId}
-              className="rounded-full border border-rose-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-rose-600"
-            >
-              Copy
-            </button>
-          </div>
-        )}
-      </Card>
+      <ErrorNotice
+        title="Unable to load workspace"
+        message={error ?? 'Unable to load workspace.'}
+        requestId={requestId}
+        onCopyRequestId={() => copyRequestId()}
+      />
     )
   }
 
@@ -233,151 +231,131 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{org.name || org.org_id}</h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Created {formatDate(org.created_at)} · Role {membership.role.replace('org_', '')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}>
-            <Button variant="outline" size="sm">Workflows</Button>
-          </Link>
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`}>
-            <Button variant="outline" size="sm">Runs</Button>
-          </Link>
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/alerts`}>
-            <Button variant="outline" size="sm">Alerts</Button>
-          </Link>
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/compliance`}>
-            <Button variant="outline" size="sm">Compliance</Button>
-          </Link>
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/members`}>
-            <Button variant="outline" size="sm">Members</Button>
-          </Link>
-          {canViewAudit && (
-            <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/audit`}>
-              <Button variant="outline" size="sm">Audit</Button>
-            </Link>
-          )}
-          <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`}>
-            <Button variant="outline" size="sm">Settings</Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={org.name || org.org_id}
+        description={`Created ${formatDate(org.created_at)} · Role ${membership.role.replace('org_', '')}`}
+        actions={
+          <>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}>Workflows</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`}>Runs</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/alerts`}>Alerts</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/compliance`}>Compliance</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/members`}>Members</Link>
+            </Button>
+            {canViewAudit && (
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/audit`}>Audit</Link>
+              </Button>
+            )}
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`}>Settings</Link>
+            </Button>
+          </>
+        }
+      />
 
-      <Card className="p-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-slate-900">Getting started</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              Capture a workflow, invite teammates, and track the first guided runs.
-            </p>
-          </div>
-          <Link href="/download">
-            <Button size="sm">Download desktop app</Button>
-          </Link>
-        </div>
-        <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+      <SectionCard
+        title="Getting started"
+        description="Capture a workflow, invite teammates, and track the first guided runs."
+        action={
+          <Button asChild size="sm">
+            <Link href="/download">Download desktop app</Link>
+          </Button>
+        }
+      >
+        <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
           <Link
             href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`}
-            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+            className="rounded-lg border border-border bg-muted/40 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             Record your first workflow
           </Link>
           <Link
             href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/members`}
-            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+            className="rounded-lg border border-border bg-muted/40 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             Invite teammates
           </Link>
           <Link
             href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`}
-            className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3"
+            className="rounded-lg border border-border bg-muted/40 px-4 py-3 transition-colors hover:bg-muted/60"
           >
             Review run history
           </Link>
         </div>
-      </Card>
+      </SectionCard>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Workflow library</h2>
-            <Badge variant="info">{summary.total}</Badge>
-          </div>
-          <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Published</div>
-              <div className="text-slate-900">{summary.published}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Drafts</div>
-              <div className="text-slate-900">{summary.draft}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Unowned</div>
-              <div className="text-slate-900">{summary.unowned}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Required</div>
-              <div className="text-slate-900">{summary.requiredCount}</div>
-            </div>
+        <SectionCard
+          title="Workflow library"
+          action={<Badge variant="info">{summary.total}</Badge>}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <MetricCard label="Published" value={summary.published} />
+            <MetricCard label="Drafts" value={summary.draft} />
+            <MetricCard label="Unowned" value={summary.unowned} />
+            <MetricCard label="Required" value={summary.requiredCount} />
           </div>
           {summary.requiredCount > 0 && (
-            <div className="mt-4">
-              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/compliance`}>
-                <Button variant="ghost" size="sm">View compliance</Button>
-              </Link>
-            </div>
+            <Button asChild variant="ghost" size="sm">
+              <Link href={`/dashboard/workspaces/${encodeURIComponent(orgId)}/compliance`}>View compliance</Link>
+            </Button>
           )}
-        </Card>
+        </SectionCard>
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Operational health</h2>
+            <h2 className="text-base font-semibold text-foreground">Operational health</h2>
             {summary.failing > 0 ? (
               <Badge variant="danger">{summary.failing} failing</Badge>
             ) : (
               <Badge variant="success">Healthy</Badge>
             )}
           </div>
-          <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Warning</div>
-              <div className="text-slate-900">{summary.warning}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Warning</div>
+              <div className="text-foreground">{summary.warning}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Runs (7d)</div>
-              <div className="text-slate-900">{summary.totalRuns}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Runs (7d)</div>
+              <div className="text-foreground">{summary.totalRuns}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Success rate</div>
-              <div className="text-slate-900">{summary.successRate ? `${summary.successRate}%` : '-'}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Success rate</div>
+              <div className="text-foreground">{summary.successRate ? `${summary.successRate}%` : '-'}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Overdue runs</div>
-              <div className="text-slate-900">{summary.overdueRuns}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Overdue runs</div>
+              <div className="text-foreground">{summary.overdueRuns}</div>
             </div>
           </div>
         </Card>
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Governance</h2>
+            <h2 className="text-base font-semibold text-foreground">Governance</h2>
             <Badge variant={summary.reviewDue > 0 ? 'warning' : 'neutral'}>
               {summary.reviewDue > 0 ? 'Review due' : 'Up to date'}
             </Badge>
           </div>
-          <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
+          <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Review due</div>
-              <div className="text-slate-900">{summary.reviewDue}</div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Review due</div>
+              <div className="text-foreground">{summary.reviewDue}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Critical workflows</div>
-              <div className="text-slate-900">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Critical workflows</div>
+              <div className="text-foreground">
                 {workflows.filter((workflow) => workflow.criticality === 'high').length}
               </div>
             </div>
@@ -386,12 +364,12 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">Alerts</h2>
+            <h2 className="text-base font-semibold text-foreground">Alerts</h2>
             <Badge variant={summary.openAlerts > 0 ? 'warning' : 'success'}>
               {summary.openAlerts > 0 ? `${summary.openAlerts} open` : 'Clear'}
             </Badge>
           </div>
-          <div className="mt-4 text-sm text-slate-600">
+          <div className="mt-4 text-sm text-muted-foreground">
             Resolve alerts to keep workflows healthy and reviewed.
           </div>
           <div className="mt-4">
@@ -402,23 +380,22 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
         </Card>
       </div>
 
-      <Card className="p-6">
-        <h2 className="text-base font-semibold text-slate-900">Workspace summary</h2>
-        <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-3">
+      <SectionCard title="Workspace summary">
+        <div className="mt-4 grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Workspace ID</div>
-            <div className="text-slate-900">{org.org_id}</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Workspace ID</div>
+            <div className="text-foreground">{org.org_id}</div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Role</div>
-            <div className="text-slate-900">{membership.role.replace('org_', '')}</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Role</div>
+            <div className="text-foreground">{membership.role.replace('org_', '')}</div>
           </div>
           <div>
-            <div className="text-xs uppercase tracking-wide text-slate-400">Joined</div>
-            <div className="text-slate-900">{formatDate(membership.created_at)}</div>
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">Joined</div>
+            <div className="text-foreground">{formatDate(membership.created_at)}</div>
           </div>
         </div>
-      </Card>
+      </SectionCard>
     </div>
   )
 }

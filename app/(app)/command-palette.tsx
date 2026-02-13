@@ -2,7 +2,16 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import Input from '@/components/ui/input'
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from '@/components/ui/command'
 
 type OrgListResponse = {
   orgs: Array<{ org_id: string }>
@@ -50,6 +59,13 @@ const staticItems: CommandItem[] = [
   { label: 'Settings', path: 'settings' },
 ]
 
+const matchesCommandItem = (item: CommandItem, normalizedQuery: string) => {
+  if (!normalizedQuery) return true
+  const label = item.label.toLowerCase()
+  const description = item.description?.toLowerCase() ?? ''
+  return label.includes(normalizedQuery) || description.includes(normalizedQuery)
+}
+
 export default function CommandPalette() {
   const router = useRouter()
   const pathname = usePathname()
@@ -86,9 +102,6 @@ export default function CommandPalette() {
   useEffect(() => {
     if (!isOpen) return
     let active = true
-    setWorkflowItems([])
-    setRunItems([])
-    setMemberItems([])
     if (!activeOrgId) return
 
     const loadDynamicItems = async () => {
@@ -172,15 +185,30 @@ export default function CommandPalette() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [])
 
-  const allItems = useMemo(() => {
-    return [...staticItems, ...workflowItems, ...runItems, ...memberItems]
-  }, [workflowItems, runItems, memberItems])
+  const normalizedQuery = query.trim().toLowerCase()
 
-  const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase()
-    if (!normalized) return allItems
-    return allItems.filter((item) => item.label.toLowerCase().includes(normalized))
-  }, [query, allItems])
+  const filteredStaticItems = useMemo(
+    () => staticItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
+    [normalizedQuery]
+  )
+  const filteredWorkflowItems = useMemo(
+    () => workflowItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
+    [normalizedQuery, workflowItems]
+  )
+  const filteredRunItems = useMemo(
+    () => runItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
+    [normalizedQuery, runItems]
+  )
+  const filteredMemberItems = useMemo(
+    () => memberItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
+    [memberItems, normalizedQuery]
+  )
+
+  const hasResults =
+    filteredStaticItems.length > 0 ||
+    filteredWorkflowItems.length > 0 ||
+    filteredRunItems.length > 0 ||
+    filteredMemberItems.length > 0
 
   const handleNavigate = (path: string) => {
     if (path.startsWith('/')) {
@@ -200,38 +228,99 @@ export default function CommandPalette() {
     setIsOpen(false)
   }
 
-  if (!isOpen) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 px-4 py-16">
-      <div className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-4 shadow-xl">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-          Jump to
-        </div>
-        <Input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search workflows, runs, alerts…"
-          autoFocus
-        />
-        <div className="mt-4 space-y-1">
-          {filtered.map((item) => (
-            <button
-              key={`${item.path}-${item.label}`}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
-              onClick={() => handleNavigate(item.path)}
-            >
-              <span>{item.label}</span>
-              <span className="text-xs text-slate-400">Enter</span>
-            </button>
-          ))}
-          {filtered.length === 0 && (
-            <div className="rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-500">
-              No matches yet.
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <CommandDialog
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="sm:max-w-2xl"
+      title="Jump to"
+      description="Search workflows, runs, members, and workspace pages."
+    >
+      <CommandInput
+        value={query}
+        onValueChange={setQuery}
+        placeholder="Search workflows, runs, alerts…"
+      />
+      <CommandList>
+        {!hasResults && <CommandEmpty>No matches yet.</CommandEmpty>}
+
+        {filteredStaticItems.length > 0 && (
+          <CommandGroup heading="Workspace">
+            {filteredStaticItems.map((item) => (
+              <CommandItem
+                key={`${item.path}-${item.label}`}
+                onSelect={() => handleNavigate(item.path)}
+              >
+                <span>{item.label}</span>
+                <CommandShortcut>Enter</CommandShortcut>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        {filteredWorkflowItems.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Workflows">
+              {filteredWorkflowItems.map((item) => (
+                <CommandItem
+                  key={`${item.path}-${item.label}`}
+                  onSelect={() => handleNavigate(item.path)}
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate">{item.label}</span>
+                    {item.description && (
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {filteredRunItems.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Runs">
+              {filteredRunItems.map((item) => (
+                <CommandItem
+                  key={`${item.path}-${item.label}`}
+                  onSelect={() => handleNavigate(item.path)}
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate">{item.label}</span>
+                    {item.description && (
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+
+        {filteredMemberItems.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Members">
+              {filteredMemberItems.map((item) => (
+                <CommandItem
+                  key={`${item.path}-${item.label}`}
+                  onSelect={() => handleNavigate(item.path)}
+                >
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate">{item.label}</span>
+                    {item.description && (
+                      <span className="text-xs text-muted-foreground">{item.description}</span>
+                    )}
+                  </div>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+      </CommandList>
+    </CommandDialog>
   )
 }

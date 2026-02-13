@@ -5,6 +5,17 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { safeInternalPath } from '@/lib/profile-identity'
+import Button from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
+import Card from '@/components/ui/card'
+import { Alert } from '@/components/ui/alert'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
+import {
+  ErrorNotice,
+  PageHeader,
+  SectionCard,
+} from '@/components/dashboard'
 
 type PlanInfo = {
   name: string
@@ -180,147 +191,124 @@ export default function AccountClient() {
   }
 
   if (loading) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-600">Loading account…</div>
+    return <Card className="p-6 text-sm text-muted-foreground">Loading account…</Card>
   }
 
   if (error || !me || !orgs) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-sm text-rose-700">
-        {error ?? 'Unable to load account details.'}
-      </div>
+      <ErrorNotice message={error ?? 'Unable to load account details.'} title="Unable to load account" />
     )
   }
 
+  const emailDisplay = me.email?.trim() ? me.email : null
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">Account</h1>
-        <p className="mt-1 text-sm text-slate-600">Manage your profile, plan, and security settings.</p>
-      </div>
+      <PageHeader
+        title="Account"
+        description="Manage your profile, plan, and security settings."
+        backHref="/dashboard"
+        backLabel="Back to dashboard"
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Profile</h2>
-          <div className="mt-4 space-y-4">
-            {completeProfile && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                Add your first and last name to continue using workspace pages.
-              </div>
-            )}
-            {saveError && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                {saveError}
-              </div>
-            )}
-            {saveMessage && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {saveMessage}
-              </div>
-            )}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <label
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                  htmlFor="account-first-name"
-                >
-                  First Name
-                </label>
-                <input
+        <SectionCard title="Profile">
+          {completeProfile && (
+            <Alert className="border-amber-200 bg-amber-50 text-amber-800">
+              Add your first and last name to continue using workspace pages.
+            </Alert>
+          )}
+          {saveError && <ErrorNotice message={saveError} title="Profile update failed" />}
+          {saveMessage && (
+            <Alert className="border-emerald-200 bg-emerald-50 text-emerald-700">
+              {saveMessage}
+            </Alert>
+          )}
+          <FieldGroup className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="account-first-name">First Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
                   id="account-first-name"
                   value={firstName}
                   onChange={(event) => setFirstName(event.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
                   placeholder="First name"
                 />
-              </div>
-              <div>
-                <label
-                  className="mb-1.5 block text-sm font-medium text-slate-700"
-                  htmlFor="account-last-name"
-                >
-                  Last Name
-                </label>
-                <input
+              </InputGroup>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="account-last-name">Last Name</FieldLabel>
+              <InputGroup>
+                <InputGroupInput
                   id="account-last-name"
                   value={lastName}
                   onChange={(event) => setLastName(event.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8]"
                   placeholder="Last name"
                 />
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                className="rounded-full bg-[#1861C8] px-4 py-2 text-sm font-medium text-white hover:bg-[#2171d8] disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={savePending || csrfLoading || !csrfToken || !isDirty}
-                onClick={submitProfile}
-              >
+              </InputGroup>
+            </Field>
+          </FieldGroup>
+          <div className="flex flex-wrap items-center gap-3">
+            <ButtonGroup>
+              <Button disabled={savePending || csrfLoading || !csrfToken || !isDirty} onClick={submitProfile}>
                 {savePending ? 'Saving…' : 'Save profile'}
-              </button>
-              {saveRequestId && (
-                <span className="text-xs text-slate-500">Request ID {saveRequestId}</span>
-              )}
-            </div>
+              </Button>
+            </ButtonGroup>
+            {saveRequestId && (
+              <span className="text-xs text-muted-foreground">Request ID {saveRequestId}</span>
+            )}
           </div>
-          <div className="mt-6 space-y-3 text-sm text-slate-600">
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Email</div>
-              <div className="text-slate-900">{me.email ?? me.sub}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Display name</div>
-              <div className="text-slate-900">{me.display_name ?? 'Not set'}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Account ID</div>
-              <div className="text-slate-900">{me.sub}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Plan</div>
-              <div className="text-slate-900">{me.plan?.name ?? 'Unknown'}</div>
-            </div>
-          </div>
-        </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">Workspaces</h2>
-          <div className="mt-4 space-y-3 text-sm text-slate-600">
+          <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Default workspace</div>
-              <div className="text-slate-900">
-                {defaultOrg?.name ?? orgs.default_org_id ?? 'Not set'}
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Email</div>
+              <div className={emailDisplay ? 'text-foreground' : 'text-muted-foreground'}>
+                {emailDisplay ?? 'Not available'}
               </div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Personal workspace</div>
-              <div className="text-slate-900">
-                {personalOrg?.name ?? orgs.personal_org_id ?? 'Not set'}
-              </div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Display name</div>
+              <div className="text-foreground">{me.display_name ?? 'Not set'}</div>
             </div>
-            <Link className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80" href="/dashboard/workspaces">
-              Manage workspaces
-            </Link>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Account ID</div>
+              <div className="break-all font-mono text-xs text-foreground">{me.sub}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Plan</div>
+              <div className="text-foreground">{me.plan?.name ?? 'Unknown'}</div>
+            </div>
           </div>
-        </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Workspaces"
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link href="/dashboard/workspaces">Manage workspaces</Link>
+            </Button>
+          }
+        >
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Default workspace</div>
+              <div className="text-foreground">{defaultOrg?.name ?? orgs.default_org_id ?? 'Not set'}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Personal workspace</div>
+              <div className="text-foreground">{personalOrg?.name ?? orgs.personal_org_id ?? 'Not set'}</div>
+            </div>
+          </div>
+        </SectionCard>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Security</h2>
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <Link
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
-            href="/reset-password"
-          >
-            Reset password
-          </Link>
-          <Link
-            className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:text-slate-900"
-            href="/dashboard"
-          >
-            Back to dashboard
-          </Link>
+      <SectionCard title="Security">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button asChild variant="outline">
+            <Link href="/reset-password">Reset password</Link>
+          </Button>
         </div>
-      </div>
+      </SectionCard>
     </div>
   )
 }
