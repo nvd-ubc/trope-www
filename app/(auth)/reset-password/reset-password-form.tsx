@@ -18,7 +18,7 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Reset your password</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Send a reset code, then enter the code and your new password below.
+          Enter your email to get a verification code, then set a new password.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
           {(error || sent) && (
             <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
               {error && <p>{error}</p>}
-              {!error && sent && <p>Reset code sent. Check your email for the verification code.</p>}
+              {!error && sent && <p>Reset code sent. Check your email, then enter the code below.</p>}
             </div>
           )}
           <form action="/api/auth/reset-password" method="post">
@@ -47,7 +47,7 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
               </div>
               <div>
                 <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="code">
-                  Verification Code
+                  Verification code
                 </label>
                 <input
                   id="code"
@@ -59,7 +59,7 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
               </div>
               <div>
                 <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="new-password">
-                  New Password
+                  New password
                 </label>
                 <input
                   id="new-password"
@@ -77,7 +77,7 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
                 className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={csrfLoading || !csrfToken}
               >
-                Reset Password
+                Reset password
               </button>
             </div>
           </form>
