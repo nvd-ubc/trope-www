@@ -26,6 +26,7 @@ export default function ResetPasswordForm({
   const [email, setEmail] = useState(initialEmail ?? '')
   const [cooldownEndsAt, setCooldownEndsAt] = useState<number>(0)
   const [now, setNow] = useState<number>(0)
+  const hasInitialEmail = (initialEmail ?? '').trim().length > 0
   const hasEmail = email.trim().length > 0
   const isConfirmStep = step === 'confirm'
   const cooldownRemaining = Math.max(0, Math.ceil((cooldownEndsAt - now) / 1000))
@@ -117,7 +118,7 @@ export default function ResetPasswordForm({
             <>
               <form action="/api/auth/reset-password" method="post">
                 <div className="space-y-4">
-                  {hasEmail ? (
+                  {hasInitialEmail ? (
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
                       Code will be verified for <span className="font-medium text-slate-900">{email}</span>.
                     </div>
@@ -139,7 +140,7 @@ export default function ResetPasswordForm({
                       />
                     </div>
                   )}
-                  {hasEmail && <input type="hidden" name="email" value={email} />}
+                  {hasInitialEmail && <input type="hidden" name="email" value={email} />}
                   <div>
                     <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="code-confirm">
                       Verification code
