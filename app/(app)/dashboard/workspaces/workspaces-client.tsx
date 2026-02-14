@@ -11,6 +11,7 @@ import Card from '@/components/ui/card'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
+  DataTableSkeleton,
   EmptyState,
   ErrorNotice,
   InlineStatus,
@@ -166,7 +167,7 @@ export default function WorkspacesClient() {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading workspaces…</Card>
+    return <DataTableSkeleton rows={5} columns={5} />
   }
 
   return (

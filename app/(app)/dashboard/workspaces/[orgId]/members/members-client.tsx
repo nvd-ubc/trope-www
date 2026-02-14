@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DataToolbar, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type MemberRecord = {
   org_id: string
@@ -40,6 +40,12 @@ type MembersResponse = {
 
 type MeResponse = {
   sub: string
+}
+
+type MembersBootstrapResponse = {
+  members?: MembersResponse | null
+  me?: MeResponse | null
+  error?: string
 }
 
 const roleOptions = [
@@ -85,26 +91,23 @@ export default function MembersClient({ orgId }: { orgId: string }) {
   }, [queryFromUrl, query])
 
   const loadMembers = useCallback(async () => {
-    const [membersRes, meRes] = await Promise.all([
-      fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, { cache: 'no-store' }),
-      fetch('/api/me', { cache: 'no-store' }),
-    ])
+    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members/bootstrap`, {
+      cache: 'no-store',
+    })
 
-    if (membersRes.status === 401 || meRes.status === 401) {
+    if (response.status === 401) {
       router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/members`)
       return
     }
 
-    const membersPayload = (await membersRes.json().catch(() => null)) as MembersResponse | null
-    const mePayload = (await meRes.json().catch(() => null)) as MeResponse | null
-
-    if (!membersRes.ok || !membersPayload) {
+    const payload = (await response.json().catch(() => null)) as MembersBootstrapResponse | null
+    if (!response.ok || !payload?.members) {
       throw new Error('Unable to load members.')
     }
 
-    setMembers(membersPayload.members ?? [])
-    if (mePayload?.sub) {
-      setCurrentUserId(mePayload.sub)
+    setMembers(payload.members.members ?? [])
+    if (payload.me?.sub) {
+      setCurrentUserId(payload.me.sub)
     }
   }, [orgId, router])
 
@@ -223,7 +226,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading members…</Card>
+    return <DataTableSkeleton rows={7} columns={6} />
   }
 
   if (error && members.length === 0) {

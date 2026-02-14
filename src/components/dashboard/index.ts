@@ -5,3 +5,13 @@ export { default as InlineStatus } from './inline-status'
 export { default as MetricCard } from './metric-card'
 export { default as PageHeader } from './page-header'
 export { default as SectionCard } from './section-card'
+export {
+  DashboardHomeSkeleton,
+  DataTableSkeleton,
+  GuidePageSkeleton,
+  MetricGridSkeleton,
+  PageHeaderSkeleton,
+  SectionCardSkeleton,
+  WorkflowDetailSkeleton,
+  WorkspaceOverviewSkeleton,
+} from './skeletons'

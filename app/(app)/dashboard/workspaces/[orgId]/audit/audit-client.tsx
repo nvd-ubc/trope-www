@@ -33,7 +33,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type AuditEvent = {
   actor_user_id: string
@@ -62,6 +62,12 @@ type MemberRecord = {
 
 type MembersResponse = {
   members: MemberRecord[]
+}
+
+type AuditBootstrapResponse = {
+  audit?: AuditResponse | null
+  members?: MembersResponse | null
+  error?: string
 }
 
 const formatDateTime = (value?: string) => {
@@ -102,6 +108,14 @@ const formatMemberLabel = (member: MemberRecord) => {
   return member.user_id
 }
 
+const buildMemberMap = (members: MemberRecord[]) => {
+  const map: Record<string, string> = {}
+  for (const member of members) {
+    map[member.user_id] = formatMemberLabel(member)
+  }
+  return map
+}
+
 export default function AuditClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -114,19 +128,6 @@ export default function AuditClient({ orgId }: { orgId: string }) {
   const [query, setQuery] = useState('')
   const [memberMap, setMemberMap] = useState<Record<string, string>>({})
   const [sortBy, setSortBy] = useState('newest')
-
-  const loadMembers = useCallback(async () => {
-    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
-      cache: 'no-store',
-    })
-    if (!response.ok) return
-    const payload = (await response.json().catch(() => null)) as MembersResponse | null
-    const map: Record<string, string> = {}
-    for (const member of payload?.members ?? []) {
-      map[member.user_id] = formatMemberLabel(member)
-    }
-    setMemberMap(map)
-  }, [orgId])
 
   const loadEvents = useCallback(async (cursor?: string, append = false) => {
     const queryParams = new URLSearchParams()
@@ -160,11 +161,42 @@ export default function AuditClient({ orgId }: { orgId: string }) {
     setNextCursor(payload.next_cursor ?? null)
   }, [orgId, router])
 
+  const loadBootstrap = useCallback(async () => {
+    const queryParams = new URLSearchParams()
+    queryParams.set('limit', '25')
+    const response = await fetch(
+      `/api/orgs/${encodeURIComponent(orgId)}/audit/bootstrap?${queryParams.toString()}`,
+      { cache: 'no-store' }
+    )
+
+    if (response.status === 401) {
+      router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/audit`)
+      return
+    }
+
+    if (response.status === 403) {
+      setForbidden(true)
+      setError('Audit logs are only available to workspace admins.')
+      return
+    }
+
+    const payload = (await response.json().catch(() => null)) as AuditBootstrapResponse | null
+    if (!response.ok || !payload?.audit) {
+      setRequestId(response.headers.get('x-trope-request-id'))
+      throw new Error('Unable to load audit log.')
+    }
+
+    setForbidden(false)
+    setEvents(payload.audit.events ?? [])
+    setNextCursor(payload.audit.next_cursor ?? null)
+    setMemberMap(buildMemberMap(payload.members?.members ?? []))
+  }, [orgId, router])
+
   useEffect(() => {
     let active = true
     const run = async () => {
       try {
-        await Promise.all([loadEvents(), loadMembers()])
+        await loadBootstrap()
         if (!active) return
         setLoading(false)
       } catch (err) {
@@ -177,7 +209,7 @@ export default function AuditClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [loadEvents, loadMembers])
+  }, [loadBootstrap])
 
   const handleLoadMore = async () => {
     if (!nextCursor) return
@@ -257,7 +289,7 @@ export default function AuditClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading audit log…</Card>
+    return <DataTableSkeleton rows={7} columns={6} />
   }
 
   if (error && events.length === 0) {

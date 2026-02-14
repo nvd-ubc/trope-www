@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Badge from '@/components/ui/badge'
@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { ErrorNotice, PageHeader } from '@/components/dashboard'
+import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
   buildSaveFingerprint,
   createDraftStep,
@@ -30,18 +30,6 @@ import {
   shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
-
-type ResolveResponse = {
-  org_id: string
-  workflow_id: string
-  status?: string | null
-}
-
-type OrgProfileResponse = {
-  membership?: {
-    role?: string | null
-  } | null
-}
 
 type WorkflowDefinition = {
   org_id: string
@@ -129,6 +117,18 @@ type VersionsCreateResponse = {
   version?: WorkflowVersionSummary
   error?: string
   message?: string
+}
+
+type GuideBootstrapResponse = {
+  orgId?: string | null
+  workflow?: WorkflowDetailResponse | null
+  versions?: WorkflowVersionSummary[] | null
+  membershipRole?: string | null
+  selectedVersionId?: string | null
+  spec?: GuideSpec | null
+  versionDetail?: VersionDetailResponse['version'] | null
+  specError?: string | null
+  error?: string
 }
 
 const formatDate = (value?: string | null) => {
@@ -250,8 +250,8 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
-  const width = cardImage?.width ?? image?.width ?? null
-  const height = cardImage?.height ?? image?.height ?? null
+  const width = image?.width ?? cardImage?.width ?? null
+  const height = image?.height ?? cardImage?.height ?? null
   const radarPercent = useMemo(
     () =>
       shouldRenderStepRadar({
@@ -398,6 +398,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const router = useRouter()
   const searchParams = useSearchParams()
   const { token: csrfToken } = useCsrfToken()
+  const skipInitialSpecFetchRef = useRef(false)
 
   const versionIdParam = (searchParams.get('versionId') ?? '').trim()
 
@@ -427,95 +428,79 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
   useEffect(() => {
     let active = true
-    const resolve = async () => {
+    const load = async () => {
       setLoading(true)
       setResolveError(null)
       setOrgId(null)
       setRequestId(null)
+      setSpecError(null)
       try {
-        const response = await fetch(`/api/workflows/${encodeURIComponent(workflowId)}/resolve`, {
-          cache: 'no-store',
-        })
-        const payload = (await response.json().catch(() => null)) as ResolveResponse | null
-        if (!response.ok || !payload?.org_id) {
-          throw new Error('Workflow not found or you do not have access.')
+        const params = new URLSearchParams()
+        if (versionIdParam) {
+          params.set('versionId', versionIdParam)
         }
-        if (!active) return
-        setOrgId(payload.org_id)
+        const response = await fetch(
+          `/api/workflows/${encodeURIComponent(workflowId)}/guide/bootstrap${
+            params.toString() ? `?${params.toString()}` : ''
+          }`,
+          { cache: 'no-store' }
+        )
+        if (response.status === 401) {
+          router.replace(`/signin?next=/dashboard/workflows/${encodeURIComponent(workflowId)}/guide`)
+          return
+        }
 
-        const params = new URLSearchParams(window.location.search)
-        const currentOrgId = (params.get('orgId') ?? '').trim()
-        if (currentOrgId !== payload.org_id) {
-          params.set('orgId', payload.org_id)
-          const query = params.toString()
+        const payload = (await response.json().catch(() => null)) as GuideBootstrapResponse | null
+        if (!response.ok || !payload?.orgId || !payload?.workflow?.workflow) {
+          setRequestId(response.headers.get('x-trope-request-id'))
+          throw new Error(payload?.error || 'Workflow not found or you do not have access.')
+        }
+
+        if (!active) return
+        const orgIdentifier = payload.orgId
+        setOrgId(orgIdentifier)
+        setWorkflow(payload.workflow.workflow)
+        setVersions(sortVersionsByDate(payload.versions ?? []))
+        setMembershipRole(payload.membershipRole ?? null)
+        setSelectedVersionId(payload.selectedVersionId ?? null)
+
+        const queryParams = new URLSearchParams(window.location.search)
+        const currentOrgId = (queryParams.get('orgId') ?? '').trim()
+        if (currentOrgId !== orgIdentifier) {
+          queryParams.set('orgId', orgIdentifier)
+          const query = queryParams.toString()
           router.replace(
             `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide${query ? `?${query}` : ''}`
           )
         }
+
+        if (payload.selectedVersionId && payload.spec && payload.versionDetail) {
+          const normalized = normalizeSpecForPublish(
+            payload.spec,
+            payload.workflow.workflow.title ?? payload.spec.workflow_title ?? workflowId
+          )
+          setVersionDetail(payload.versionDetail)
+          setSpec(normalized)
+          setDraftSpec(cloneSpec(normalized))
+          setBaselineFingerprint(
+            buildSaveFingerprint(
+              normalized,
+              payload.workflow.workflow.title ?? normalized.workflow_title ?? workflowId
+            )
+          )
+          setIsEditing(false)
+          setSpecError(null)
+          skipInitialSpecFetchRef.current = true
+        } else {
+          setVersionDetail(null)
+          setSpec(null)
+          setDraftSpec(null)
+          setBaselineFingerprint(null)
+          setSpecError(payload.specError ?? null)
+        }
       } catch (err) {
         if (!active) return
-        setResolveError(err instanceof Error ? err.message : 'Unable to resolve workflow.')
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-    resolve()
-    return () => {
-      active = false
-    }
-  }, [router, workflowId])
-
-  useEffect(() => {
-    if (!orgId) return
-    let active = true
-    const load = async () => {
-      setLoading(true)
-      try {
-        const [workflowResponse, versionsResponse, orgResponse] = await Promise.all([
-          fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`,
-            { cache: 'no-store' }
-          ),
-          fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
-            { cache: 'no-store' }
-          ),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-        ])
-
-        const workflowPayload = (await workflowResponse.json().catch(() => null)) as
-          | WorkflowDetailResponse
-          | null
-        const versionsPayload = (await versionsResponse.json().catch(() => null)) as
-          | VersionsResponse
-          | null
-        const orgPayload = (await orgResponse.json().catch(() => null)) as OrgProfileResponse | null
-
-        if (!workflowResponse.ok || !workflowPayload?.workflow) {
-          throw new Error('Unable to load workflow.')
-        }
-        if (!versionsResponse.ok || !versionsPayload?.versions) {
-          throw new Error('Unable to load versions.')
-        }
-        if (!active) return
-
-        const sortedVersions = sortVersionsByDate(versionsPayload.versions ?? [])
-
-        setWorkflow(workflowPayload.workflow)
-        setVersions(sortedVersions)
-        setMembershipRole(orgPayload?.membership?.role ?? null)
-
-        const defaultVersion =
-          (versionIdParam && sortedVersions.some((v) => v.version_id === versionIdParam)
-            ? versionIdParam
-            : null) ||
-          (workflowPayload.latest_version?.version_id ?? null) ||
-          (sortedVersions[0]?.version_id ?? null)
-
-        setSelectedVersionId(defaultVersion)
-      } catch (err) {
-        if (!active) return
-        setResolveError(err instanceof Error ? err.message : 'Unable to load workflow.')
+        setResolveError(err instanceof Error ? err.message : 'Unable to load workflow guide.')
       } finally {
         if (active) setLoading(false)
       }
@@ -524,7 +509,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return () => {
       active = false
     }
-  }, [orgId, versionIdParam, workflowId])
+  }, [router, versionIdParam, workflowId])
 
   useEffect(() => {
     if (!csrfToken || !orgId) return
@@ -554,6 +539,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setDraftSpec(null)
       setVersionDetail(null)
       setBaselineFingerprint(null)
+      return
+    }
+
+    if (skipInitialSpecFetchRef.current) {
+      skipInitialSpecFetchRef.current = false
       return
     }
 
@@ -844,11 +834,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }
 
   if (loading && !orgId) {
-    return (
-      <div className="flex items-center justify-center">
-        <Card className="p-6 text-sm text-slate-600">Loading guide…</Card>
-      </div>
-    )
+    return <GuidePageSkeleton />
   }
 
   if (resolveError || !orgId) {
