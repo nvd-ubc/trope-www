@@ -140,6 +140,17 @@ type RunListResponse = {
   next_cursor?: string | null
 }
 
+type WorkflowDetailBootstrapResponse = {
+  detail?: WorkflowDetailResponse | null
+  versions?: VersionsResponse | null
+  org?: OrgProfileResponse | null
+  members?: MembersResponse | null
+  runs?: RunListResponse | null
+  runsError?: string | null
+  runsRequestId?: string | null
+  error?: string
+}
+
 type GuideSpec = {
   workflow_title: string
   app: string
@@ -322,19 +333,12 @@ export default function WorkflowDetailClient({
     const load = async () => {
       setRequestId(null)
       try {
-        const [detailRes, versionsRes, orgRes] = await Promise.all([
-          fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}`,
-            { cache: 'no-store' }
-          ),
-          fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
-            { cache: 'no-store' }
-          ),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-        ])
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/bootstrap`,
+          { cache: 'no-store' }
+        )
 
-        if (detailRes.status === 401 || versionsRes.status === 401 || orgRes.status === 401) {
+        if (response.status === 401) {
           router.replace(
             `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
               workflowId
@@ -343,25 +347,15 @@ export default function WorkflowDetailClient({
           return
         }
 
-        const detailReqId = detailRes.headers.get('x-trope-request-id')
-        const versionsReqId = versionsRes.headers.get('x-trope-request-id')
-        const orgReqId = orgRes.headers.get('x-trope-request-id')
-        const fallbackRequestId = detailReqId || versionsReqId || orgReqId
+        const payload = (await response.json().catch(() => null)) as WorkflowDetailBootstrapResponse | null
 
-        const detailPayload = (await detailRes.json().catch(() => null)) as
-          | WorkflowDetailResponse
-          | null
-        const versionsPayload = (await versionsRes.json().catch(() => null)) as
-          | VersionsResponse
-          | null
-        const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
-
-        if (!detailRes.ok || !detailPayload) {
-          setRequestId(fallbackRequestId)
+        if (!response.ok || !payload?.detail) {
+          setRequestId(response.headers.get('x-trope-request-id'))
           throw new Error('Unable to load workflow.')
         }
 
-        const list = versionsPayload?.versions ?? []
+        const detailPayload = payload.detail
+        const list = payload.versions?.versions ?? []
         list.sort((a, b) => {
           const aTime = new Date(a.created_at).getTime()
           const bTime = new Date(b.created_at).getTime()
@@ -387,7 +381,12 @@ export default function WorkflowDetailClient({
         setContexts((detailPayload.workflow.contexts ?? []).join(', '))
         setRequiredFlag(detailPayload.workflow.required ?? false)
         setVersions(list)
-        setMembershipRole(orgPayload?.membership?.role ?? null)
+        setMembershipRole(payload.org?.membership?.role ?? null)
+        setMembers(payload.members?.members ?? [])
+        setRuns(payload.runs?.runs ?? [])
+        setRunsError(payload.runsError ?? null)
+        setRunsRequestId(payload.runsRequestId ?? null)
+        setRunsLoading(false)
         const latestId =
           detailPayload.workflow.latest_version_id || detailPayload.latest_version?.version_id
         setSelectedVersionId(latestId || list[0]?.version_id || null)
@@ -406,80 +405,6 @@ export default function WorkflowDetailClient({
   }, [orgId, workflowId, router])
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
-
-  useEffect(() => {
-    if (!isAdmin) {
-      setMembers([])
-      return
-    }
-    let active = true
-    const loadMembers = async () => {
-      try {
-        const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
-          cache: 'no-store',
-        })
-        if (response.status === 401) {
-          router.replace(
-            `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-              workflowId
-            )}`
-          )
-          return
-        }
-        if (!response.ok) return
-        const payload = (await response.json().catch(() => null)) as MembersResponse | null
-        if (!active) return
-        setMembers(payload?.members ?? [])
-      } catch {
-        if (!active) return
-      }
-    }
-    loadMembers()
-    return () => {
-      active = false
-    }
-  }, [isAdmin, orgId, router, workflowId])
-
-  useEffect(() => {
-    let active = true
-    const loadRuns = async () => {
-      setRunsLoading(true)
-      setRunsError(null)
-      setRunsRequestId(null)
-      try {
-        const response = await fetch(
-          `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/runs?limit=10`,
-          { cache: 'no-store' }
-        )
-        if (response.status === 401) {
-          router.replace(
-            `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-              workflowId
-            )}`
-          )
-          return
-        }
-        const payload = (await response.json().catch(() => null)) as RunListResponse | null
-        if (!response.ok || !payload) {
-          setRunsRequestId(response.headers.get('x-trope-request-id'))
-          throw new Error('Unable to load runs.')
-        }
-        if (!active) return
-        setRuns(payload.runs ?? [])
-      } catch (err) {
-        if (!active) return
-        setRunsError(err instanceof Error ? err.message : 'Unable to load runs.')
-      } finally {
-        if (active) {
-          setRunsLoading(false)
-        }
-      }
-    }
-    loadRuns()
-    return () => {
-      active = false
-    }
-  }, [orgId, workflowId, router])
 
   const memberMap = useMemo(() => {
     const map: Record<string, string> = {}
