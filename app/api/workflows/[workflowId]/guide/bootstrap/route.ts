@@ -111,16 +111,30 @@ export async function GET(
     const [guideSpecResponse, versionResponse] = await Promise.all([
       fetchInternalJson(
         request,
-        `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}/guide-spec`
+        `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}/guide-spec`,
+        { timeoutMs: 1500 }
       ),
       fetchInternalJson<VersionDetailPayload>(
         request,
-        `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}`
+        `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}`,
+        { timeoutMs: 1500 }
       ),
     ])
     specResult = guideSpecResponse
     versionDetailResult = versionResponse
   }
+
+  const specError = (() => {
+    if (!specResult) return null
+    if (specResult.ok && versionDetailResult?.ok !== false) return null
+    if (specResult.timedOut || versionDetailResult?.timedOut) {
+      return 'Guide preview is taking longer than expected.'
+    }
+    if (versionDetailResult && !versionDetailResult.ok) {
+      return 'Version detail is unavailable for this release.'
+    }
+    return 'Guide spec is not available for this version.'
+  })()
 
   const response = NextResponse.json({
     orgId,
@@ -130,8 +144,7 @@ export async function GET(
     selectedVersionId,
     spec: specResult?.ok ? specResult.data : null,
     versionDetail: versionDetailResult?.ok ? versionDetailResult.data?.version ?? null : null,
-    specError:
-      specResult && !specResult.ok ? 'Guide spec is not available for this version.' : null,
+    specError,
   })
   applyBootstrapMeta(
     response,
@@ -144,4 +157,3 @@ export async function GET(
   )
   return response
 }
-

@@ -35,15 +35,19 @@ export async function GET(
   const encodedOrgId = encodeURIComponent(orgId)
   const encodedWorkflowId = encodeURIComponent(workflowId)
 
-  const [detailResult, versionsResult, orgResult, runsResult] = await Promise.all([
+  const runsPromise = fetchInternalJson(
+    request,
+    `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/runs?limit=10`,
+    { timeoutMs: 1200 }
+  )
+
+  const [detailResult, versionsResult, orgResult] = await Promise.all([
     fetchInternalJson(request, `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}`),
     fetchInternalJson(request, `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions`),
     fetchInternalJson(request, `/api/orgs/${encodedOrgId}`),
-    fetchInternalJson(
-      request,
-      `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/runs?limit=10`
-    ),
   ])
+
+  const runsResult = await runsPromise
 
   const failed = firstFailedResult(detailResult)
   if (failed) {
@@ -75,10 +79,13 @@ export async function GET(
     org: orgResult.ok ? orgResult.data : null,
     members: membersResult.data,
     runs: runsResult.ok ? runsResult.data : { runs: [] },
-    runsError: runsResult.ok ? null : 'Unable to load runs.',
+    runsError: runsResult.ok
+      ? null
+      : runsResult.timedOut
+        ? 'Run history is taking longer than expected.'
+        : 'Unable to load runs.',
     runsRequestId: runsResult.ok ? null : runsResult.requestId,
   })
   applyBootstrapMeta(response, detailResult, versionsResult, orgResult, membersResult, runsResult)
   return response
 }
-
