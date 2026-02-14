@@ -250,8 +250,8 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
-  const width = cardImage?.width ?? image?.width ?? null
-  const height = cardImage?.height ?? image?.height ?? null
+  const width = image?.width ?? cardImage?.width ?? null
+  const height = image?.height ?? cardImage?.height ?? null
   const radarPercent = useMemo(
     () =>
       shouldRenderStepRadar({

@@ -43,6 +43,24 @@ export const createDraftStep = (): GuideEditorStep => ({
   },
 })
 
+const ensureUniqueStepId = (candidate: string, used: Set<string>) => {
+  const trimmed = candidate.trim()
+  const base = trimmed.length > 0 ? trimmed : 'step'
+  if (!used.has(base)) {
+    used.add(base)
+    return base
+  }
+
+  let suffix = 2
+  let next = `${base}_${suffix}`
+  while (used.has(next)) {
+    suffix += 1
+    next = `${base}_${suffix}`
+  }
+  used.add(next)
+  return next
+}
+
 export const normalizeStepForPublish = (step: GuideEditorStep, index: number): GuideEditorStep => {
   const id = typeof step.id === 'string' && step.id.trim() ? step.id.trim() : `step_${index + 1}`
   const title =
@@ -81,22 +99,35 @@ export const normalizeSpecForPublish = (
   spec: GuideEditorSpec,
   fallbackTitle: string,
   fallbackVersion = '1'
-): GuideEditorSpec => ({
-  ...spec,
-  workflow_title:
-    typeof spec.workflow_title === 'string' && spec.workflow_title.trim()
-      ? spec.workflow_title.trim()
-      : fallbackTitle,
-  app:
-    typeof spec.app === 'string' && spec.app.trim()
-      ? spec.app.trim()
-      : 'Desktop',
-  version:
-    typeof spec.version === 'string' && spec.version.trim()
-      ? spec.version.trim()
-      : fallbackVersion,
-  steps: (Array.isArray(spec.steps) ? spec.steps : []).map(normalizeStepForPublish),
-})
+): GuideEditorSpec => {
+  const usedStepIds = new Set<string>()
+  const normalizedSteps = (Array.isArray(spec.steps) ? spec.steps : []).map(normalizeStepForPublish)
+  const steps = normalizedSteps.map((step, index) => {
+    const fallbackId = `step_${index + 1}`
+    const nextId = ensureUniqueStepId(
+      typeof step.id === 'string' && step.id.trim() ? step.id.trim() : fallbackId,
+      usedStepIds
+    )
+    return nextId === step.id ? step : { ...step, id: nextId }
+  })
+
+  return {
+    ...spec,
+    workflow_title:
+      typeof spec.workflow_title === 'string' && spec.workflow_title.trim()
+        ? spec.workflow_title.trim()
+        : fallbackTitle,
+    app:
+      typeof spec.app === 'string' && spec.app.trim()
+        ? spec.app.trim()
+        : 'Desktop',
+    version:
+      typeof spec.version === 'string' && spec.version.trim()
+        ? spec.version.trim()
+        : fallbackVersion,
+    steps,
+  }
+}
 
 export const buildSaveFingerprint = (spec: GuideEditorSpec, fallbackTitle: string) =>
   JSON.stringify(normalizeSpecForPublish(spec, fallbackTitle))

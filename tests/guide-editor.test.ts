@@ -78,6 +78,45 @@ describe('guide editor helpers', () => {
     assert.equal(buildSaveFingerprint(specA, 'Fallback'), buildSaveFingerprint(specB, 'Fallback'))
   })
 
+  it('ensures normalized step ids are unique without collapsing case', () => {
+    const normalized = normalizeSpecForPublish(
+      {
+        workflow_title: 'A',
+        app: 'Desktop',
+        version: '1',
+        steps: [
+          {
+            id: 'step_1',
+            title: 'First',
+            instructions: 'One',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+          {
+            id: 'Step_1',
+            title: 'Second',
+            instructions: 'Two',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+          {
+            id: 'step_1',
+            title: 'Third',
+            instructions: 'Three',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+        ],
+      },
+      'Fallback'
+    )
+
+    assert.deepEqual(
+      normalized.steps.map((step) => step.id),
+      ['step_1', 'Step_1', 'step_1_2']
+    )
+  })
+
   it('calculates radar percentages and clamps values', () => {
     const inside = getRadarPercent(
       { x: 50, y: 20, coordinate_space: 'step_image_pixels_v1' },

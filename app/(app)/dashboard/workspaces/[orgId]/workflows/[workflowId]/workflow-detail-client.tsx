@@ -1463,8 +1463,8 @@ export default function WorkflowDetailClient({
                     ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
                     : null
                   const radar = image?.radar ?? null
-                  const radarWidth = previewImage?.width ?? image?.width ?? null
-                  const radarHeight = previewImage?.height ?? image?.height ?? null
+                  const radarWidth = image?.width ?? previewImage?.width ?? null
+                  const radarHeight = image?.height ?? previewImage?.height ?? null
                   const radarPercent = shouldRenderStepRadar({
                     step,
                     radar,
