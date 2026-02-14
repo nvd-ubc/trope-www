@@ -153,6 +153,8 @@ const sortVersionsByDate = (versions: WorkflowVersionSummary[]) =>
     return bTime - aTime
   })
 
+const formatReleaseLabel = (index: number) => `Release ${index + 1}`
+
 const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
 
 const StepImageCard = ({
@@ -571,17 +573,17 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         ])
 
         if (!versionResponse.ok) {
-          throw new Error('Unable to load version details.')
+          throw new Error('Unable to load release details.')
         }
         const versionPayload = (await versionResponse.json().catch(() => null)) as
           | VersionDetailResponse
           | null
         if (!versionPayload?.version) {
-          throw new Error('Unable to load version details.')
+          throw new Error('Unable to load release details.')
         }
 
         if (!specResponse.ok) {
-          throw new Error('Guide spec is not available for this version.')
+          throw new Error('Guide spec is not available for this release.')
         }
         const specJson = (await specResponse.json().catch(() => null)) as GuideSpec | null
         if (!specJson) {
@@ -629,6 +631,10 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }, [versionDetail?.guide_media?.step_images])
 
   const visibleSpec = isEditing ? draftSpec : spec
+  const selectedVersion = useMemo(
+    () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
+    [selectedVersionId, versions]
+  )
 
   const draftIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
@@ -639,7 +645,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const onSelectVersion = (versionId: string) => {
     if (isEditing && draftIsDirty) {
       const proceed = window.confirm(
-        'You have unsaved edits. Switch versions and discard those edits?'
+        'You have unsaved edits. Switch releases and discard those edits?'
       )
       if (!proceed) return
     }
@@ -726,7 +732,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       { cache: 'no-store' }
     )
     if (!response.ok) {
-      throw new Error('Unable to refresh versions.')
+      throw new Error('Unable to refresh releases.')
     }
     const payload = (await response.json().catch(() => null)) as VersionsResponse | null
     return sortVersionsByDate(payload?.versions ?? [])
@@ -812,7 +818,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       if (!publishResponse.ok || !publishPayload?.version?.version_id) {
         setSaveRequestId(publishRequestId ?? presignRequestId)
         throw new Error(
-          publishPayload?.message || 'Unable to publish edited guide version.'
+          publishPayload?.message || 'Unable to publish edited guide release.'
         )
       }
 
@@ -824,7 +830,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       params.set('versionId', nextVersionId)
       router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
       setIsEditing(false)
-      setSaveMessage('Edits saved as a new version.')
+      setSaveMessage('Edits saved as a new release.')
       setSaveRequestId(publishRequestId ?? presignRequestId)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Unable to save edits.')
@@ -889,7 +895,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                   onClick={handleSaveEdits}
                   disabled={saving || !draftIsDirty}
                 >
-                  {saving ? 'Saving…' : 'Save as new version'}
+                  {saving ? 'Saving…' : 'Save as new release'}
                 </Button>
               </>
             )}
@@ -904,25 +910,23 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
       <Card className="p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-slate-900">Version</div>
+          <div className="text-sm font-semibold text-slate-900">Release</div>
           <div className="flex flex-wrap items-center gap-2">
             <Select value={selectedVersionId ?? undefined} onValueChange={onSelectVersion}>
               <SelectTrigger className="h-9 min-w-[17rem] bg-white text-sm text-slate-800 shadow-sm">
-                <SelectValue placeholder="Select a version" />
+                <SelectValue placeholder="Select a release" />
               </SelectTrigger>
               <SelectContent>
-                {versions.map((version) => (
+                {versions.map((version, index) => (
                   <SelectItem key={version.version_id} value={version.version_id}>
-                    {version.version_id} ({formatDate(version.created_at)})
+                    {formatReleaseLabel(index)} ({formatDate(version.created_at)})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            {selectedVersionId && (
+            {selectedVersion && (
               <span className="text-xs text-slate-500">
-                {versions.find((version) => version.version_id === selectedVersionId)?.steps_count
-                  ? `${versions.find((version) => version.version_id === selectedVersionId)?.steps_count} steps`
-                  : ''}
+                {selectedVersion.steps_count ? `${selectedVersion.steps_count} steps` : ''}
               </span>
             )}
           </div>
