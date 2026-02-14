@@ -232,7 +232,17 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={6} columns={6} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Invites"
+          description="Invite teammates and track onboarding status."
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={6} columns={6} />
+      </div>
+    )
   }
 
   return (

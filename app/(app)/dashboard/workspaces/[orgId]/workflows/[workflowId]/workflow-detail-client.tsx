@@ -722,7 +722,7 @@ export default function WorkflowDetailClient({
   }, [failedRuns])
 
   if (loading) {
-    return <WorkflowDetailSkeleton />
+    return <WorkflowDetailSkeleton workflowId={workflowId} />
   }
 
   if (error || !workflow) {

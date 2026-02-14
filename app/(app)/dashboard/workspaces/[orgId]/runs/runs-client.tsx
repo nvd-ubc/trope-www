@@ -299,7 +299,17 @@ export default function RunsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={8} columns={8} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Runs"
+          description="Recent guided executions across this workspace."
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={8} columns={8} />
+      </div>
+    )
   }
 
   if (error && runs.length === 0) {
