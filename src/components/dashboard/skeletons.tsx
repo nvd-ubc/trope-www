@@ -1,23 +1,41 @@
 import Card, { CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import { type ReactNode } from 'react'
 
 export function PageHeaderSkeleton({
+  title,
+  description,
+  eyebrow,
   className,
   withActions = true,
+  withBadges = false,
 }: {
+  title?: ReactNode
+  description?: ReactNode
+  eyebrow?: ReactNode
   className?: string
   withActions?: boolean
+  withBadges?: boolean
 }) {
   return (
     <div className={cn('flex flex-wrap items-start justify-between gap-3', className)}>
       <div className="space-y-2">
-        <Skeleton className="h-8 w-52" />
-        <Skeleton className="h-4 w-72 max-w-[80vw]" />
-        <div className="flex items-center gap-2 pt-1">
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-24 rounded-full" />
-        </div>
+        {eyebrow ? (
+          <div className="text-xs tracking-[0.12em] uppercase text-muted-foreground">{eyebrow}</div>
+        ) : null}
+        {title ? <h1 className="text-2xl font-semibold text-foreground">{title}</h1> : <Skeleton className="h-8 w-52" />}
+        {description ? (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        ) : (
+          <Skeleton className="h-4 w-72 max-w-[80vw]" />
+        )}
+        {withBadges ? (
+          <div className="flex items-center gap-2 pt-1">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+        ) : null}
       </div>
       {withActions && (
         <div className="flex items-center gap-2">
@@ -132,7 +150,10 @@ export function DashboardHomeSkeleton() {
 export function WorkspaceOverviewSkeleton() {
   return (
     <div className="space-y-6">
-      <PageHeaderSkeleton />
+      <PageHeaderSkeleton
+        title="Workspace"
+        description="Loading workspace overview."
+      />
       <SectionCardSkeleton rows={3} />
       <div className="grid gap-4 md:grid-cols-2">
         <SectionCardSkeleton rows={4} />
@@ -146,7 +167,10 @@ export function WorkspaceOverviewSkeleton() {
 export function WorkflowDetailSkeleton() {
   return (
     <div className="space-y-6">
-      <PageHeaderSkeleton />
+      <PageHeaderSkeleton
+        title="Workflow"
+        description="Loading workflow details."
+      />
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCardSkeleton rows={6} />
         <SectionCardSkeleton rows={6} />
@@ -162,7 +186,11 @@ export function WorkflowDetailSkeleton() {
 export function GuidePageSkeleton() {
   return (
     <div className="space-y-6">
-      <PageHeaderSkeleton />
+      <PageHeaderSkeleton
+        title="Workflow guide"
+        description="Loading guide details."
+        eyebrow="Workflow guide"
+      />
       <SectionCardSkeleton rows={1} />
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <SectionCardSkeleton rows={5} />
@@ -171,4 +199,3 @@ export function GuidePageSkeleton() {
     </div>
   )
 }
-
