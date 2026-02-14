@@ -78,7 +78,7 @@ describe('guide editor helpers', () => {
     assert.equal(buildSaveFingerprint(specA, 'Fallback'), buildSaveFingerprint(specB, 'Fallback'))
   })
 
-  it('ensures normalized step ids are unique', () => {
+  it('ensures normalized step ids are unique without collapsing case', () => {
     const normalized = normalizeSpecForPublish(
       {
         workflow_title: 'A',
@@ -113,7 +113,7 @@ describe('guide editor helpers', () => {
 
     assert.deepEqual(
       normalized.steps.map((step) => step.id),
-      ['step_1', 'Step_1_2', 'step_1_3']
+      ['step_1', 'Step_1', 'step_1_2']
     )
   })
 

@@ -46,19 +46,18 @@ export const createDraftStep = (): GuideEditorStep => ({
 const ensureUniqueStepId = (candidate: string, used: Set<string>) => {
   const trimmed = candidate.trim()
   const base = trimmed.length > 0 ? trimmed : 'step'
-  const normalizedBase = base.toLowerCase()
-  if (!used.has(normalizedBase)) {
-    used.add(normalizedBase)
+  if (!used.has(base)) {
+    used.add(base)
     return base
   }
 
   let suffix = 2
   let next = `${base}_${suffix}`
-  while (used.has(next.toLowerCase())) {
+  while (used.has(next)) {
     suffix += 1
     next = `${base}_${suffix}`
   }
-  used.add(next.toLowerCase())
+  used.add(next)
   return next
 }
 
