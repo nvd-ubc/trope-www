@@ -164,20 +164,132 @@ export function WorkspaceOverviewSkeleton() {
   )
 }
 
-export function WorkflowDetailSkeleton() {
+export function WorkflowDetailSkeleton({ workflowId }: { workflowId?: string }) {
   return (
     <div className="space-y-6">
       <PageHeaderSkeleton
-        title="Workflow"
-        description="Loading workflow details."
+        title="Workflow details"
+        description={
+          workflowId ? (
+            <>
+              Loading details for <span className="font-mono">{workflowId}</span>.
+            </>
+          ) : (
+            'Loading operational health, governance, settings, versions, and guide preview.'
+          )
+        }
+        withBadges
       />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCardSkeleton rows={6} />
-        <SectionCardSkeleton rows={6} />
+
+      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">Operational health</h2>
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <div key={`workflow-health-field-${index}`} className="space-y-2">
+                <Skeleton className="h-3 w-28" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="mt-4 h-3 w-72 max-w-[80vw]" />
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-foreground">Governance</h2>
+            <Skeleton className="h-6 w-20 rounded-full" />
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-x-6">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`workflow-governance-field-${index}`} className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+        </Card>
       </div>
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <SectionCardSkeleton rows={3} />
-        <SectionCardSkeleton rows={4} />
+
+      <div className="grid gap-4 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div className="space-y-4">
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">Settings</h2>
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <div className="mt-4 space-y-4">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={`workflow-settings-input-${index}`} className="space-y-2">
+                  <Skeleton className="h-3 w-28" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
+                </div>
+              ))}
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-20 w-full rounded-xl" />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Skeleton className="h-9 w-32" />
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold text-foreground">Run history</h2>
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <Skeleton className="mt-4 h-12 w-full rounded-xl" />
+            <div className="mt-4 space-y-2">
+              <Skeleton className="h-4 w-full" />
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={`workflow-runs-row-${index}`} className="h-10 w-full" />
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="space-y-4">
+          <Card className="p-6">
+            <h2 className="text-base font-semibold text-foreground">Versions</h2>
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={`workflow-version-${index}`} className="h-14 w-full rounded-xl" />
+              ))}
+            </div>
+          </Card>
+
+          <Card className="p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <h2 className="text-base font-semibold text-foreground">Guide preview</h2>
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <div className="mt-4 space-y-4">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <div key={`workflow-guide-step-${index}`} className="space-y-3 rounded-2xl border p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                  <Skeleton className="h-36 w-full rounded-xl" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   )
