@@ -18,26 +18,25 @@ type OrgListResponse = {
   default_org_id?: string | null
 }
 
-type WorkflowDefinition = {
-  workflow_id: string
-  title: string
+type SearchResponse = {
+  docs?: Array<{
+    doc_id: string
+    title: string
+    status?: string
+  }>
+  tasks?: Array<{
+    task_id: string
+    title: string
+    status?: string
+  }>
+  people?: Array<{
+    user_id: string
+    display_name?: string | null
+    email?: string | null
+  }>
 }
 
-type WorkflowListResponse = {
-  workflows: WorkflowDefinition[]
-}
-
-type MemberRecord = {
-  user_id: string
-  email?: string
-  display_name?: string
-}
-
-type MembersResponse = {
-  members: MemberRecord[]
-}
-
-type CommandItem = {
+type CommandItemRecord = {
   label: string
   path: string
   description?: string
@@ -48,7 +47,7 @@ const parseActiveOrgId = (pathname: string) => {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-const staticItems: CommandItem[] = [
+const staticItems: CommandItemRecord[] = [
   { label: 'Home', path: 'home' },
   { label: 'Documents', path: 'docs' },
   { label: 'Tasks', path: 'tasks' },
@@ -65,7 +64,7 @@ const staticItems: CommandItem[] = [
   { label: 'Settings', path: 'settings' },
 ]
 
-const matchesCommandItem = (item: CommandItem, normalizedQuery: string) => {
+const matchesCommandItem = (item: CommandItemRecord, normalizedQuery: string) => {
   if (!normalizedQuery) return true
   const label = item.label.toLowerCase()
   const description = item.description?.toLowerCase() ?? ''
@@ -78,9 +77,9 @@ export default function CommandPalette() {
   const [isOpen, setIsOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [defaultOrgId, setDefaultOrgId] = useState<string | null>(null)
-  const [workflowItems, setWorkflowItems] = useState<CommandItem[]>([])
-  const [memberItems, setMemberItems] = useState<CommandItem[]>([])
-  const [runItems, setRunItems] = useState<CommandItem[]>([])
+  const [docItems, setDocItems] = useState<CommandItemRecord[]>([])
+  const [taskItems, setTaskItems] = useState<CommandItemRecord[]>([])
+  const [peopleItems, setPeopleItems] = useState<CommandItemRecord[]>([])
 
   useEffect(() => {
     let active = true
@@ -107,75 +106,66 @@ export default function CommandPalette() {
 
   useEffect(() => {
     if (!isOpen) return
-    let active = true
     if (!activeOrgId) return
 
-    const loadDynamicItems = async () => {
+    const normalized = query.trim()
+    if (!normalized) {
+      setDocItems([])
+      setTaskItems([])
+      setPeopleItems([])
+      return
+    }
+
+    let active = true
+    const run = async () => {
       try {
-        const workflowRes = await fetch(`/api/orgs/${encodeURIComponent(activeOrgId)}/workflows`, {
-          cache: 'no-store',
-        })
-        if (workflowRes.ok) {
-          const payload = (await workflowRes.json().catch(() => null)) as WorkflowListResponse | null
-          const workflows = payload?.workflows ?? []
-          if (!active) return
-          setWorkflowItems(
-            workflows.map((workflow) => ({
-              label: `Workflow: ${workflow.title || workflow.workflow_id}`,
-              path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/workflows/${encodeURIComponent(
-                workflow.workflow_id
-              )}`,
-              description: workflow.workflow_id,
-            }))
-          )
-          setRunItems(
-            workflows.map((workflow) => ({
-              label: `Runs: ${workflow.title || workflow.workflow_id}`,
-              path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/runs?workflow_id=${encodeURIComponent(
-                workflow.workflow_id
-              )}`,
-              description: 'Filtered runs',
-            }))
-          )
-        } else if (active) {
-          setWorkflowItems([])
-          setRunItems([])
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(activeOrgId)}/search?q=${encodeURIComponent(normalized)}&limit=12`,
+          { cache: 'no-store' }
+        )
+        if (!response.ok) {
+          throw new Error('search_failed')
         }
 
-        const membersRes = await fetch(`/api/orgs/${encodeURIComponent(activeOrgId)}/members`, {
-          cache: 'no-store',
-        })
-        if (membersRes.ok) {
-          const membersPayload = (await membersRes.json().catch(() => null)) as MembersResponse | null
-          const members = membersPayload?.members ?? []
-          if (!active) return
-          setMemberItems(
-            members.map((member) => {
-              const label = member.display_name || member.email || member.user_id
-              const queryValue = encodeURIComponent(member.email || member.display_name || member.user_id)
-              return {
-                label: `Member: ${label}`,
-                path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/members?query=${queryValue}`,
-                description: member.email ?? member.user_id,
-              }
-            })
-          )
-        } else {
-          if (active) setMemberItems([])
-        }
+        const payload = (await response.json().catch(() => null)) as SearchResponse | null
+        if (!active) return
+
+        setDocItems(
+          (payload?.docs ?? []).map((doc) => ({
+            label: `Document: ${doc.title || doc.doc_id}`,
+            path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/workflows/${encodeURIComponent(doc.doc_id)}`,
+            description: doc.status ?? 'guide',
+          }))
+        )
+
+        setTaskItems(
+          (payload?.tasks ?? []).map((task) => ({
+            label: `Task: ${task.title || task.task_id}`,
+            path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/tasks`,
+            description: task.status ?? 'open',
+          }))
+        )
+
+        setPeopleItems(
+          (payload?.people ?? []).map((person) => ({
+            label: `Teammate: ${person.display_name || person.email || person.user_id}`,
+            path: `/dashboard/workspaces/${encodeURIComponent(activeOrgId)}/teammates`,
+            description: person.email ?? person.user_id,
+          }))
+        )
       } catch {
         if (!active) return
-        setWorkflowItems([])
-        setRunItems([])
-        setMemberItems([])
+        setDocItems([])
+        setTaskItems([])
+        setPeopleItems([])
       }
     }
 
-    loadDynamicItems()
+    run()
     return () => {
       active = false
     }
-  }, [activeOrgId, isOpen])
+  }, [activeOrgId, isOpen, query])
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -197,24 +187,12 @@ export default function CommandPalette() {
     () => staticItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
     [normalizedQuery]
   )
-  const filteredWorkflowItems = useMemo(
-    () => workflowItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
-    [normalizedQuery, workflowItems]
-  )
-  const filteredRunItems = useMemo(
-    () => runItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
-    [normalizedQuery, runItems]
-  )
-  const filteredMemberItems = useMemo(
-    () => memberItems.filter((item) => matchesCommandItem(item, normalizedQuery)),
-    [memberItems, normalizedQuery]
-  )
 
   const hasResults =
     filteredStaticItems.length > 0 ||
-    filteredWorkflowItems.length > 0 ||
-    filteredRunItems.length > 0 ||
-    filteredMemberItems.length > 0
+    docItems.length > 0 ||
+    taskItems.length > 0 ||
+    peopleItems.length > 0
 
   const handleNavigate = (path: string) => {
     if (path.startsWith('/')) {
@@ -240,12 +218,12 @@ export default function CommandPalette() {
       onOpenChange={setIsOpen}
       className="sm:max-w-2xl"
       title="Jump to"
-      description="Search docs, workflows, tasks, teammates, and workspace pages."
+      description="Search docs, tasks, teammates, and workspace pages."
     >
       <CommandInput
         value={query}
         onValueChange={setQuery}
-        placeholder="Search docs, workflows, tasks, alerts…"
+        placeholder="Search docs, tasks, teammates…"
       />
       <CommandList>
         {!hasResults && <CommandEmpty>No matches yet.</CommandEmpty>}
@@ -264,11 +242,11 @@ export default function CommandPalette() {
           </CommandGroup>
         )}
 
-        {filteredWorkflowItems.length > 0 && (
+        {docItems.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Workflows">
-              {filteredWorkflowItems.map((item) => (
+            <CommandGroup heading="Documents">
+              {docItems.map((item) => (
                 <CommandItem
                   key={`${item.path}-${item.label}`}
                   onSelect={() => handleNavigate(item.path)}
@@ -285,11 +263,11 @@ export default function CommandPalette() {
           </>
         )}
 
-        {filteredRunItems.length > 0 && (
+        {taskItems.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Runs">
-              {filteredRunItems.map((item) => (
+            <CommandGroup heading="Tasks">
+              {taskItems.map((item) => (
                 <CommandItem
                   key={`${item.path}-${item.label}`}
                   onSelect={() => handleNavigate(item.path)}
@@ -306,11 +284,11 @@ export default function CommandPalette() {
           </>
         )}
 
-        {filteredMemberItems.length > 0 && (
+        {peopleItems.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Members">
-              {filteredMemberItems.map((item) => (
+            <CommandGroup heading="Teammates">
+              {peopleItems.map((item) => (
                 <CommandItem
                   key={`${item.path}-${item.label}`}
                   onSelect={() => handleNavigate(item.path)}

@@ -8,6 +8,13 @@ import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   DashboardHomeSkeleton,
   ErrorNotice,
   MetricCard,
@@ -61,6 +68,14 @@ type NotificationsPayload = {
   notifications?: NotificationItem[]
 }
 
+type NotificationSettings = {
+  in_app_enabled: boolean
+  email_enabled: boolean
+  digest_frequency: 'off' | 'daily' | 'weekly'
+  task_reminders_enabled: boolean
+  mention_notifications_enabled: boolean
+}
+
 type HomeBootstrapResponse = {
   home?: HomePayload | null
   notifications?: NotificationsPayload | null
@@ -93,14 +108,20 @@ export default function HomeClient({ orgId }: { orgId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [home, setHome] = useState<HomePayload | null>(null)
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null)
   const [markingAllRead, setMarkingAllRead] = useState(false)
+  const [savingSettings, setSavingSettings] = useState(false)
 
   const load = useCallback(async () => {
-    const response = await fetch(
-      `/api/orgs/${encodeURIComponent(orgId)}/home/bootstrap`,
-      { cache: 'no-store' }
-    )
-    if (response.status === 401) {
+    const [response, settingsResponse] = await Promise.all([
+      fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/home/bootstrap`,
+        { cache: 'no-store' }
+      ),
+      fetch('/api/me/notification-settings', { cache: 'no-store' }),
+    ])
+
+    if (response.status === 401 || settingsResponse.status === 401) {
       router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/home`)
       return
     }
@@ -111,6 +132,15 @@ export default function HomeClient({ orgId }: { orgId: string }) {
 
     setHome(payload.home)
     setNotifications(payload.notifications?.notifications ?? [])
+
+    if (settingsResponse.ok) {
+      const settingsPayload = (await settingsResponse.json().catch(() => null)) as
+        | { settings?: NotificationSettings }
+        | null
+      if (settingsPayload?.settings) {
+        setNotificationSettings(settingsPayload.settings)
+      }
+    }
   }, [orgId, router])
 
   useEffect(() => {
@@ -163,6 +193,32 @@ export default function HomeClient({ orgId }: { orgId: string }) {
     () => notifications.filter((item) => item.status === 'unread').length,
     [notifications]
   )
+
+  const patchSettings = async (patch: Partial<NotificationSettings>) => {
+    if (!csrfToken || !notificationSettings || savingSettings) {
+      return
+    }
+    const next = { ...notificationSettings, ...patch }
+    setNotificationSettings(next)
+    setSavingSettings(true)
+    try {
+      const response = await fetch('/api/me/notification-settings', {
+        method: 'PATCH',
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify(patch),
+      })
+      if (!response.ok) {
+        throw new Error('Unable to save notification settings.')
+      }
+    } catch {
+      setNotificationSettings(notificationSettings)
+    } finally {
+      setSavingSettings(false)
+    }
+  }
 
   if (loading) {
     return <DashboardHomeSkeleton />
@@ -311,6 +367,73 @@ export default function HomeClient({ orgId }: { orgId: string }) {
           ))}
         </div>
       </SectionCard>
+
+      {notificationSettings && (
+        <SectionCard
+          title="Notification preferences"
+          description="Tune digest cadence and what enters your inbox."
+        >
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+            <Select
+              value={notificationSettings.digest_frequency}
+              onValueChange={(value: 'off' | 'daily' | 'weekly') =>
+                void patchSettings({ digest_frequency: value })
+              }
+              disabled={!csrfToken || savingSettings}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Digest cadence" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="off">Digest off</SelectItem>
+                <SelectItem value="daily">Daily digest</SelectItem>
+                <SelectItem value="weekly">Weekly digest</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Button
+              variant={notificationSettings.email_enabled ? 'default' : 'outline'}
+              size="sm"
+              disabled={!csrfToken || savingSettings}
+              onClick={() => void patchSettings({ email_enabled: !notificationSettings.email_enabled })}
+            >
+              Email {notificationSettings.email_enabled ? 'on' : 'off'}
+            </Button>
+            <Button
+              variant={notificationSettings.in_app_enabled ? 'default' : 'outline'}
+              size="sm"
+              disabled={!csrfToken || savingSettings}
+              onClick={() => void patchSettings({ in_app_enabled: !notificationSettings.in_app_enabled })}
+            >
+              In-app {notificationSettings.in_app_enabled ? 'on' : 'off'}
+            </Button>
+            <Button
+              variant={notificationSettings.task_reminders_enabled ? 'default' : 'outline'}
+              size="sm"
+              disabled={!csrfToken || savingSettings}
+              onClick={() =>
+                void patchSettings({
+                  task_reminders_enabled: !notificationSettings.task_reminders_enabled,
+                })
+              }
+            >
+              Task reminders {notificationSettings.task_reminders_enabled ? 'on' : 'off'}
+            </Button>
+            <Button
+              variant={notificationSettings.mention_notifications_enabled ? 'default' : 'outline'}
+              size="sm"
+              disabled={!csrfToken || savingSettings}
+              onClick={() =>
+                void patchSettings({
+                  mention_notifications_enabled: !notificationSettings.mention_notifications_enabled,
+                })
+              }
+            >
+              Mentions {notificationSettings.mention_notifications_enabled ? 'on' : 'off'}
+            </Button>
+          </div>
+        </SectionCard>
+      )}
     </div>
   )
 }

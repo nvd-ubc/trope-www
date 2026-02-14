@@ -15,25 +15,25 @@ export async function GET(
   const { orgId } = await params
   const encodedOrgId = encodeURIComponent(orgId)
 
-  const [recentsResult, tasksResult] = await Promise.all([
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/docs/recent`),
+  const [libraryResult, tasksResult] = await Promise.all([
+    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/docs/library`),
     fetchInternalJson(request, `/api/orgs/${encodedOrgId}/tasks/assigned-to-me?status=open`),
   ])
 
-  const failed = firstFailedResult(recentsResult, tasksResult)
+  const failed = firstFailedResult(libraryResult, tasksResult)
   if (failed) {
     const response = NextResponse.json(
       { error: failed.status === 401 ? 'unauthorized' : 'Unable to load docs bootstrap.' },
       { status: failed.status === 401 ? 401 : failed.status }
     )
-    applyBootstrapMeta(response, recentsResult, tasksResult)
+    applyBootstrapMeta(response, libraryResult, tasksResult)
     return response
   }
 
   const response = NextResponse.json({
-    recents: recentsResult.data,
+    library: libraryResult.data,
     myAssignments: tasksResult.data,
   })
-  applyBootstrapMeta(response, recentsResult, tasksResult)
+  applyBootstrapMeta(response, libraryResult, tasksResult)
   return response
 }
