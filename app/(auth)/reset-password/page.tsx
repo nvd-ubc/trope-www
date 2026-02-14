@@ -16,14 +16,15 @@ type ResetSearchParams = {
 const toSingle = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value
 
-export default function ResetPassword({
+export default async function ResetPassword({
   searchParams,
 }: {
-  searchParams?: ResetSearchParams
+  searchParams?: ResetSearchParams | Promise<ResetSearchParams>
 }) {
-  const error = toSingle(searchParams?.error)
-  const sent = toSingle(searchParams?.sent)
-  const requestedStep = toSingle(searchParams?.step)
+  const resolvedParams = await Promise.resolve(searchParams)
+  const error = toSingle(resolvedParams?.error)
+  const sent = toSingle(resolvedParams?.sent)
+  const requestedStep = toSingle(resolvedParams?.step)
   const step = requestedStep === 'confirm' || sent ? 'confirm' : 'request'
 
   return <ResetPasswordForm error={error} sent={sent} step={step} />
