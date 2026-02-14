@@ -65,11 +65,11 @@ export default function StepImageViewerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[min(96vw,1240px)] p-4 sm:p-5" showCloseButton>
+      <DialogContent className="max-w-[min(98vw,1320px)] p-4 sm:p-5" showCloseButton>
         <DialogHeader className="space-y-1">
           <DialogTitle>{step.title || 'Step screenshot'}</DialogTitle>
           <DialogDescription>
-            Keyboard: `+`/`-` zoom, `0` fit, `f` focus, arrow keys pan.
+            Use bottom-right +/-, scroll wheel, or keyboard (`+`, `-`, `0`, `f`, arrows).
           </DialogDescription>
         </DialogHeader>
         {fullSrc ? (
@@ -81,6 +81,7 @@ export default function StepImageViewerDialog({
             radarPercent={radarPercent}
             showRadar={showRadar}
             active={open}
+            showControls={false}
           />
         ) : (
           <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">

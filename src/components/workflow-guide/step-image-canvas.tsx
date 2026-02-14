@@ -18,6 +18,7 @@ type StepImageCanvasProps = {
   showRadar: boolean
   active: boolean
   showControls?: boolean
+  showFloatingZoomButtons?: boolean
   compact?: boolean
   imageClassName?: string
 }
@@ -41,6 +42,7 @@ export default function StepImageCanvas({
   showRadar,
   active,
   showControls = true,
+  showFloatingZoomButtons = true,
   compact = false,
   imageClassName,
 }: StepImageCanvasProps) {
@@ -206,7 +208,7 @@ export default function StepImageCanvas({
       )}
       <div
         ref={containerRef}
-        className={`relative rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
+        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
         tabIndex={0}
         onKeyDown={handleKeyboard}
         aria-label={`Step image zoom canvas at ${ariaZoom}`}
@@ -270,6 +272,41 @@ export default function StepImageCanvas({
             </div>
           </TransformComponent>
         </TransformWrapper>
+        {showFloatingZoomButtons && (
+          <div className="pointer-events-none absolute bottom-3 right-3 z-20 flex flex-col items-end gap-2">
+            <div className="rounded-full bg-slate-900/80 px-2 py-0.5 text-[11px] font-medium text-white shadow-sm">
+              {ariaZoom}
+            </div>
+            <div className="pointer-events-auto flex flex-col overflow-hidden rounded-full border border-slate-300 bg-white/95 shadow-sm">
+              <button
+                type="button"
+                className="h-9 w-9 text-lg font-semibold text-slate-700 transition hover:bg-slate-100"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  controlsRef.current?.zoomIn()
+                }}
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                +
+              </button>
+              <button
+                type="button"
+                className="h-9 w-9 border-t border-slate-200 text-lg font-semibold text-slate-700 transition hover:bg-slate-100"
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  controlsRef.current?.zoomOut()
+                }}
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                -
+              </button>
+            </div>
+          </div>
+        )}
         {transformState.scale > 1.02 && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
             <div className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-white shadow-sm">

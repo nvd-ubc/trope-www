@@ -135,7 +135,6 @@ export default function StepImageCard({
 
   const fallbackReason = (() => {
     if (!image?.render_hints) return 'missing_render_hints'
-    if (!focusTransform.hasFocusCrop) return 'no_focus_crop'
     return 'no_focus_crop'
   })()
 
@@ -185,7 +184,7 @@ export default function StepImageCard({
         />
       </div>
       <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span>Scroll to zoom, drag to pan, double-click to toggle zoom.</span>
+        <span>Scroll to zoom, drag to pan, or use bottom-right +/-.</span>
         <button
           type="button"
           className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
@@ -194,7 +193,7 @@ export default function StepImageCard({
             setDialogOpen(true)
           }}
         >
-          Open full
+          Open full view
         </button>
       </div>
       <StepImageViewerDialog
