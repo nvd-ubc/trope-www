@@ -12,21 +12,32 @@ type ResetPasswordFormProps = {
   error?: string
   sent?: string
   step: ResetStep
+  initialEmail?: string
 }
 
-export default function ResetPasswordForm({ error, sent, step: initialStep }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({
+  error,
+  sent,
+  step: initialStep,
+  initialEmail,
+}: ResetPasswordFormProps) {
   const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
   const [step, setStep] = useState<ResetStep>(initialStep)
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(initialEmail ?? '')
   const [cooldownEndsAt, setCooldownEndsAt] = useState<number>(0)
   const [now, setNow] = useState<number>(0)
+  const hasEmail = email.trim().length > 0
   const isConfirmStep = step === 'confirm'
   const cooldownRemaining = Math.max(0, Math.ceil((cooldownEndsAt - now) / 1000))
-  const resendDisabled = cooldownRemaining > 0 || !email || csrfLoading || !csrfToken
+  const resendDisabled = cooldownRemaining > 0 || !hasEmail || csrfLoading || !csrfToken
 
   useEffect(() => {
     setStep(initialStep)
   }, [initialStep])
+
+  useEffect(() => {
+    setEmail(initialEmail ?? '')
+  }, [initialEmail])
 
   useEffect(() => {
     if (!sent) return
@@ -106,22 +117,29 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
             <>
               <form action="/api/auth/reset-password" method="post">
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email-confirm">
-                      Email
-                    </label>
-                    <input
-                      id="email-confirm"
-                      name="email"
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      required
-                    />
-                  </div>
+                  {hasEmail ? (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                      Code will be verified for <span className="font-medium text-slate-900">{email}</span>.
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email-confirm">
+                        Email
+                      </label>
+                      <input
+                        id="email-confirm"
+                        name="email"
+                        className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        required
+                      />
+                    </div>
+                  )}
+                  {hasEmail && <input type="hidden" name="email" value={email} />}
                   <div>
                     <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="code-confirm">
                       Verification code
@@ -142,6 +160,23 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                     <input
                       id="new-password-confirm"
                       name="new_password"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-sm text-slate-700 font-medium mb-1.5"
+                      htmlFor="confirm-new-password-confirm"
+                    >
+                      Confirm new password
+                    </label>
+                    <input
+                      id="confirm-new-password-confirm"
+                      name="confirm_new_password"
                       className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
                       type="password"
                       autoComplete="new-password"

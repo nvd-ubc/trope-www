@@ -11,6 +11,8 @@ export const dynamic = 'force-dynamic'
 
 type ResetMode = 'request' | 'confirm'
 type ResetStep = 'request' | 'confirm'
+const RESET_EMAIL_COOKIE = 'trope_reset_email'
+const RESET_EMAIL_MAX_AGE_SECONDS = 60 * 15
 
 const formValue = (formData: FormData, key: string): string => {
   const value = formData.get(key)
@@ -35,6 +37,21 @@ const redirectAfterPost = (request: Request, url: URL) => {
   return NextResponse.redirect(destination, 303)
 }
 
+const setResetEmailCookie = (response: NextResponse, email: string) => {
+  const secure = process.env.NODE_ENV === 'production'
+  response.cookies.set(RESET_EMAIL_COOKIE, email, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure,
+    path: '/reset-password',
+    maxAge: RESET_EMAIL_MAX_AGE_SECONDS,
+  })
+}
+
+const clearResetEmailCookie = (response: NextResponse) => {
+  response.cookies.set(RESET_EMAIL_COOKIE, '', { path: '/reset-password', maxAge: 0 })
+}
+
 export async function POST(request: Request) {
   let formData: FormData
   try {
@@ -48,9 +65,10 @@ export async function POST(request: Request) {
   const stepValue = formValue(formData, 'step').toLowerCase()
   const code = formValue(formData, 'code')
   const newPassword = formValue(formData, 'new_password')
+  const confirmNewPassword = formValue(formData, 'confirm_new_password')
   const step: ResetStep = stepValue === 'confirm' ? 'confirm' : 'request'
   const mode: ResetMode =
-    modeValue === 'confirm' || (modeValue !== 'request' && Boolean(code || newPassword))
+    modeValue === 'confirm' || (modeValue !== 'request' && Boolean(code || newPassword || confirmNewPassword))
       ? 'confirm'
       : 'request'
   const csrfFailure = await validateCsrf(request, csrfToken)
@@ -68,18 +86,30 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (mode === 'confirm' && (!code || !newPassword)) {
+    if (mode === 'confirm' && (!code || !newPassword || !confirmNewPassword)) {
       return redirectAfterPost(
         request,
-        buildErrorRedirect(request, 'Enter both the verification code and a new password.', 'confirm')
+        buildErrorRedirect(
+          request,
+          'Enter the verification code and both password fields.',
+          'confirm'
+        )
       )
     }
 
     if (mode === 'confirm') {
+      if (newPassword !== confirmNewPassword) {
+        return redirectAfterPost(
+          request,
+          buildErrorRedirect(request, 'New password and confirmation do not match.', 'confirm')
+        )
+      }
       await confirmForgotPassword({ email, code, newPassword })
       const url = new URL('/signin', request.url)
       url.searchParams.set('reset', '1')
-      return redirectAfterPost(request, url)
+      const response = redirectAfterPost(request, url)
+      clearResetEmailCookie(response)
+      return response
     }
 
     try {
@@ -92,7 +122,9 @@ export async function POST(request: Request) {
     const url = new URL('/reset-password', request.url)
     url.searchParams.set('sent', '1')
     url.searchParams.set('step', 'confirm')
-    return redirectAfterPost(request, url)
+    const response = redirectAfterPost(request, url)
+    setResetEmailCookie(response, email)
+    return response
   } catch (error) {
     const message = authErrorMessage(error)
     return redirectAfterPost(request, buildErrorRedirect(request, message, mode))

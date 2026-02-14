@@ -6,6 +6,7 @@ export const metadata = {
 export const dynamic = 'force-dynamic'
 
 import ResetPasswordForm from './reset-password-form'
+import { cookies } from 'next/headers'
 
 type ResetSearchParams = {
   error?: string
@@ -26,6 +27,8 @@ export default async function ResetPassword({
   const sent = toSingle(resolvedParams?.sent)
   const requestedStep = toSingle(resolvedParams?.step)
   const step = requestedStep === 'confirm' || sent ? 'confirm' : 'request'
+  const cookieStore = await cookies()
+  const initialEmail = cookieStore.get('trope_reset_email')?.value ?? ''
 
-  return <ResetPasswordForm error={error} sent={sent} step={step} />
+  return <ResetPasswordForm error={error} sent={sent} step={step} initialEmail={initialEmail} />
 }
