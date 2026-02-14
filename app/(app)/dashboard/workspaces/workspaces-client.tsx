@@ -167,7 +167,17 @@ export default function WorkspacesClient() {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={5} columns={5} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Workspaces"
+          description="Choose defaults and manage team workspaces."
+          backHref="/dashboard"
+          backLabel="Back to dashboard"
+        />
+        <DataTableSkeleton rows={5} columns={5} />
+      </div>
+    )
   }
 
   return (

@@ -289,7 +289,17 @@ export default function AuditClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={7} columns={6} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Audit log"
+          description="Track membership changes, invite actions, and governance updates."
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={7} columns={6} />
+      </div>
+    )
   }
 
   if (error && events.length === 0) {

@@ -496,7 +496,17 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={8} columns={9} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Workflows"
+          description="Browse the SOP library for this workspace."
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={8} columns={9} />
+      </div>
+    )
   }
 
   if (error && workflows.length === 0) {

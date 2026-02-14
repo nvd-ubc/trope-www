@@ -418,7 +418,17 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={7} columns={8} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Compliance"
+          description={`Track required SOP completion across your workspace. Reporting window: last ${lookbackDays} days.`}
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={7} columns={8} />
+      </div>
+    )
   }
 
   if (error && requiredWorkflows.length === 0) {

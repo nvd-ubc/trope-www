@@ -302,7 +302,10 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeaderSkeleton />
+        <PageHeaderSkeleton
+          title="Workspace settings"
+          description="Update workspace defaults, ownership context, and support access."
+        />
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <SectionCardSkeleton rows={8} />
           <SectionCardSkeleton rows={5} />
