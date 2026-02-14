@@ -11,6 +11,7 @@ import {
   MetricCard,
   PageHeader,
   SectionCard,
+  WorkspaceOverviewSkeleton,
 } from '@/components/dashboard'
 
 type OrgProfile = {
@@ -28,45 +29,45 @@ type OrgMembership = {
   created_at: string
 }
 
-type OrgProfileResponse = {
+type WorkspaceSummary = {
   org: OrgProfile
   membership: OrgMembership
-}
-
-type WorkflowDefinition = {
-  workflow_id: string
-  title: string
-  status: string
-  health_state?: string | null
-  run_stats_7d?: {
-    total: number
-    success: number
-    failed: number
-    canceled: number
+  workflow_counts?: {
+    total?: number
+    published?: number
+    draft?: number
+    review?: number
+    archived?: number
   } | null
-  last_success_at?: string | null
-  expected_run_cadence?: string | null
-  expected_run_cadence_days?: number | null
-  review_cadence_days?: number | null
-  last_reviewed_at?: string | null
-  owner_user_id?: string | null
-  criticality?: string | null
-  required?: boolean | null
+  health_counts?: {
+    healthy?: number
+    warning?: number
+    failing?: number
+    unknown?: number
+  } | null
+  governance_counts?: {
+    unowned?: number
+    required?: number
+    overdue_runs?: number
+    review_due?: number
+    critical_high?: number
+  } | null
+  run_totals_7d?: {
+    total?: number
+    success?: number
+    failed?: number
+    canceled?: number
+  } | null
+  alert_counts?: {
+    open?: number
+    snoozed?: number
+    resolved?: number
+  } | null
 }
 
-type WorkflowListResponse = {
-  workflows: WorkflowDefinition[]
-}
-
-type WorkflowAlert = {
-  alert_id: string
-  status: string
-  severity: string
-  last_triggered_at?: string | null
-}
-
-type AlertsResponse = {
-  alerts: WorkflowAlert[]
+type WorkspaceOverviewBootstrapResponse = {
+  summary?: WorkspaceSummary | null
+  error?: string
 }
 
 const formatDate = (value?: string) => {
@@ -76,20 +77,6 @@ const formatDate = (value?: string) => {
   return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const resolveCadenceDays = (cadence?: string | null, customDays?: number | null) => {
-  const normalized = (cadence ?? '').trim().toLowerCase()
-  if (!normalized || normalized === 'on_demand') return null
-  if (normalized === 'daily') return 1
-  if (normalized === 'weekly') return 7
-  if (normalized === 'monthly') return 30
-  if (normalized === 'custom') {
-    return typeof customDays === 'number' && customDays > 0 ? customDays : null
-  }
-  const numeric = Number.parseInt(normalized, 10)
-  if (Number.isFinite(numeric) && numeric > 0) return numeric
-  return typeof customDays === 'number' && customDays > 0 ? customDays : null
-}
-
 export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -97,8 +84,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   const [requestId, setRequestId] = useState<string | null>(null)
   const [org, setOrg] = useState<OrgProfile | null>(null)
   const [membership, setMembership] = useState<OrgMembership | null>(null)
-  const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([])
-  const [alerts, setAlerts] = useState<WorkflowAlert[]>([])
+  const [summaryData, setSummaryData] = useState<WorkspaceSummary | null>(null)
 
   const copyRequestId = async () => {
     if (!requestId) return
@@ -115,36 +101,26 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
     const load = async () => {
       try {
         setRequestId(null)
-        const [orgRes, workflowsRes, alertsRes] = await Promise.all([
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/alerts?status=open`, { cache: 'no-store' }),
-        ])
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(orgId)}/workspace-overview/bootstrap`,
+          { cache: 'no-store' }
+        )
 
-        if (orgRes.status === 401 || workflowsRes.status === 401 || alertsRes.status === 401) {
+        if (response.status === 401) {
           router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}`)
           return
         }
 
-        const fallbackRequestId =
-          orgRes.headers.get('x-trope-request-id') ||
-          workflowsRes.headers.get('x-trope-request-id') ||
-          alertsRes.headers.get('x-trope-request-id')
-
-        const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
-        const workflowsPayload = (await workflowsRes.json().catch(() => null)) as WorkflowListResponse | null
-        const alertsPayload = (await alertsRes.json().catch(() => null)) as AlertsResponse | null
-
-        if (!orgRes.ok || !orgPayload) {
-          setRequestId(fallbackRequestId)
+        const payload = (await response.json().catch(() => null)) as WorkspaceOverviewBootstrapResponse | null
+        if (!response.ok || !payload?.summary?.org || !payload.summary.membership) {
+          setRequestId(response.headers.get('x-trope-request-id'))
           throw new Error('Unable to load workspace.')
         }
 
         if (!active) return
-        setOrg(orgPayload.org)
-        setMembership(orgPayload.membership)
-        setWorkflows(workflowsPayload?.workflows ?? [])
-        setAlerts(alertsPayload?.alerts ?? [])
+        setOrg(payload.summary.org)
+        setMembership(payload.summary.membership)
+        setSummaryData(payload.summary)
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -160,41 +136,23 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   }, [orgId, router])
 
   const summary = useMemo(() => {
-    const total = workflows.length
-    const published = workflows.filter((workflow) => workflow.status === 'published').length
-    const draft = workflows.filter((workflow) => workflow.status === 'draft').length
-    const failing = workflows.filter((workflow) => workflow.health_state === 'failing').length
-    const warning = workflows.filter((workflow) => workflow.health_state === 'warning').length
-    const unowned = workflows.filter((workflow) => !workflow.owner_user_id).length
-    const requiredCount = workflows.filter((workflow) => workflow.required).length
-    const totalRuns = workflows.reduce((sum, workflow) => sum + (workflow.run_stats_7d?.total ?? 0), 0)
-    const totalSuccess = workflows.reduce(
-      (sum, workflow) => sum + (workflow.run_stats_7d?.success ?? 0),
-      0
-    )
+    const workflowCounts = summaryData?.workflow_counts ?? {}
+    const healthCounts = summaryData?.health_counts ?? {}
+    const governanceCounts = summaryData?.governance_counts ?? {}
+    const runTotals = summaryData?.run_totals_7d ?? {}
+    const alertCounts = summaryData?.alert_counts ?? {}
+    const total = workflowCounts.total ?? 0
+    const published = workflowCounts.published ?? 0
+    const draft = workflowCounts.draft ?? 0
+    const failing = healthCounts.failing ?? 0
+    const warning = healthCounts.warning ?? 0
+    const unowned = governanceCounts.unowned ?? 0
+    const requiredCount = governanceCounts.required ?? 0
+    const totalRuns = runTotals.total ?? 0
+    const totalSuccess = runTotals.success ?? 0
     const successRate = totalRuns > 0 ? Math.round((totalSuccess / totalRuns) * 100) : null
-    const overdueRuns = workflows.filter((workflow) => {
-      const cadenceDays = resolveCadenceDays(
-        workflow.expected_run_cadence,
-        workflow.expected_run_cadence_days
-      )
-      if (!cadenceDays) return false
-      if (!workflow.last_success_at) return true
-      const lastSuccess = new Date(workflow.last_success_at)
-      if (Number.isNaN(lastSuccess.getTime())) return true
-      const due = new Date(lastSuccess)
-      due.setUTCDate(due.getUTCDate() + cadenceDays)
-      return Date.now() > due.getTime()
-    }).length
-    const reviewDue = workflows.filter((workflow) => {
-      if (!workflow.review_cadence_days) return false
-      if (!workflow.last_reviewed_at) return true
-      const lastReviewed = new Date(workflow.last_reviewed_at)
-      if (Number.isNaN(lastReviewed.getTime())) return true
-      const due = new Date(lastReviewed)
-      due.setUTCDate(due.getUTCDate() + workflow.review_cadence_days)
-      return Date.now() > due.getTime()
-    }).length
+    const overdueRuns = governanceCounts.overdue_runs ?? 0
+    const reviewDue = governanceCounts.review_due ?? 0
 
     return {
       total,
@@ -204,16 +162,17 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
       warning,
       unowned,
       requiredCount,
+      criticalHigh: governanceCounts.critical_high ?? 0,
       totalRuns,
       successRate,
       overdueRuns,
       reviewDue,
-      openAlerts: alerts.filter((alert) => alert.status === 'open').length,
+      openAlerts: alertCounts.open ?? 0,
     }
-  }, [alerts, workflows])
+  }, [summaryData])
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading workspace…</Card>
+    return <WorkspaceOverviewSkeleton />
   }
 
   if (error || !org || !membership) {
@@ -355,9 +314,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Critical workflows</div>
-              <div className="text-foreground">
-                {workflows.filter((workflow) => workflow.criticality === 'high').length}
-              </div>
+              <div className="text-foreground">{summary.criticalHigh}</div>
             </div>
           </div>
         </Card>

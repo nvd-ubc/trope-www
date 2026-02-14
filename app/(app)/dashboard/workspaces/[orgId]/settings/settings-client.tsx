@@ -11,7 +11,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { PageHeader } from '@/components/dashboard'
+import { PageHeader, PageHeaderSkeleton, SectionCardSkeleton } from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -49,6 +49,12 @@ type OrgProfileResponse = {
 
 type MembersResponse = {
   members: MemberRecord[]
+}
+
+type SettingsBootstrapResponse = {
+  org?: OrgProfileResponse | null
+  members?: MembersResponse | null
+  error?: string
 }
 
 export default function SettingsClient({ orgId }: { orgId: string }) {
@@ -110,51 +116,43 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
         setSupportExpiresAt(null)
         setSupportError(null)
         setSupportCopied(false)
-        const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' })
+        const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/settings/bootstrap`, {
+          cache: 'no-store',
+        })
         if (response.status === 401) {
           router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`)
           return
         }
-        const payload = (await response.json().catch(() => null)) as OrgProfileResponse | null
-        if (!response.ok || !payload) {
+        const payload = (await response.json().catch(() => null)) as SettingsBootstrapResponse | null
+        if (!response.ok || !payload?.org) {
           throw new Error('Unable to load workspace settings.')
         }
         if (!active) return
-        setOrg(payload.org)
-        setName(payload.org?.name ?? '')
+        setOrg(payload.org.org)
+        setName(payload.org.org?.name ?? '')
         setRunRetentionDays(
-          typeof payload.org?.run_retention_days === 'number'
-            ? String(payload.org.run_retention_days)
+          typeof payload.org.org?.run_retention_days === 'number'
+            ? String(payload.org.org.run_retention_days)
             : ''
         )
-        setAlertDigestEnabled(payload.org?.alert_digest_enabled ?? false)
+        setAlertDigestEnabled(payload.org.org?.alert_digest_enabled ?? false)
         setAlertDigestHour(
-          typeof payload.org?.alert_digest_hour_utc === 'number'
-            ? String(payload.org.alert_digest_hour_utc)
+          typeof payload.org.org?.alert_digest_hour_utc === 'number'
+            ? String(payload.org.org.alert_digest_hour_utc)
             : '9'
         )
-        setMembership(payload.membership ?? null)
+        setMembership(payload.org.membership ?? null)
 
-        if (payload.membership?.role === 'org_owner' || payload.membership?.role === 'org_admin') {
-          const membersResponse = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
-            cache: 'no-store',
-          })
-          if (membersResponse.status === 401) {
-            router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/settings`)
-            return
-          }
-          if (membersResponse.ok) {
-            const membersPayload = (await membersResponse.json().catch(() => null)) as MembersResponse | null
-            const ownerList =
-              membersPayload?.members?.filter(
-                (member) => member.role === 'org_owner' && member.status === 'active'
-              ) ?? []
-            if (!active) return
-            setOwners(ownerList)
-            setOwnersError(null)
-          } else {
-            setOwnersError('Unable to load workspace owners.')
-          }
+        if (
+          payload.org.membership?.role === 'org_owner' ||
+          payload.org.membership?.role === 'org_admin'
+        ) {
+          const ownerList =
+            payload.members?.members?.filter(
+              (member) => member.role === 'org_owner' && member.status === 'active'
+            ) ?? []
+          setOwners(ownerList)
+          setOwnersError(null)
         } else {
           setOwnersError('Owners list is available to workspace admins.')
         }
@@ -302,7 +300,16 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading settings…</Card>
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <SectionCardSkeleton rows={8} />
+          <SectionCardSkeleton rows={5} />
+        </div>
+        <SectionCardSkeleton rows={2} />
+      </div>
+    )
   }
 
   const digestHourOptions = Array.from({ length: 24 }, (_, idx) => idx)

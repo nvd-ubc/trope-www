@@ -17,6 +17,7 @@ type ProxyOptions = {
   body?: BodyInit | null
   headers?: HeadersInit
   cache?: RequestCache
+  timingLabel?: string
 }
 
 type PublicOptions = {
@@ -24,6 +25,17 @@ type PublicOptions = {
   body?: BodyInit | null
   headers?: HeadersInit
   cache?: RequestCache
+  timingLabel?: string
+}
+
+const buildServerTimingHeader = (metric: string, durationMs: number, description?: string) => {
+  const safeMetric = metric.replace(/[^a-z0-9_-]/gi, '_').slice(0, 64) || 'backend'
+  const dur = Number.isFinite(durationMs) ? Math.max(0, durationMs) : 0
+  if (!description) {
+    return `${safeMetric};dur=${dur.toFixed(1)}`
+  }
+  const safeDescription = description.replace(/"/g, '').slice(0, 80)
+  return `${safeMetric};dur=${dur.toFixed(1)};desc="${safeDescription}"`
 }
 
 const readJson = async (response: Response) => {
@@ -37,6 +49,7 @@ export const proxyBackendRequest = async (
   path: string,
   options: ProxyOptions = {}
 ): Promise<NextResponse> => {
+  const requestStart = performance.now()
   const sessionResult = await getSessionWithRefresh()
   if (!sessionResult) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
@@ -120,6 +133,12 @@ export const proxyBackendRequest = async (
     clearAuthCookies(next)
   }
 
+  const durationMs = performance.now() - requestStart
+  next.headers.set(
+    'Server-Timing',
+    buildServerTimingHeader(options.timingLabel ?? 'backend_proxy', durationMs, path)
+  )
+
   return next
 }
 
@@ -127,6 +146,7 @@ export const publicBackendRequest = async (
   path: string,
   options: PublicOptions = {}
 ): Promise<NextResponse> => {
+  const requestStart = performance.now()
   const config = getAuthConfig()
   const response = await fetch(`${config.apiBaseUrl}${path}`, {
     method: options.method ?? 'GET',
@@ -142,6 +162,12 @@ export const publicBackendRequest = async (
   if (requestId) {
     next.headers.set('X-Trope-Request-Id', requestId)
   }
+
+  const durationMs = performance.now() - requestStart
+  next.headers.set(
+    'Server-Timing',
+    buildServerTimingHeader(options.timingLabel ?? 'backend_public_proxy', durationMs, path)
+  )
 
   return next
 }
