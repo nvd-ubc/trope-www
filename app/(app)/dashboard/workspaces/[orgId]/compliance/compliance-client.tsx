@@ -83,6 +83,13 @@ type RunsResponse = {
   next_cursor?: string | null
 }
 
+type ComplianceBootstrapResponse = {
+  org?: OrgProfileResponse | null
+  workflows?: WorkflowListResponse | null
+  members?: MembersResponse | null
+  error?: string
+}
+
 type WorkflowCompletion = {
   workflow: WorkflowDefinition
   successByUser: Record<string, string>
@@ -154,35 +161,25 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
         setError(null)
         setRequestId(null)
 
-        const [orgRes, workflowsRes, membersRes] = await Promise.all([
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, { cache: 'no-store' }),
-        ])
+        const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/compliance/bootstrap`, {
+          cache: 'no-store',
+        })
 
-        if (orgRes.status === 401 || workflowsRes.status === 401 || membersRes.status === 401) {
+        if (response.status === 401) {
           router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/compliance`)
           return
         }
 
-        const fallbackRequestId =
-          orgRes.headers.get('x-trope-request-id') ||
-          workflowsRes.headers.get('x-trope-request-id') ||
-          membersRes.headers.get('x-trope-request-id')
-
-        const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
-        const workflowsPayload = (await workflowsRes.json().catch(() => null)) as WorkflowListResponse | null
-        const membersPayload = (await membersRes.json().catch(() => null)) as MembersResponse | null
-
-        if (!orgRes.ok || !orgPayload) {
-          setRequestId(fallbackRequestId)
+        const payload = (await response.json().catch(() => null)) as ComplianceBootstrapResponse | null
+        if (!response.ok || !payload?.org) {
+          setRequestId(response.headers.get('x-trope-request-id'))
           throw new Error('Unable to load compliance data.')
         }
 
         if (!active) return
-        setOrg(orgPayload.org)
-        setWorkflows(workflowsPayload?.workflows ?? [])
-        setMembers(membersPayload?.members ?? [])
+        setOrg(payload.org.org)
+        setWorkflows(payload.workflows?.workflows ?? [])
+        setMembers(payload.members?.members ?? [])
         setLoading(false)
       } catch (err) {
         if (!active) return

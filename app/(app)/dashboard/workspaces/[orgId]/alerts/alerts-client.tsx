@@ -82,6 +82,14 @@ type MembersResponse = {
   members: MemberRecord[]
 }
 
+type AlertsBootstrapResponse = {
+  alerts?: AlertsResponse | null
+  workflows?: WorkflowListResponse | null
+  me?: MeResponse | null
+  members?: MembersResponse | null
+  error?: string
+}
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return '-'
   const date = new Date(value)
@@ -127,59 +135,13 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
   const [sortBy, setSortBy] = useState('triggered_desc')
   const [pendingAction, setPendingAction] = useState<string | null>(null)
 
-  const loadWorkflows = useCallback(async () => {
-    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, {
-      cache: 'no-store',
-    })
-    if (!response.ok) return
-    const payload = (await response.json().catch(() => null)) as WorkflowListResponse | null
-    const map: Record<string, string> = {}
-    for (const workflow of payload?.workflows ?? []) {
-      map[workflow.workflow_id] = workflow.title
-    }
-    setWorkflowMap(map)
-  }, [orgId])
-
-  const loadMe = useCallback(async () => {
-    const response = await fetch('/api/me', { cache: 'no-store' })
-    if (response.status === 401) {
-      router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/alerts`)
-      return
-    }
-    if (!response.ok) return
-    const payload = (await response.json().catch(() => null)) as MeResponse | null
-    if (payload?.sub) setCurrentUserId(payload.sub)
-    if (payload?.email) setCurrentUserEmail(payload.email)
-  }, [orgId, router])
-
-  const loadMembers = useCallback(async () => {
-    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
-      cache: 'no-store',
-    })
-    if (!response.ok) return
-    const payload = (await response.json().catch(() => null)) as MembersResponse | null
-    const map: Record<string, string> = {}
-    for (const member of payload?.members ?? []) {
-      if (member.display_name && member.email) {
-        map[member.user_id] = `${member.display_name} (${member.email})`
-      } else if (member.display_name) {
-        map[member.user_id] = member.display_name
-      } else if (member.email) {
-        map[member.user_id] = member.email
-      } else {
-        map[member.user_id] = member.user_id
-      }
-    }
-    setMemberMap(map)
-  }, [orgId])
-
   const loadAlerts = useCallback(async () => {
     const queryParams = new URLSearchParams()
     if (statusFilter) {
       queryParams.set('status', statusFilter)
     }
     const response = await fetch(
-      `/api/orgs/${encodeURIComponent(orgId)}/alerts?${queryParams.toString()}`,
+      `/api/orgs/${encodeURIComponent(orgId)}/alerts/bootstrap?${queryParams.toString()}`,
       { cache: 'no-store' }
     )
 
@@ -188,21 +150,43 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
       return
     }
 
-    const payload = (await response.json().catch(() => null)) as AlertsResponse | null
-    if (!response.ok || !payload) {
+    const payload = (await response.json().catch(() => null)) as AlertsBootstrapResponse | null
+    if (!response.ok || !payload?.alerts) {
       const reqId = response.headers.get('x-trope-request-id')
       setRequestId(reqId)
       throw new Error('Unable to load alerts.')
     }
 
-    setAlerts(payload.alerts ?? [])
+    const workflowLookup: Record<string, string> = {}
+    for (const workflow of payload.workflows?.workflows ?? []) {
+      workflowLookup[workflow.workflow_id] = workflow.title
+    }
+    setWorkflowMap(workflowLookup)
+
+    const memberLookup: Record<string, string> = {}
+    for (const member of payload.members?.members ?? []) {
+      if (member.display_name && member.email) {
+        memberLookup[member.user_id] = `${member.display_name} (${member.email})`
+      } else if (member.display_name) {
+        memberLookup[member.user_id] = member.display_name
+      } else if (member.email) {
+        memberLookup[member.user_id] = member.email
+      } else {
+        memberLookup[member.user_id] = member.user_id
+      }
+    }
+    setMemberMap(memberLookup)
+
+    setCurrentUserId(payload.me?.sub ?? null)
+    setCurrentUserEmail(payload.me?.email ?? null)
+    setAlerts(payload.alerts.alerts ?? [])
   }, [orgId, router, statusFilter])
 
   useEffect(() => {
     let active = true
     const run = async () => {
       try {
-        await Promise.all([loadAlerts(), loadWorkflows(), loadMe(), loadMembers()])
+        await loadAlerts()
         if (!active) return
         setLoading(false)
       } catch (err) {
@@ -215,7 +199,7 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [loadAlerts, loadWorkflows, loadMe, loadMembers])
+  }, [loadAlerts])
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
