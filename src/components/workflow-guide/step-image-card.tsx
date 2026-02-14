@@ -55,7 +55,6 @@ export default function StepImageCard({
   maxHeightClass,
   onTelemetryEvent,
 }: StepImageCardProps) {
-  const focusZoomEnabled = true
   const [dialogOpen, setDialogOpen] = useState(false)
   const focusTelemetryKeyRef = useRef<string | null>(null)
 
@@ -103,11 +102,10 @@ export default function StepImageCard({
         },
         renderHints: image?.render_hints ?? null,
         radar,
-      }),
+    }),
     [height, image?.render_hints, previewImage?.height, previewImage?.width, radar, width]
   )
-  const shouldApplyFocus =
-    focusZoomEnabled && focusTransform.hasFocusCrop && Boolean(image?.render_hints)
+  const shouldApplyFocus = focusTransform.hasFocusCrop && Boolean(image?.render_hints)
   const showRadar = Boolean(
     radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null)
   )
@@ -138,11 +136,11 @@ export default function StepImageCard({
   const fallbackReason = (() => {
     if (!image?.render_hints) return 'missing_render_hints'
     if (!focusTransform.hasFocusCrop) return 'no_focus_crop'
-    return 'focus_disabled'
+    return 'no_focus_crop'
   })()
 
   useEffect(() => {
-    if (!focusZoomEnabled || !onTelemetryEvent) return
+    if (!onTelemetryEvent) return
     const key = `${step.id}:${image?.step_id ?? 'no-image'}:${shouldApplyFocus ? 'applied' : fallbackReason}`
     if (focusTelemetryKeyRef.current === key) return
     if (shouldApplyFocus) {
@@ -157,7 +155,6 @@ export default function StepImageCard({
   }, [
     baseTelemetryProperties,
     fallbackReason,
-    focusZoomEnabled,
     image?.step_id,
     onTelemetryEvent,
     shouldApplyFocus,
@@ -167,97 +164,46 @@ export default function StepImageCard({
   const emitOpenFullTelemetry = () => {
     onTelemetryEvent?.('workflow_doc_step_image_open_full', {
       ...baseTelemetryProperties,
-      focus_enabled: focusZoomEnabled,
+      focus_enabled: true,
     })
   }
 
-  const imageFrame = (
-    <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
-      <div
-        className="relative transition-transform duration-300 ease-out"
-        style={
-          shouldApplyFocus
-            ? {
-                transform: `scale(${focusTransform.zoomScale})`,
-                transformOrigin: `${focusTransform.transformOriginPercent.x}% ${focusTransform.transformOriginPercent.y}%`,
-                willChange: 'transform',
-              }
-            : undefined
-        }
-      >
-        <img
+  return (
+    <>
+      <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+        <StepImageCanvas
           src={previewSrc}
           alt={step.title}
-          loading="lazy"
-          className={`block h-auto w-auto max-w-full ${maxHeightClass}`}
+          focusTransform={focusTransform}
+          sourceImageSize={{ width: imageWidth, height: imageHeight }}
+          radarPercent={radarPercent}
+          showRadar={showRadar}
+          active
+          compact
+          showControls={false}
+          imageClassName={maxHeightClass}
         />
-        {showRadar && radarPercent && (
-          <div className="pointer-events-none absolute inset-0">
-            <div
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
-            >
-              <div className="relative h-5 w-5">
-                <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
-                <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
-  )
-
-  if (focusZoomEnabled) {
-    return (
-      <>
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-          <StepImageCanvas
-            src={previewSrc}
-            alt={step.title}
-            focusTransform={focusTransform}
-            sourceImageSize={{ width: imageWidth, height: imageHeight }}
-            radarPercent={radarPercent}
-            showRadar={showRadar}
-            active
-            compact
-            showControls={false}
-            imageClassName={maxHeightClass}
-          />
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-          <span>Scroll to zoom, drag to pan, double-click to toggle zoom.</span>
-          <button
-            type="button"
-            className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
-            onClick={() => {
-              emitOpenFullTelemetry()
-              setDialogOpen(true)
-            }}
-          >
-            Open full
-          </button>
-        </div>
-        <StepImageViewerDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          step={step}
-          fullSrc={fullSrc}
-          image={image}
-        />
-      </>
-    )
-  }
-
-  return (
-    <a
-      href={fullSrc}
-      target="_blank"
-      rel="noreferrer"
-      className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-      onClick={emitOpenFullTelemetry}
-    >
-      {imageFrame}
-    </a>
+      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+        <span>Scroll to zoom, drag to pan, double-click to toggle zoom.</span>
+        <button
+          type="button"
+          className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+          onClick={() => {
+            emitOpenFullTelemetry()
+            setDialogOpen(true)
+          }}
+        >
+          Open full
+        </button>
+      </div>
+      <StepImageViewerDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        step={step}
+        fullSrc={fullSrc}
+        image={image}
+      />
+    </>
   )
 }
