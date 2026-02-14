@@ -222,7 +222,7 @@ export default function WorkspacesClient() {
                   </div>
                   <ButtonGroup>
                     <Button asChild variant="outline" size="sm">
-                      <Link href={`/dashboard/workspaces/${encodeURIComponent(org.org_id)}`}>Open</Link>
+                      <Link href={`/dashboard/workspaces/${encodeURIComponent(org.org_id)}/home`}>Open</Link>
                     </Button>
                     <Button
                       variant="secondary"

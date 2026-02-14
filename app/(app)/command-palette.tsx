@@ -49,11 +49,17 @@ const parseActiveOrgId = (pathname: string) => {
 }
 
 const staticItems: CommandItem[] = [
+  { label: 'Home', path: 'home' },
+  { label: 'Documents', path: 'docs' },
+  { label: 'Tasks', path: 'tasks' },
+  { label: 'Teammates', path: 'teammates' },
+  { label: 'Insights', path: 'insights' },
+  { label: 'Community', path: 'community' },
   { label: 'Workflows', path: 'workflows' },
   { label: 'Runs', path: 'runs' },
   { label: 'Alerts', path: 'alerts' },
   { label: 'Compliance', path: 'compliance' },
-  { label: 'Members', path: 'members' },
+  { label: 'Members (Admin)', path: 'members' },
   { label: 'Invites', path: 'invites' },
   { label: 'Audit log', path: 'audit' },
   { label: 'Settings', path: 'settings' },
@@ -234,12 +240,12 @@ export default function CommandPalette() {
       onOpenChange={setIsOpen}
       className="sm:max-w-2xl"
       title="Jump to"
-      description="Search workflows, runs, members, and workspace pages."
+      description="Search docs, workflows, tasks, teammates, and workspace pages."
     >
       <CommandInput
         value={query}
         onValueChange={setQuery}
-        placeholder="Search workflows, runs, alerts…"
+        placeholder="Search docs, workflows, tasks, alerts…"
       />
       <CommandList>
         {!hasResults && <CommandEmpty>No matches yet.</CommandEmpty>}

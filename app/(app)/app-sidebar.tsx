@@ -1,9 +1,13 @@
 import Link from 'next/link'
 import {
   BellRing,
+  BookOpenText,
   Cog,
+  Compass,
   Gauge,
+  Home,
   ListChecks,
+  Sparkles,
   ShieldCheck,
   User,
   Users,
@@ -45,6 +49,67 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Home">
+                  <WorkspaceNavLink path="home">
+                    <Home />
+                    <span>Home</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Documents">
+                  <WorkspaceNavLink path="docs">
+                    <BookOpenText />
+                    <span>Documents</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Tasks">
+                  <WorkspaceNavLink path="tasks">
+                    <ListChecks />
+                    <span>Tasks</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Teammates">
+                  <WorkspaceNavLink path="teammates">
+                    <Users />
+                    <span>Teammates</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Insights">
+                  <WorkspaceNavLink path="insights">
+                    <Sparkles />
+                    <span>Insights</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Community">
+                  <WorkspaceNavLink path="community">
+                    <Compass />
+                    <span>Community</span>
+                  </WorkspaceNavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[10px] tracking-[0.14em] uppercase">Operations</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="Workflows">
                   <WorkspaceNavLink path="workflows">
