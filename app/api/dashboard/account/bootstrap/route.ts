@@ -8,27 +8,29 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
-  const [meResult, orgsResult] = await Promise.all([
-    fetchInternalJson(request, '/api/me'),
-    fetchInternalJson(request, '/api/orgs'),
-  ])
+type DashboardSummaryPayload = {
+  me?: unknown
+  orgs?: unknown
+}
 
-  const failed = firstFailedResult(meResult, orgsResult)
+export async function GET(request: Request) {
+  const summaryResult = await fetchInternalJson<DashboardSummaryPayload>(request, '/api/dashboard/summary')
+
+  const failed = firstFailedResult(summaryResult)
   if (failed) {
     const response = NextResponse.json(
       { error: failed.status === 401 ? 'unauthorized' : 'Unable to load account bootstrap.' },
       { status: failed.status === 401 ? 401 : failed.status }
     )
-    applyBootstrapMeta(response, meResult, orgsResult)
+    applyBootstrapMeta(response, summaryResult)
     return response
   }
 
+  const summary = (summaryResult.data ?? {}) as DashboardSummaryPayload
   const response = NextResponse.json({
-    me: meResult.data,
-    orgs: orgsResult.data,
+    me: summary.me ?? null,
+    orgs: summary.orgs ?? null,
   })
-  applyBootstrapMeta(response, meResult, orgsResult)
+  applyBootstrapMeta(response, summaryResult)
   return response
 }
-

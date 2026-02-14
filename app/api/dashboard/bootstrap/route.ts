@@ -8,32 +8,34 @@ import {
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
-  const [meResult, usageResult, orgsResult, invitesResult] = await Promise.all([
-    fetchInternalJson(request, '/api/me'),
-    fetchInternalJson(request, '/api/usage'),
-    fetchInternalJson(request, '/api/orgs'),
-    fetchInternalJson(request, '/api/me/invites'),
-  ])
+type DashboardSummaryPayload = {
+  me?: unknown
+  usage?: unknown
+  orgs?: unknown
+  invites?: unknown
+}
 
-  const failed = firstFailedResult(meResult, usageResult, orgsResult, invitesResult)
+export async function GET(request: Request) {
+  const summaryResult = await fetchInternalJson<DashboardSummaryPayload>(request, '/api/dashboard/summary')
+
+  const failed = firstFailedResult(summaryResult)
   if (failed) {
     const response = NextResponse.json(
       { error: failed.status === 401 ? 'unauthorized' : 'Unable to load dashboard bootstrap.' },
       { status: failed.status === 401 ? 401 : failed.status }
     )
-    applyBootstrapMeta(response, meResult, usageResult, orgsResult, invitesResult)
+    applyBootstrapMeta(response, summaryResult)
     return response
   }
 
-  const invitesPayload = (invitesResult.data ?? {}) as { invites?: unknown[] }
+  const summary = (summaryResult.data ?? {}) as DashboardSummaryPayload
+  const invites = Array.isArray(summary.invites) ? summary.invites : []
   const response = NextResponse.json({
-    me: meResult.data,
-    usage: usageResult.data,
-    orgs: orgsResult.data,
-    invites: invitesPayload.invites ?? [],
+    me: summary.me ?? null,
+    usage: summary.usage ?? null,
+    orgs: summary.orgs ?? { orgs: [] },
+    invites,
   })
-  applyBootstrapMeta(response, meResult, usageResult, orgsResult, invitesResult)
+  applyBootstrapMeta(response, summaryResult)
   return response
 }
-

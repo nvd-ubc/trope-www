@@ -6,10 +6,23 @@ import {
   type InternalJsonFetchResult,
 } from '@/lib/server/internal-api-bootstrap'
 
-type OrgPayload = {
+type MembershipPayload = {
   membership?: {
     role?: string | null
   } | null
+}
+
+type WorkflowVersionPayload = {
+  version_id?: string | null
+  [key: string]: unknown
+}
+
+type WorkflowSummaryPayload = {
+  membership?: MembershipPayload['membership']
+  workflow?: Record<string, unknown> | null
+  versions?: WorkflowVersionPayload[] | null
+  recent_runs?: unknown[] | null
+  next_runs_cursor?: string | null
 }
 
 type MembersPayload = {
@@ -35,31 +48,44 @@ export async function GET(
   const encodedOrgId = encodeURIComponent(orgId)
   const encodedWorkflowId = encodeURIComponent(workflowId)
 
-  const runsPromise = fetchInternalJson(
+  const summaryResult = await fetchInternalJson<WorkflowSummaryPayload>(
     request,
-    `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/runs?limit=10`,
+    `/api/orgs/${encodedOrgId}/workflow-summary/${encodedWorkflowId}`,
     { timeoutMs: 1200 }
   )
 
-  const [detailResult, versionsResult, orgResult] = await Promise.all([
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}`),
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions`),
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}`),
-  ])
-
-  const runsResult = await runsPromise
-
-  const failed = firstFailedResult(detailResult)
+  const failed = firstFailedResult(summaryResult)
   if (failed) {
     const response = NextResponse.json(
       { error: failed.status === 401 ? 'unauthorized' : 'Unable to load workflow bootstrap.' },
       { status: failed.status === 401 ? 401 : failed.status }
     )
-    applyBootstrapMeta(response, detailResult, versionsResult, orgResult, runsResult)
+    applyBootstrapMeta(response, summaryResult)
     return response
   }
 
-  const role = ((orgResult.data ?? {}) as OrgPayload).membership?.role ?? null
+  const summary = (summaryResult.data ?? {}) as WorkflowSummaryPayload
+  const workflow = summary.workflow
+  if (!workflow || typeof workflow !== 'object') {
+    const response = NextResponse.json(
+      { error: 'Unable to load workflow bootstrap.' },
+      { status: 502 }
+    )
+    applyBootstrapMeta(response, summaryResult)
+    return response
+  }
+
+  const versions = Array.isArray(summary.versions) ? summary.versions : []
+  const latestVersionId =
+    typeof workflow.latest_version_id === 'string' && workflow.latest_version_id.trim().length > 0
+      ? workflow.latest_version_id
+      : null
+  const latestVersion =
+    versions.find(
+      (version) => typeof version.version_id === 'string' && version.version_id === latestVersionId
+    ) ?? versions[0] ?? null
+
+  const role = summary.membership?.role ?? null
   const isAdmin = role === 'org_owner' || role === 'org_admin'
 
   let membersResult = emptyMembersResult()
@@ -74,18 +100,22 @@ export async function GET(
   }
 
   const response = NextResponse.json({
-    detail: detailResult.data,
-    versions: versionsResult.ok ? versionsResult.data : { versions: [] },
-    org: orgResult.ok ? orgResult.data : null,
+    detail: {
+      workflow,
+      latest_version: latestVersion,
+    },
+    versions: { versions },
+    org: {
+      membership: summary.membership ?? null,
+    },
     members: membersResult.data,
-    runs: runsResult.ok ? runsResult.data : { runs: [] },
-    runsError: runsResult.ok
-      ? null
-      : runsResult.timedOut
-        ? 'Run history is taking longer than expected.'
-        : 'Unable to load runs.',
-    runsRequestId: runsResult.ok ? null : runsResult.requestId,
+    runs: {
+      runs: Array.isArray(summary.recent_runs) ? summary.recent_runs : [],
+      next_cursor: summary.next_runs_cursor ?? null,
+    },
+    runsError: null,
+    runsRequestId: null,
   })
-  applyBootstrapMeta(response, detailResult, versionsResult, orgResult, membersResult, runsResult)
+  applyBootstrapMeta(response, summaryResult, membersResult)
   return response
 }

@@ -63,8 +63,11 @@ const CLIENT_BOOTSTRAP_EXPECTATIONS: BootstrapClientExpectation[] = [
 ]
 
 const REQUIRED_BOOTSTRAP_ROUTE_FILES = [
+  'app/api/dashboard/summary/route.ts',
   'app/api/dashboard/bootstrap/route.ts',
   'app/api/dashboard/account/bootstrap/route.ts',
+  'app/api/orgs/[orgId]/dashboard-summary/route.ts',
+  'app/api/orgs/[orgId]/workflow-summary/[workflowId]/route.ts',
   'app/api/orgs/[orgId]/workspace-overview/bootstrap/route.ts',
   'app/api/orgs/[orgId]/runs/bootstrap/route.ts',
   'app/api/orgs/[orgId]/workflows/bootstrap/route.ts',
