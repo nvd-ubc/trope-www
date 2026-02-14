@@ -46,17 +46,11 @@ export default function AppLayout({
             </div>
           </header>
           <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">
-            <Suspense
-              fallback={
-                <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-                  Loading dashboard…
-                </div>
-              }
-            >
-              <div className="mx-auto w-full max-w-[1200px]">
+            <div className="mx-auto w-full max-w-[1200px]">
+              <Suspense fallback={children}>
                 <ProfileCompletionGate>{children}</ProfileCompletionGate>
-              </div>
-            </Suspense>
+              </Suspense>
+            </div>
           </main>
         </SidebarInset>
       </SidebarProvider>
