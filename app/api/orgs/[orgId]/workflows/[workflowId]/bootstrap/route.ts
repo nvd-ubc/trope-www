@@ -29,6 +29,9 @@ type MembersPayload = {
   members?: unknown[]
 }
 
+const isWorkflowVersionPayload = (value: unknown): value is WorkflowVersionPayload =>
+  Boolean(value) && typeof value === 'object'
+
 const emptyMembersResult = (): InternalJsonFetchResult<MembersPayload> => ({
   ok: true,
   status: 200,
@@ -74,7 +77,9 @@ export async function GET(
     return response
   }
 
-  const versions = Array.isArray(summary.versions) ? summary.versions : []
+  const versions = Array.isArray(summary.versions)
+    ? summary.versions.filter(isWorkflowVersionPayload)
+    : []
   const versionsByNewest = [...versions].sort((left, right) => {
     const leftTime = Date.parse(String(left.created_at ?? ''))
     const rightTime = Date.parse(String(right.created_at ?? ''))
