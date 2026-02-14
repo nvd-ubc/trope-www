@@ -10,17 +10,24 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 type ResetMode = 'request' | 'confirm'
+type ResetStep = 'request' | 'confirm'
 
 const formValue = (formData: FormData, key: string): string => {
   const value = formData.get(key)
   return typeof value === 'string' ? value.trim() : ''
 }
 
-const buildErrorRedirect = (request: Request, message: string, step: ResetMode) => {
+const buildErrorRedirect = (request: Request, message: string, step: ResetStep) => {
   const url = new URL('/reset-password', request.url)
   url.searchParams.set('error', message)
   url.searchParams.set('step', step)
   return url
+}
+
+const errorName = (error: unknown): string => {
+  if (!error || typeof error !== 'object') return ''
+  const candidate = (error as { name?: unknown }).name
+  return typeof candidate === 'string' ? candidate : ''
 }
 
 const redirectAfterPost = (request: Request, url: URL) => {
@@ -38,8 +45,10 @@ export async function POST(request: Request) {
 
   const csrfToken = formValue(formData, csrfFormField)
   const modeValue = formValue(formData, 'mode').toLowerCase()
+  const stepValue = formValue(formData, 'step').toLowerCase()
   const code = formValue(formData, 'code')
   const newPassword = formValue(formData, 'new_password')
+  const step: ResetStep = stepValue === 'confirm' ? 'confirm' : 'request'
   const mode: ResetMode =
     modeValue === 'confirm' || (modeValue !== 'request' && Boolean(code || newPassword))
       ? 'confirm'
@@ -48,14 +57,14 @@ export async function POST(request: Request) {
   if (csrfFailure) {
     return redirectAfterPost(
       request,
-      buildErrorRedirect(request, 'Session expired. Please refresh and try again.', mode)
+      buildErrorRedirect(request, 'Session expired. Please refresh and try again.', step)
     )
   }
 
   const email = formValue(formData, 'email')
 
   if (!email) {
-    return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.', mode))
+    return redirectAfterPost(request, buildErrorRedirect(request, 'Email is required.', step))
   }
 
   try {
@@ -73,7 +82,13 @@ export async function POST(request: Request) {
       return redirectAfterPost(request, url)
     }
 
-    await forgotPassword(email)
+    try {
+      await forgotPassword(email)
+    } catch (error) {
+      if (errorName(error) !== 'UserNotFoundException') {
+        throw error
+      }
+    }
     const url = new URL('/reset-password', request.url)
     url.searchParams.set('sent', '1')
     url.searchParams.set('step', 'confirm')

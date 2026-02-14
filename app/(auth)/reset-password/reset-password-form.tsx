@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AuthLogo from '../auth-logo'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 
 type ResetStep = 'request' | 'confirm'
+const RESEND_COOLDOWN_SECONDS = 30
 
 type ResetPasswordFormProps = {
   error?: string
@@ -16,7 +17,27 @@ type ResetPasswordFormProps = {
 export default function ResetPasswordForm({ error, sent, step: initialStep }: ResetPasswordFormProps) {
   const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
   const [step, setStep] = useState<ResetStep>(initialStep)
+  const [email, setEmail] = useState('')
+  const [cooldownEndsAt, setCooldownEndsAt] = useState<number>(0)
+  const [now, setNow] = useState<number>(0)
   const isConfirmStep = step === 'confirm'
+  const cooldownRemaining = Math.max(0, Math.ceil((cooldownEndsAt - now) / 1000))
+  const resendDisabled = cooldownRemaining > 0 || !email || csrfLoading || !csrfToken
+
+  useEffect(() => {
+    setStep(initialStep)
+  }, [initialStep])
+
+  useEffect(() => {
+    if (!sent) return
+    setCooldownEndsAt(Date.now() + RESEND_COOLDOWN_SECONDS * 1000)
+  }, [sent])
+
+  useEffect(() => {
+    setNow(Date.now())
+    const timer = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   return (
     <>
@@ -53,11 +74,14 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                       type="email"
                       autoComplete="email"
                       placeholder="you@example.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
                       required
                     />
                   </div>
                 </div>
                 <input type="hidden" name="mode" value="request" />
+                <input type="hidden" name="step" value="request" />
                 <input type="hidden" name="csrf_token" value={csrfToken} />
                 <div className="mt-6">
                   <button
@@ -74,7 +98,7 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                   type="button"
                   onClick={() => setStep('confirm')}
                 >
-                  Already have a code?
+                  Already have a code? Continue
                 </button>
               </div>
             </>
@@ -93,6 +117,8 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                       type="email"
                       autoComplete="email"
                       placeholder="you@example.com"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
                       required
                     />
                   </div>
@@ -125,6 +151,7 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                   </div>
                 </div>
                 <input type="hidden" name="mode" value="confirm" />
+                <input type="hidden" name="step" value="confirm" />
                 <input type="hidden" name="csrf_token" value={csrfToken} />
                 <div className="mt-6">
                   <button
@@ -135,13 +162,28 @@ export default function ResetPasswordForm({ error, sent, step: initialStep }: Re
                   </button>
                 </div>
               </form>
-              <div className="mt-4 text-right">
+              <div className="mt-4 border-t border-slate-200 pt-4">
+                <form action="/api/auth/reset-password" method="post">
+                  <input type="hidden" name="email" value={email} />
+                  <input type="hidden" name="mode" value="request" />
+                  <input type="hidden" name="step" value="confirm" />
+                  <input type="hidden" name="csrf_token" value={csrfToken} />
+                  <button
+                    className="w-full py-2.5 px-4 text-sm font-medium text-[#1861C8] border border-[#1861C8]/30 rounded-full hover:bg-[#1861C8]/5 transition disabled:cursor-not-allowed disabled:opacity-60"
+                    type="submit"
+                    disabled={resendDisabled}
+                  >
+                    {cooldownRemaining > 0
+                      ? `Resend code in ${cooldownRemaining}s`
+                      : 'Resend verification code'}
+                  </button>
+                </form>
                 <button
-                  className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
+                  className="mt-3 text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
                   type="button"
                   onClick={() => setStep('request')}
                 >
-                  Need a new code?
+                  Use a different email
                 </button>
               </div>
             </>
