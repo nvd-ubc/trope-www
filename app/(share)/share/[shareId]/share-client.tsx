@@ -17,6 +17,8 @@ type ShareRecord = {
   share_id: string
   workflow_id: string
   version_id: string
+  content_mode?: string | null
+  embed_enabled?: boolean | null
   created_at: string
   expires_at?: number | null
   created_by?: string | null
@@ -101,7 +103,7 @@ const formatKind = (kind?: string | null) => {
 
 export default function ShareClient({ shareId }: { shareId: string }) {
   const searchParams = useSearchParams()
-  const embedMode = searchParams.get('embed') === '1' || searchParams.get('embed') === 'true'
+  const embedRequested = searchParams.get('embed') === '1' || searchParams.get('embed') === 'true'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
@@ -197,6 +199,8 @@ export default function ShareClient({ shareId }: { shareId: string }) {
     }
     return map
   }, [version?.guide_media?.step_images])
+  const shareContentMode = share?.content_mode === 'text_only' ? 'text_only' : 'media'
+  const shareAllowsMedia = shareContentMode === 'media'
 
   if (loading) {
     return (
@@ -227,6 +231,19 @@ export default function ShareClient({ shareId }: { shareId: string }) {
     )
   }
 
+  const shareEmbedEnabled = share.embed_enabled !== false
+  const embedMode = embedRequested && shareEmbedEnabled
+
+  if (embedRequested && !shareEmbedEnabled) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <Card className="border-amber-200 bg-amber-50 p-6 text-sm text-amber-700">
+          Embed mode is disabled for this share link.
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen">
       {!embedMode && (
@@ -249,6 +266,9 @@ export default function ShareClient({ shareId }: { shareId: string }) {
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="info">Shared workflow</Badge>
+            <Badge variant={shareAllowsMedia ? 'success' : 'warning'}>
+              {shareAllowsMedia ? 'Screenshots enabled' : 'Text-only share'}
+            </Badge>
             {share.expires_at && (
               <Badge variant="warning">Expires {formatDate(new Date(share.expires_at * 1000).toISOString())}</Badge>
             )}
@@ -283,6 +303,11 @@ export default function ShareClient({ shareId }: { shareId: string }) {
               Follow the SOP below in your browser or desktop app. If you want interactive guidance,
               open Trope and run the workflow in guided mode.
             </div>
+            {!shareAllowsMedia && (
+              <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+                Screenshots are hidden for this public share. Use the instructions to run the workflow.
+              </div>
+            )}
           </Card>
         </div>
 
@@ -354,26 +379,28 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                         )}
                       </div>
                     </div>
-                    <GuideStepImageCard
-                      step={step}
-                      image={image}
-                      previewSrc={previewSrc}
-                      fullSrc={fullSrc}
-                      maxHeightClass="max-h-[22rem]"
-                      onTelemetryEvent={(eventType, properties) => {
-                        fetch(`/api/shares/${encodeURIComponent(shareId)}/events`, {
-                          method: 'POST',
-                          headers: { 'content-type': 'application/json' },
-                          body: JSON.stringify({
-                            event_type: eventType,
-                            surface: 'web_share_doc',
-                            ...properties,
-                          }),
-                        }).catch(() => {
-                          // Ignore telemetry failures.
-                        })
-                      }}
-                    />
+                    {shareAllowsMedia && (
+                      <GuideStepImageCard
+                        step={step}
+                        image={image}
+                        previewSrc={previewSrc}
+                        fullSrc={fullSrc}
+                        maxHeightClass="max-h-[22rem]"
+                        onTelemetryEvent={(eventType, properties) => {
+                          fetch(`/api/shares/${encodeURIComponent(shareId)}/events`, {
+                            method: 'POST',
+                            headers: { 'content-type': 'application/json' },
+                            body: JSON.stringify({
+                              event_type: eventType,
+                              surface: 'web_share_doc',
+                              ...properties,
+                            }),
+                          }).catch(() => {
+                            // Ignore telemetry failures.
+                          })
+                        }}
+                      />
+                    )}
                     <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                     {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
                   </div>

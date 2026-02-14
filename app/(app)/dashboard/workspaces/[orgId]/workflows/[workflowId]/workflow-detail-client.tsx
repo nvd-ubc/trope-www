@@ -303,6 +303,10 @@ export default function WorkflowDetailClient({
   const [specLoading, setSpecLoading] = useState(false)
   const [specError, setSpecError] = useState<string | null>(null)
   const [shareId, setShareId] = useState<string | null>(null)
+  const [shareContentMode, setShareContentMode] = useState<'text_only' | 'media' | null>(null)
+  const [shareIncludeMedia, setShareIncludeMedia] = useState(false)
+  const [shareEmbedAllowed, setShareEmbedAllowed] = useState(false)
+  const [shareEmbedMode, setShareEmbedMode] = useState<boolean | null>(null)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
@@ -527,6 +531,8 @@ export default function WorkflowDetailClient({
   useEffect(() => {
     if (!shareId) {
       setShareUrl(null)
+      setShareContentMode(null)
+      setShareEmbedMode(null)
       return
     }
     if (typeof window !== 'undefined') {
@@ -562,11 +568,15 @@ export default function WorkflowDetailClient({
             'content-type': 'application/json',
             'x-csrf-token': csrfToken,
           },
-          body: JSON.stringify({ version_id: selectedVersionId }),
+          body: JSON.stringify({
+            version_id: selectedVersionId,
+            include_media: shareIncludeMedia,
+            embed_enabled: shareEmbedAllowed,
+          }),
         }
       )
       const payload = (await response.json().catch(() => null)) as
-        | { share?: { share_id?: string }; message?: string }
+        | { share?: { share_id?: string; content_mode?: string | null; embed_enabled?: boolean | null }; message?: string }
         | null
       if (!response.ok) {
         setRequestId(response.headers.get('x-trope-request-id'))
@@ -574,7 +584,10 @@ export default function WorkflowDetailClient({
       }
       const nextShareId = payload?.share?.share_id ?? null
       setShareId(nextShareId)
-      setActionMessage('Share link created.')
+      const contentMode = payload?.share?.content_mode === 'text_only' ? 'text_only' : 'media'
+      setShareContentMode(contentMode)
+      setShareEmbedMode(payload?.share?.embed_enabled === true)
+      setActionMessage(contentMode === 'media' ? 'Share link created with screenshots.' : 'Text-only share link created.')
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Unable to create share link.')
     } finally {
@@ -796,6 +809,38 @@ export default function WorkflowDetailClient({
         }
         actions={
           <>
+            {isAdmin && (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
+                <Checkbox
+                  id="share-include-media"
+                  checked={shareIncludeMedia}
+                  onCheckedChange={(checked) => setShareIncludeMedia(checked === true)}
+                  disabled={!selectedVersionId || pendingAction === 'share'}
+                />
+                <label
+                  htmlFor="share-include-media"
+                  className="cursor-pointer text-xs font-medium text-muted-foreground"
+                >
+                  Include screenshots
+                </label>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
+                <Checkbox
+                  id="share-embed-enabled"
+                  checked={shareEmbedAllowed}
+                  onCheckedChange={(checked) => setShareEmbedAllowed(checked === true)}
+                  disabled={!selectedVersionId || pendingAction === 'share'}
+                />
+                <label
+                  htmlFor="share-embed-enabled"
+                  className="cursor-pointer text-xs font-medium text-muted-foreground"
+                >
+                  Allow embed mode
+                </label>
+              </div>
+            )}
             {isAdmin && (
               <Button
                 variant="outline"
@@ -1303,6 +1348,20 @@ export default function WorkflowDetailClient({
           {shareId && (
             <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Share link</div>
+              {shareContentMode && (
+                <div className="mt-2">
+                  <Badge variant={shareContentMode === 'media' ? 'success' : 'warning'}>
+                    {shareContentMode === 'media' ? 'Screenshots enabled' : 'Text-only share'}
+                  </Badge>
+                </div>
+              )}
+              {shareEmbedMode !== null && (
+                <div className="mt-2">
+                  <Badge variant={shareEmbedMode ? 'info' : 'neutral'}>
+                    {shareEmbedMode ? 'Embed enabled' : 'Embed disabled'}
+                  </Badge>
+                </div>
+              )}
               {shareUrl ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="break-all font-mono text-xs">{shareUrl}</span>
