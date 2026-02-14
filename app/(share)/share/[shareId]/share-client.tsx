@@ -7,11 +7,9 @@ import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import Logo from '@/components/ui/logo'
-import { getRadarPercent } from '@/lib/guide-editor'
+import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
 import {
   formatCaptureTimestamp,
-  resolveStepImageVariant,
-  shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
 
@@ -325,20 +323,6 @@ export default function ShareClient({ shareId }: { shareId: string }) {
               {spec.steps.map((step, index) => {
                 const kindLabel = formatKind(step.kind)
                 const image = stepImageMap[step.id] ?? null
-                const previewImage = image
-                  ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
-                  : null
-                const radar = image?.radar ?? null
-                const radarWidth = image?.width ?? previewImage?.width ?? null
-                const radarHeight = image?.height ?? previewImage?.height ?? null
-                const radarPercent = shouldRenderStepRadar({
-                  step,
-                  radar,
-                  width: radarWidth,
-                  height: radarHeight,
-                })
-                  ? getRadarPercent(radar, radarWidth, radarHeight)
-                  : null
                 const previewSrc = image
                   ? `/api/shares/${encodeURIComponent(shareId)}/media/steps/${encodeURIComponent(
                       step.id
@@ -349,7 +333,6 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                       step.id
                     )}?variant=full`
                   : null
-                const hasImage = Boolean(previewSrc && (previewImage?.downloadUrl || image?.download_url))
                 const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
                 return (
                   <div key={step.id} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -371,41 +354,13 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                         )}
                       </div>
                     </div>
-                    {hasImage && previewSrc && fullSrc && (
-                      <a
-                        href={fullSrc}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-                      >
-                        <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
-                          <img
-                            src={previewSrc}
-                            alt={step.title}
-                            loading="lazy"
-                            className="block h-auto max-h-[22rem] w-auto max-w-full transition group-hover:scale-[1.01]"
-                          />
-                          {radarPercent && (
-                            <div className="pointer-events-none absolute inset-0">
-                              <div
-                                className="absolute -translate-x-1/2 -translate-y-1/2"
-                                style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
-                              >
-                                <div className="relative h-5 w-5">
-                                  <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
-                                  <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </a>
-                    )}
-                    {!hasImage && (
-                      <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                        No screenshot available for this step.
-                      </div>
-                    )}
+                    <GuideStepImageCard
+                      step={step}
+                      image={image}
+                      previewSrc={previewSrc}
+                      fullSrc={fullSrc}
+                      maxHeightClass="max-h-[22rem]"
+                    />
                     <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                     {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
                   </div>

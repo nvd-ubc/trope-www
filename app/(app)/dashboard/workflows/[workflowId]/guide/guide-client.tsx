@@ -16,18 +16,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
   buildSaveFingerprint,
   createDraftStep,
-  getRadarPercent,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
 import {
   formatCaptureTimestamp,
-  resolveStepImageVariant,
-  shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
 
@@ -221,29 +219,14 @@ const StepImageCard = ({
     })
     .filter((value): value is string => Boolean(value))
 
-  const cardImage = useMemo(
-    () =>
-      image
-        ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
-        : null,
-    [image]
-  )
-  const fullImage = useMemo(
-    () =>
-      image
-        ? resolveStepImageVariant(image, { surface: 'detail', requestedVariant: 'full' })
-        : null,
-    [image]
-  )
-
-  const imgSrc = image
+  const previewSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
         workflowId
       )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
         step.id
       )}?variant=preview`
     : null
-  const openImageHref = image
+  const fullSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
         workflowId
       )}/versions/${encodeURIComponent(versionId)}/media/steps/${encodeURIComponent(
@@ -252,22 +235,7 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
-  const width = image?.width ?? cardImage?.width ?? null
-  const height = image?.height ?? cardImage?.height ?? null
-  const radarPercent = useMemo(
-    () =>
-      shouldRenderStepRadar({
-        step,
-        radar,
-        width,
-        height,
-      })
-        ? getRadarPercent(radar, width, height)
-        : null,
-    [height, radar, step, width]
-  )
   const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
-  const hasImage = Boolean(imgSrc && (cardImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url))
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -317,42 +285,13 @@ const StepImageCard = ({
         </div>
       </div>
 
-      {hasImage && imgSrc && openImageHref && (
-        <a
-          href={openImageHref}
-          target="_blank"
-          rel="noreferrer"
-          className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-        >
-          <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
-            <img
-              src={imgSrc}
-              alt={step.title}
-              loading="lazy"
-              className="block h-auto max-h-[27rem] w-auto max-w-full transition group-hover:scale-[1.01]"
-            />
-            {radarPercent && (
-              <div className="pointer-events-none absolute inset-0">
-                <div
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
-                >
-                  <div className="relative h-5 w-5">
-                    <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
-                    <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </a>
-      )}
-
-      {!hasImage && (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-          No screenshot available for this step.
-        </div>
-      )}
+      <GuideStepImageCard
+        step={step}
+        image={image}
+        previewSrc={previewSrc}
+        fullSrc={fullSrc}
+        maxHeightClass="max-h-[27rem]"
+      />
 
       {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
         <div className="mt-2 text-xs text-slate-500">
