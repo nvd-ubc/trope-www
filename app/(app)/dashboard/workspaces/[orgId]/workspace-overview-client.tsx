@@ -70,6 +70,13 @@ type AlertsResponse = {
   alerts: WorkflowAlert[]
 }
 
+type WorkspaceOverviewBootstrapResponse = {
+  org?: OrgProfileResponse | null
+  workflows?: WorkflowListResponse | null
+  alerts?: AlertsResponse | null
+  error?: string
+}
+
 const formatDate = (value?: string) => {
   if (!value) return 'Unknown'
   const date = new Date(value)
@@ -116,36 +123,27 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
     const load = async () => {
       try {
         setRequestId(null)
-        const [orgRes, workflowsRes, alertsRes] = await Promise.all([
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, { cache: 'no-store' }),
-          fetch(`/api/orgs/${encodeURIComponent(orgId)}/alerts?status=open`, { cache: 'no-store' }),
-        ])
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(orgId)}/workspace-overview/bootstrap`,
+          { cache: 'no-store' }
+        )
 
-        if (orgRes.status === 401 || workflowsRes.status === 401 || alertsRes.status === 401) {
+        if (response.status === 401) {
           router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}`)
           return
         }
 
-        const fallbackRequestId =
-          orgRes.headers.get('x-trope-request-id') ||
-          workflowsRes.headers.get('x-trope-request-id') ||
-          alertsRes.headers.get('x-trope-request-id')
-
-        const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
-        const workflowsPayload = (await workflowsRes.json().catch(() => null)) as WorkflowListResponse | null
-        const alertsPayload = (await alertsRes.json().catch(() => null)) as AlertsResponse | null
-
-        if (!orgRes.ok || !orgPayload) {
-          setRequestId(fallbackRequestId)
+        const payload = (await response.json().catch(() => null)) as WorkspaceOverviewBootstrapResponse | null
+        if (!response.ok || !payload?.org) {
+          setRequestId(response.headers.get('x-trope-request-id'))
           throw new Error('Unable to load workspace.')
         }
 
         if (!active) return
-        setOrg(orgPayload.org)
-        setMembership(orgPayload.membership)
-        setWorkflows(workflowsPayload?.workflows ?? [])
-        setAlerts(alertsPayload?.alerts ?? [])
+        setOrg(payload.org.org)
+        setMembership(payload.org.membership)
+        setWorkflows(payload.workflows?.workflows ?? [])
+        setAlerts(payload.alerts?.alerts ?? [])
         setLoading(false)
       } catch (err) {
         if (!active) return

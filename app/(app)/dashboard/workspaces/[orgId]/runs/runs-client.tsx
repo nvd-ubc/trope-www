@@ -67,6 +67,12 @@ type WorkflowListResponse = {
   workflows: WorkflowDefinition[]
 }
 
+type RunsBootstrapResponse = {
+  runs?: RunListResponse | null
+  workflows?: WorkflowListResponse | null
+  error?: string
+}
+
 const formatDateTime = (value?: string | null) => {
   if (!value) return 'Unknown'
   const date = new Date(value)
@@ -128,19 +134,6 @@ export default function RunsClient({ orgId }: { orgId: string }) {
     }
   }, [workflowFromUrl, workflowFilter])
 
-  const loadWorkflows = useCallback(async () => {
-    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, {
-      cache: 'no-store',
-    })
-    if (!response.ok) return
-    const payload = (await response.json().catch(() => null)) as WorkflowListResponse | null
-    const map: Record<string, string> = {}
-    for (const workflow of payload?.workflows ?? []) {
-      map[workflow.workflow_id] = workflow.title
-    }
-    setWorkflowMap(map)
-  }, [orgId])
-
   const loadRuns = useCallback(
     async (cursor?: string, append = false) => {
       const queryParams = new URLSearchParams()
@@ -172,8 +165,36 @@ export default function RunsClient({ orgId }: { orgId: string }) {
     let active = true
     const run = async () => {
       try {
-        await Promise.all([loadRuns(), loadWorkflows()])
+        const queryParams = new URLSearchParams()
+        queryParams.set('limit', '25')
+        if (workflowFilter) {
+          queryParams.set('workflow_id', workflowFilter)
+        }
+
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(orgId)}/runs/bootstrap?${queryParams.toString()}`,
+          { cache: 'no-store' }
+        )
+
+        if (response.status === 401) {
+          router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`)
+          return
+        }
+
+        const payload = (await response.json().catch(() => null)) as RunsBootstrapResponse | null
+        if (!response.ok || !payload?.runs) {
+          setRequestId(response.headers.get('x-trope-request-id'))
+          throw new Error('Unable to load runs.')
+        }
+
+        const workflowLookup: Record<string, string> = {}
+        for (const workflow of payload.workflows?.workflows ?? []) {
+          workflowLookup[workflow.workflow_id] = workflow.title
+        }
         if (!active) return
+        setWorkflowMap(workflowLookup)
+        setRuns(payload.runs.runs ?? [])
+        setNextCursor(payload.runs.next_cursor ?? null)
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -185,7 +206,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
     return () => {
       active = false
     }
-  }, [loadRuns, loadWorkflows])
+  }, [orgId, router, workflowFilter])
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()

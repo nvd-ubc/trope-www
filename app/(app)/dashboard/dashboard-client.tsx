@@ -61,8 +61,12 @@ type InviteSummary = {
   expires_at?: number | null
 }
 
-type MeInvitesResponse = {
-  invites: InviteSummary[]
+type DashboardBootstrapResponse = {
+  me?: MeResponse | null
+  usage?: UsageResponse | null
+  orgs?: OrgsResponse | null
+  invites?: InviteSummary[] | null
+  error?: string
 }
 
 export default function DashboardClient() {
@@ -78,37 +82,27 @@ export default function DashboardClient() {
     let active = true
     const fetchData = async () => {
       try {
-        const [meRes, usageRes, orgsRes, invitesRes] = await Promise.all([
-          fetch('/api/me', { cache: 'no-store' }),
-          fetch('/api/usage', { cache: 'no-store' }),
-          fetch('/api/orgs', { cache: 'no-store' }),
-          fetch('/api/me/invites', { cache: 'no-store' }),
-        ])
-
-        if (
-          meRes.status === 401 ||
-          usageRes.status === 401 ||
-          orgsRes.status === 401 ||
-          invitesRes.status === 401
-        ) {
+        const response = await fetch('/api/dashboard/bootstrap', { cache: 'no-store' })
+        if (response.status === 401) {
           router.replace('/signin?next=/dashboard')
           return
         }
 
-        const mePayload = (await meRes.json().catch(() => null)) as MeResponse | null
-        const usagePayload = (await usageRes.json().catch(() => null)) as UsageResponse | null
-        const orgsPayload = (await orgsRes.json().catch(() => null)) as OrgsResponse | null
-        const invitesPayload = (await invitesRes.json().catch(() => null)) as MeInvitesResponse | null
-
-        if (!meRes.ok || !usageRes.ok || !orgsRes.ok || !invitesRes.ok) {
+        const payload = (await response.json().catch(() => null)) as DashboardBootstrapResponse | null
+        if (
+          !response.ok ||
+          !payload?.me ||
+          !payload?.usage ||
+          !payload?.orgs
+        ) {
           throw new Error('Unable to load dashboard data.')
         }
 
         if (!active) return
-        setMe(mePayload)
-        setUsage(usagePayload)
-        setOrgs(orgsPayload)
-        setInvites(invitesPayload?.invites ?? [])
+        setMe(payload.me)
+        setUsage(payload.usage)
+        setOrgs(payload.orgs)
+        setInvites(payload.invites ?? [])
         setLoading(false)
       } catch (err) {
         if (!active) return

@@ -56,6 +56,12 @@ type ProfileUpdateResponse = {
   error?: string
 }
 
+type AccountBootstrapResponse = {
+  me?: MeResponse | null
+  orgs?: OrgsResponse | null
+  error?: string
+}
+
 export default function AccountClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -78,28 +84,22 @@ export default function AccountClient() {
     let active = true
     const load = async () => {
       try {
-        const [meRes, orgsRes] = await Promise.all([
-          fetch('/api/me', { cache: 'no-store' }),
-          fetch('/api/orgs', { cache: 'no-store' }),
-        ])
-
-        if (meRes.status === 401 || orgsRes.status === 401) {
+        const response = await fetch('/api/dashboard/account/bootstrap', { cache: 'no-store' })
+        if (response.status === 401) {
           router.replace('/signin?next=/dashboard/account')
           return
         }
 
-        const mePayload = (await meRes.json().catch(() => null)) as MeResponse | null
-        const orgsPayload = (await orgsRes.json().catch(() => null)) as OrgsResponse | null
-
-        if (!meRes.ok || !orgsRes.ok || !mePayload || !orgsPayload) {
+        const payload = (await response.json().catch(() => null)) as AccountBootstrapResponse | null
+        if (!response.ok || !payload?.me || !payload?.orgs) {
           throw new Error('Unable to load account details.')
         }
 
         if (!active) return
-        setMe(mePayload)
-        setOrgs(orgsPayload)
-        setFirstName(mePayload.first_name ?? '')
-        setLastName(mePayload.last_name ?? '')
+        setMe(payload.me)
+        setOrgs(payload.orgs)
+        setFirstName(payload.me.first_name ?? '')
+        setLastName(payload.me.last_name ?? '')
         setLoading(false)
       } catch (err) {
         if (!active) return

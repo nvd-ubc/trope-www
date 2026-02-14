@@ -85,11 +85,6 @@ type WorkflowVersion = {
   steps_count?: number | null
 }
 
-type WorkflowDetailResponse = {
-  workflow: WorkflowDefinition
-  latest_version?: WorkflowVersion | null
-}
-
 type OrgProfileResponse = {
   membership?: { role: string }
 }
@@ -104,6 +99,14 @@ type MemberRecord = {
 
 type MembersResponse = {
   members: MemberRecord[]
+}
+
+type WorkflowsBootstrapResponse = {
+  workflows?: WorkflowListResponse | null
+  org?: OrgProfileResponse | null
+  members?: MembersResponse | null
+  latestVersions?: Record<string, WorkflowVersion | null> | null
+  error?: string
 }
 
 const formatDate = (value?: string) => {
@@ -213,70 +216,26 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
 
   const loadWorkflows = useCallback(async () => {
     setRequestId(null)
-    const [workflowRes, orgRes] = await Promise.all([
-      fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows`, { cache: 'no-store' }),
-      fetch(`/api/orgs/${encodeURIComponent(orgId)}`, { cache: 'no-store' }),
-    ])
+    const response = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/workflows/bootstrap`, {
+      cache: 'no-store',
+    })
 
-    if (workflowRes.status === 401 || orgRes.status === 401) {
+    if (response.status === 401) {
       router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows`)
       return
     }
 
-    const fallbackRequestId =
-      workflowRes.headers.get('x-trope-request-id') || orgRes.headers.get('x-trope-request-id')
-
-    const workflowPayload = (await workflowRes.json().catch(() => null)) as WorkflowListResponse | null
-    const orgPayload = (await orgRes.json().catch(() => null)) as OrgProfileResponse | null
-    if (!workflowRes.ok || !workflowPayload) {
-      setRequestId(fallbackRequestId)
+    const payload = (await response.json().catch(() => null)) as WorkflowsBootstrapResponse | null
+    if (!response.ok || !payload?.workflows) {
+      setRequestId(response.headers.get('x-trope-request-id'))
       throw new Error('Unable to load workflows.')
     }
 
-    const list = workflowPayload.workflows ?? []
+    const list = payload.workflows.workflows ?? []
     setWorkflows(list)
-    setMembershipRole(orgPayload?.membership?.role ?? null)
-
-    if (orgPayload?.membership?.role === 'org_owner' || orgPayload?.membership?.role === 'org_admin') {
-      const membersRes = await fetch(`/api/orgs/${encodeURIComponent(orgId)}/members`, {
-        cache: 'no-store',
-      })
-      if (membersRes.ok) {
-        const membersPayload = (await membersRes.json().catch(() => null)) as MembersResponse | null
-        setMembers(membersPayload?.members ?? [])
-      }
-    } else {
-      setMembers([])
-    }
-
-    const details = await Promise.all(
-      list.map(async (workflow) => {
-        try {
-          const detailResponse = await fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflow.workflow_id)}`,
-            { cache: 'no-store' }
-          )
-          if (!detailResponse.ok) {
-            return { workflowId: workflow.workflow_id, latest: null }
-          }
-          const detail = (await detailResponse.json().catch(() => null)) as
-            | WorkflowDetailResponse
-            | null
-          return {
-            workflowId: workflow.workflow_id,
-            latest: detail?.latest_version ?? null,
-          }
-        } catch {
-          return { workflowId: workflow.workflow_id, latest: null }
-        }
-      })
-    )
-
-    const latestMap: Record<string, WorkflowVersion | null> = {}
-    for (const entry of details) {
-      latestMap[entry.workflowId] = entry.latest
-    }
-    setLatestVersions(latestMap)
+    setMembershipRole(payload.org?.membership?.role ?? null)
+    setMembers(payload.members?.members ?? [])
+    setLatestVersions(payload.latestVersions ?? {})
   }, [orgId, router])
 
   useEffect(() => {
