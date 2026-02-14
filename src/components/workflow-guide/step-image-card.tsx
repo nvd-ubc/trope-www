@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import StepImageCanvas from '@/components/workflow-guide/step-image-canvas'
 import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer-dialog'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
@@ -114,6 +115,8 @@ export default function StepImageCard({
   const hasImage = Boolean(
     previewSrc && fullSrc && (previewImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url)
   )
+  const imageWidth = typeof width === 'number' && width > 0 ? width : 1
+  const imageHeight = typeof height === 'number' && height > 0 ? height : 1
 
   if (!hasImage || !previewSrc || !fullSrc) {
     return (
@@ -208,16 +211,33 @@ export default function StepImageCard({
   if (focusZoomEnabled) {
     return (
       <>
-        <button
-          type="button"
-          className="group mt-4 block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]"
-          onClick={() => {
-            emitOpenFullTelemetry()
-            setDialogOpen(true)
-          }}
-        >
-          {imageFrame}
-        </button>
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+          <StepImageCanvas
+            src={previewSrc}
+            alt={step.title}
+            focusTransform={focusTransform}
+            sourceImageSize={{ width: imageWidth, height: imageHeight }}
+            radarPercent={radarPercent}
+            showRadar={showRadar}
+            active
+            compact
+            showControls={false}
+            imageClassName={maxHeightClass}
+          />
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
+          <span>Scroll to zoom, drag to pan, double-click to toggle zoom.</span>
+          <button
+            type="button"
+            className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+            onClick={() => {
+              emitOpenFullTelemetry()
+              setDialogOpen(true)
+            }}
+          >
+            Open full
+          </button>
+        </div>
         <StepImageViewerDialog
           open={dialogOpen}
           onOpenChange={setDialogOpen}

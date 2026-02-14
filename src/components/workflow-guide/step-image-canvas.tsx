@@ -17,6 +17,9 @@ type StepImageCanvasProps = {
   radarPercent: { left: number; top: number } | null
   showRadar: boolean
   active: boolean
+  showControls?: boolean
+  compact?: boolean
+  imageClassName?: string
 }
 
 type TransformState = {
@@ -37,6 +40,9 @@ export default function StepImageCanvas({
   radarPercent,
   showRadar,
   active,
+  showControls = true,
+  compact = false,
+  imageClassName,
 }: StepImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const controlsRef = useRef<{
@@ -53,6 +59,7 @@ export default function StepImageCanvas({
   })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
+  const [isPanning, setIsPanning] = useState(false)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -180,24 +187,26 @@ export default function StepImageCanvas({
 
   return (
     <div className="space-y-3">
-      <StepImageControls
-        zoomScale={transformState.scale}
-        minScale={MIN_SCALE}
-        maxScale={MAX_SCALE}
-        canFocus={focusTransform.hasFocusCrop}
-        onFit={resetToFit}
-        onActualSize={() => setTransform(transformState.positionX, transformState.positionY, 1)}
-        onFocus={jumpToFocus}
-        onReset={resetToFit}
-        onZoomIn={() => controlsRef.current?.zoomIn()}
-        onZoomOut={() => controlsRef.current?.zoomOut()}
-        onZoomScaleChange={(scale) =>
-          setTransform(transformState.positionX, transformState.positionY, scale)
-        }
-      />
+      {showControls && (
+        <StepImageControls
+          zoomScale={transformState.scale}
+          minScale={MIN_SCALE}
+          maxScale={MAX_SCALE}
+          canFocus={focusTransform.hasFocusCrop}
+          onFit={resetToFit}
+          onActualSize={() => setTransform(transformState.positionX, transformState.positionY, 1)}
+          onFocus={jumpToFocus}
+          onReset={resetToFit}
+          onZoomIn={() => controlsRef.current?.zoomIn()}
+          onZoomOut={() => controlsRef.current?.zoomOut()}
+          onZoomScaleChange={(scale) =>
+            setTransform(transformState.positionX, transformState.positionY, scale)
+          }
+        />
+      )}
       <div
         ref={containerRef}
-        className="rounded-lg border border-slate-200 bg-slate-50 p-2 focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]"
+        className={`relative rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
         tabIndex={0}
         onKeyDown={handleKeyboard}
         aria-label={`Step image zoom canvas at ${ariaZoom}`}
@@ -210,7 +219,12 @@ export default function StepImageCanvas({
           wheel={{ step: 0.12 }}
           doubleClick={{ mode: 'toggle' }}
           pinch={{ step: 5 }}
-          panning={{ velocityDisabled: true }}
+          panning={{
+            velocityDisabled: true,
+            allowLeftClickPan: true,
+            allowMiddleClickPan: false,
+            allowRightClickPan: false,
+          }}
           onTransformed={(ref) => {
             controlsRef.current = {
               zoomIn: ref.zoomIn,
@@ -224,16 +238,20 @@ export default function StepImageCanvas({
               positionY: ref.state.positionY,
             })
           }}
+          onPanningStart={() => setIsPanning(true)}
+          onPanningStop={() => setIsPanning(false)}
         >
           <TransformComponent
-            wrapperClass="!w-full !h-[70vh] max-h-[70vh]"
-            contentClass="!w-fit !h-fit !overflow-visible"
+            wrapperClass={compact ? '!w-full !h-auto min-h-[14rem]' : '!w-full !h-[70vh] max-h-[70vh]'}
+            contentClass={compact ? '!w-fit !h-fit !overflow-visible' : '!w-fit !h-fit !overflow-visible'}
           >
             <div className="relative">
               <img
                 src={src}
                 alt={alt}
-                className="block h-auto max-h-[68vh] w-auto max-w-[88vw] select-none"
+                className={compact
+                  ? `block h-auto w-auto max-w-full select-none ${imageClassName ?? ''}`.trim()
+                  : 'block h-auto max-h-[68vh] w-auto max-w-[88vw] select-none'}
                 draggable={false}
               />
               {showRadar && radarPercent && (
@@ -252,6 +270,13 @@ export default function StepImageCanvas({
             </div>
           </TransformComponent>
         </TransformWrapper>
+        {transformState.scale > 1.02 && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+            <div className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-white shadow-sm">
+              {isPanning ? 'Panning...' : 'Drag to pan'}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
