@@ -65,7 +65,11 @@ export default function StepImageViewerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[min(98vw,1320px)] p-4 sm:p-5" showCloseButton>
+      <DialogContent
+        className="max-h-[96vh] grid-rows-[auto_minmax(0,1fr)] overflow-hidden p-4 sm:p-5"
+        style={{ width: 'min(98vw, 1320px)', maxWidth: 'min(98vw, 1320px)' }}
+        showCloseButton
+      >
         <DialogHeader className="space-y-1">
           <DialogTitle>{step.title || 'Step screenshot'}</DialogTitle>
           <DialogDescription>
@@ -73,16 +77,19 @@ export default function StepImageViewerDialog({
           </DialogDescription>
         </DialogHeader>
         {fullSrc ? (
-          <StepImageCanvas
-            src={fullSrc}
-            alt={step.title}
-            focusTransform={focusTransform}
-            sourceImageSize={{ width: imageWidth, height: imageHeight }}
-            radarPercent={radarPercent}
-            showRadar={showRadar}
-            active={open}
-            showControls={false}
-          />
+          <div className="min-h-0">
+            <StepImageCanvas
+              src={fullSrc}
+              alt={step.title}
+              focusTransform={focusTransform}
+              sourceImageSize={{ width: imageWidth, height: imageHeight }}
+              radarPercent={radarPercent}
+              showRadar={showRadar}
+              active={open}
+              autoFocusOnActive={false}
+              showControls={false}
+            />
+          </div>
         ) : (
           <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
             Full screenshot is unavailable.

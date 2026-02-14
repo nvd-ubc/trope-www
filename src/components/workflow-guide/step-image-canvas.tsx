@@ -17,6 +17,7 @@ type StepImageCanvasProps = {
   radarPercent: { left: number; top: number } | null
   showRadar: boolean
   active: boolean
+  autoFocusOnActive?: boolean
   showControls?: boolean
   showFloatingZoomButtons?: boolean
   compact?: boolean
@@ -41,6 +42,7 @@ export default function StepImageCanvas({
   radarPercent,
   showRadar,
   active,
+  autoFocusOnActive = true,
   showControls = true,
   showFloatingZoomButtons = true,
   compact = false,
@@ -118,13 +120,13 @@ export default function StepImageCanvas({
 
   useEffect(() => {
     if (!active) return
-    if (focusTransform.hasFocusCrop) {
+    if (autoFocusOnActive && focusTransform.hasFocusCrop) {
       const id = window.setTimeout(() => jumpToFocus(), 0)
       return () => window.clearTimeout(id)
     }
     const id = window.setTimeout(() => resetToFit(), 0)
     return () => window.clearTimeout(id)
-  }, [active, focusTransform.hasFocusCrop, jumpToFocus, resetToFit])
+  }, [active, autoFocusOnActive, focusTransform.hasFocusCrop, jumpToFocus, resetToFit])
 
   const handleKeyboard = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
     if (!controlsRef.current) return
@@ -188,7 +190,7 @@ export default function StepImageCanvas({
   const ariaZoom = useMemo(() => `${Math.round(transformState.scale * 100)}%`, [transformState.scale])
 
   return (
-    <div className="space-y-3">
+    <div className="w-full space-y-3">
       {showControls && (
         <StepImageControls
           zoomScale={transformState.scale}
@@ -253,7 +255,10 @@ export default function StepImageCanvas({
                 alt={alt}
                 className={compact
                   ? `block h-auto w-auto max-w-full select-none ${imageClassName ?? ''}`.trim()
-                  : 'block h-auto max-h-[68vh] w-auto max-w-[88vw] select-none'}
+                  : 'block h-auto max-h-[68vh] w-auto max-w-full select-none'}
+                style={!compact && viewportSize.width > 0
+                  ? { maxWidth: `${Math.max(1, Math.floor(viewportSize.width - 8))}px` }
+                  : undefined}
                 draggable={false}
               />
               {showRadar && radarPercent && (
