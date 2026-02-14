@@ -11,6 +11,7 @@ import {
   MetricCard,
   PageHeader,
   SectionCard,
+  WorkspaceOverviewSkeleton,
 } from '@/components/dashboard'
 
 type OrgProfile = {
@@ -213,7 +214,7 @@ export default function WorkspaceOverviewClient({ orgId }: { orgId: string }) {
   }, [alerts, workflows])
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading workspace…</Card>
+    return <WorkspaceOverviewSkeleton />
   }
 
   if (error || !org || !membership) {

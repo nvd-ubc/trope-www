@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type InviteRecord = {
   org_id: string
@@ -232,7 +232,7 @@ export default function InvitesClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading invites…</Card>
+    return <DataTableSkeleton rows={6} columns={6} />
   }
 
   return (

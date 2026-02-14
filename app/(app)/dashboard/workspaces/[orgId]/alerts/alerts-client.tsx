@@ -36,7 +36,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowAlert = {
   alert_id: string
@@ -327,7 +327,7 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading alerts…</Card>
+    return <DataTableSkeleton rows={7} columns={7} />
   }
 
   if (error && alerts.length === 0) {

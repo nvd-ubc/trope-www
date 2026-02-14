@@ -34,7 +34,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowRun = {
   org_id: string
@@ -278,11 +278,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return (
-      <Card className="p-6 text-sm text-muted-foreground">
-        Loading runs…
-      </Card>
-    )
+    return <DataTableSkeleton rows={8} columns={8} />
   }
 
   if (error && runs.length === 0) {

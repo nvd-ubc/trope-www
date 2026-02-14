@@ -34,7 +34,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -421,7 +421,7 @@ export default function ComplianceClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading compliance data…</Card>
+    return <DataTableSkeleton rows={7} columns={8} />
   }
 
   if (error && requiredWorkflows.length === 0) {

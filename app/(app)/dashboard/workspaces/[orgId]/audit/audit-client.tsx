@@ -33,7 +33,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type AuditEvent = {
   actor_user_id: string
@@ -257,7 +257,7 @@ export default function AuditClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading audit log…</Card>
+    return <DataTableSkeleton rows={7} columns={6} />
   }
 
   if (error && events.length === 0) {

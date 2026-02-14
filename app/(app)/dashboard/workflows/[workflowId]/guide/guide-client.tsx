@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { ErrorNotice, PageHeader } from '@/components/dashboard'
+import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
   buildSaveFingerprint,
   createDraftStep,
@@ -844,11 +844,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }
 
   if (loading && !orgId) {
-    return (
-      <div className="flex items-center justify-center">
-        <Card className="p-6 text-sm text-slate-600">Loading guide…</Card>
-      </div>
-    )
+    return <GuidePageSkeleton />
   }
 
   if (resolveError || !orgId) {

@@ -37,7 +37,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type WorkflowDefinition = {
   org_id: string
@@ -537,7 +537,7 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading workflows…</Card>
+    return <DataTableSkeleton rows={8} columns={9} />
   }
 
   if (error && workflows.length === 0) {

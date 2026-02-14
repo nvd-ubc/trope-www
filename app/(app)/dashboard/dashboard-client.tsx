@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ChevronRight, Download, ListChecks, Users, Workflow } from 'lucide-react'
 import Button from '@/components/ui/button'
 import {
+  DashboardHomeSkeleton,
   EmptyState,
   ErrorNotice,
   MetricCard,
@@ -123,13 +124,7 @@ export default function DashboardClient() {
   }, [router])
 
   if (loading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
-        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
-        <div className="h-28 animate-pulse rounded-xl border border-border bg-card shadow-sm" />
-      </div>
-    )
+    return <DashboardHomeSkeleton />
   }
 
   if (error) {

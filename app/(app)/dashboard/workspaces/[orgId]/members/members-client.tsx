@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { DataToolbar, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, ErrorNotice, PageHeader } from '@/components/dashboard'
 
 type MemberRecord = {
   org_id: string
@@ -223,7 +223,7 @@ export default function MembersClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading members…</Card>
+    return <DataTableSkeleton rows={7} columns={6} />
   }
 
   if (error && members.length === 0) {

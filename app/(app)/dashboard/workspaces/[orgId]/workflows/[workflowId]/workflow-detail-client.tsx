@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { ErrorNotice, PageHeader } from '@/components/dashboard'
+import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
 import { getRadarPercent } from '@/lib/guide-editor'
 import {
   formatCaptureTimestamp,
@@ -797,7 +797,7 @@ export default function WorkflowDetailClient({
   }, [failedRuns])
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading workflow…</Card>
+    return <WorkflowDetailSkeleton />
   }
 
   if (error || !workflow) {

@@ -7,13 +7,14 @@ import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { safeInternalPath } from '@/lib/profile-identity'
 import Button from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
-import Card from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import {
+  PageHeaderSkeleton,
   ErrorNotice,
   PageHeader,
+  SectionCardSkeleton,
   SectionCard,
 } from '@/components/dashboard'
 
@@ -191,7 +192,16 @@ export default function AccountClient() {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading account…</Card>
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <SectionCardSkeleton rows={5} />
+          <SectionCardSkeleton rows={4} />
+        </div>
+        <SectionCardSkeleton rows={1} />
+      </div>
+    )
   }
 
   if (error || !me || !orgs) {

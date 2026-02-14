@@ -11,7 +11,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
-import { PageHeader } from '@/components/dashboard'
+import { PageHeader, PageHeaderSkeleton, SectionCardSkeleton } from '@/components/dashboard'
 
 type OrgProfile = {
   org_id: string
@@ -302,7 +302,16 @@ export default function SettingsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <Card className="p-6 text-sm text-muted-foreground">Loading settings…</Card>
+    return (
+      <div className="space-y-6">
+        <PageHeaderSkeleton />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <SectionCardSkeleton rows={8} />
+          <SectionCardSkeleton rows={5} />
+        </div>
+        <SectionCardSkeleton rows={2} />
+      </div>
+    )
   }
 
   const digestHourOptions = Array.from({ length: 24 }, (_, idx) => idx)
