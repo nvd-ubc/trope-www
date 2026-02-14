@@ -83,6 +83,7 @@ type GuideStep = {
   why?: string
   instructions: string
   kind?: string
+  callout_style?: string
   video_ranges?: unknown[]
   anchors?: {
     text?: unknown[]
@@ -141,6 +142,38 @@ const formatKind = (kind?: string | null) => {
   return kind.replace(/_/g, ' ')
 }
 
+const resolveCalloutStyle = (step: GuideStep): 'tip' | 'note' | 'alert' => {
+  const explicit = (step.callout_style ?? '').trim().toLowerCase()
+  if (explicit === 'tip' || explicit === 'note' || explicit === 'alert') {
+    return explicit
+  }
+
+  const title = step.title.trim().toLowerCase()
+  if (title.startsWith('tip:')) return 'tip'
+  if (title.startsWith('alert:') || title.startsWith('warning:')) return 'alert'
+  return 'note'
+}
+
+const calloutToneClass = (style: 'tip' | 'note' | 'alert') => {
+  switch (style) {
+    case 'tip':
+      return {
+        container: 'border-emerald-200 bg-emerald-50',
+        badge: 'bg-emerald-100 text-emerald-700',
+      }
+    case 'alert':
+      return {
+        container: 'border-amber-200 bg-amber-50',
+        badge: 'bg-amber-100 text-amber-700',
+      }
+    default:
+      return {
+        container: 'border-sky-200 bg-sky-50',
+        badge: 'bg-sky-100 text-sky-700',
+      }
+  }
+}
+
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
 
@@ -156,6 +189,7 @@ const formatReleaseLabel = (index: number) => `Release ${index + 1}`
 const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
 
 const StepImageCard = ({
+  csrfToken,
   orgId,
   workflowId,
   versionId,
@@ -170,9 +204,11 @@ const StepImageCard = ({
   onMoveDown,
   onDelete,
   onInsertAfter,
+  onCopyStepLink,
   onStepTitleChange,
   onStepInstructionChange,
 }: {
+  csrfToken: string | null
   orgId: string
   workflowId: string
   versionId: string
@@ -187,10 +223,14 @@ const StepImageCard = ({
   onMoveDown: () => void
   onDelete: () => void
   onInsertAfter: () => void
+  onCopyStepLink: () => void
   onStepTitleChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
 }) => {
   const kindLabel = formatKind(step.kind)
+  const isManual = (step.kind ?? '').trim().toLowerCase() === 'manual'
+  const calloutStyle = resolveCalloutStyle(step)
+  const calloutTone = calloutToneClass(calloutStyle)
   const anchorText = (step.anchors?.text ?? [])
     .map((anchor) => {
       if (anchor && typeof anchor === 'object' && !Array.isArray(anchor)) {
@@ -236,6 +276,32 @@ const StepImageCard = ({
 
   const radar = image?.radar ?? null
   const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
+  const sendGuideEvent = (
+    eventType:
+      | 'workflow_doc_focus_applied'
+      | 'workflow_doc_focus_fallback'
+      | 'workflow_doc_step_image_open_full',
+    properties: Record<string, unknown>
+  ) => {
+    if (!csrfToken) return
+    fetch(
+      `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/events`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        body: JSON.stringify({
+          event_type: eventType,
+          surface: 'web_guide_doc',
+          ...properties,
+        }),
+      }
+    ).catch(() => {
+      // Ignore telemetry failures.
+    })
+  }
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
@@ -256,6 +322,9 @@ const StepImageCard = ({
           )}
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onCopyStepLink}>
+            Copy step link
+          </Button>
           {kindLabel && (
             <Badge variant="info" className="text-[10px]">
               {kindLabel}
@@ -285,18 +354,32 @@ const StepImageCard = ({
         </div>
       </div>
 
-      <GuideStepImageCard
-        step={step}
-        image={image}
-        previewSrc={previewSrc}
-        fullSrc={fullSrc}
-        maxHeightClass="max-h-[27rem]"
-      />
-
-      {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
-        <div className="mt-2 text-xs text-slate-500">
-          Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
+      {isManual ? (
+        <div className={`mt-4 rounded-xl border px-4 py-3 ${calloutTone.container}`}>
+          <span
+            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${calloutTone.badge}`}
+          >
+            {calloutStyle}
+          </span>
+          <p className="mt-2 text-sm text-slate-700">{step.instructions}</p>
         </div>
+      ) : (
+        <>
+          <GuideStepImageCard
+            step={step}
+            image={image}
+            previewSrc={previewSrc}
+            fullSrc={fullSrc}
+            maxHeightClass="max-h-[27rem]"
+            onTelemetryEvent={sendGuideEvent}
+          />
+
+          {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
+            <div className="mt-2 text-xs text-slate-500">
+              Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
+            </div>
+          )}
+        </>
       )}
 
       {isEditing ? (
@@ -307,9 +390,9 @@ const StepImageCard = ({
           rows={3}
           placeholder="Describe the action clearly."
         />
-      ) : (
+      ) : !isManual ? (
         <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
-      )}
+      ) : null}
       {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
 
       {!isEditing && (anchorText.length > 0 || iconText.length > 0 || layoutText.length > 0) && (
@@ -364,6 +447,10 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [saveRequestId, setSaveRequestId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [stepSearchQuery, setStepSearchQuery] = useState('')
+  const [activeStepId, setActiveStepId] = useState<string | null>(null)
+  const [linkMessage, setLinkMessage] = useState<string | null>(null)
+  const stepCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
 
@@ -580,6 +667,141 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     const fingerprint = buildSaveFingerprint(draftSpec, workflow?.title ?? workflowId)
     return fingerprint !== baselineFingerprint
   }, [baselineFingerprint, draftSpec, isEditing, workflow?.title, workflowId])
+
+  const normalizedStepSearch = stepSearchQuery.trim().toLowerCase()
+  const stepEntries = useMemo(
+    () => (visibleSpec?.steps ?? []).map((step, index) => ({ step, index })),
+    [visibleSpec?.steps]
+  )
+  const filteredStepEntries = useMemo(() => {
+    if (isEditing || !normalizedStepSearch) return stepEntries
+    return stepEntries.filter(({ step }) => {
+      const haystack = [step.title, step.instructions, step.why ?? ''].join('\n').toLowerCase()
+      return haystack.includes(normalizedStepSearch)
+    })
+  }, [isEditing, normalizedStepSearch, stepEntries])
+
+  const setStepHash = (stepId: string) => {
+    if (typeof window === 'undefined') return
+    const url = new URL(window.location.href)
+    url.hash = `step=${encodeURIComponent(stepId)}`
+    window.history.replaceState(null, '', url)
+  }
+
+  const readStepFromHash = (): string | null => {
+    if (typeof window === 'undefined') return null
+    const hash = window.location.hash
+    if (!hash.startsWith('#step=')) return null
+    const raw = hash.slice('#step='.length)
+    if (!raw) return null
+    try {
+      return decodeURIComponent(raw)
+    } catch {
+      return raw
+    }
+  }
+
+  const focusStep = (stepId: string, behavior: ScrollBehavior = 'smooth') => {
+    const node = stepCardRefs.current[stepId]
+    if (node) {
+      node.scrollIntoView({ behavior, block: 'start' })
+    }
+    setActiveStepId(stepId)
+    setStepHash(stepId)
+  }
+
+  const copyStepLink = async (stepId: string) => {
+    if (typeof window === 'undefined') return
+    try {
+      const url = new URL(window.location.href)
+      url.hash = `step=${encodeURIComponent(stepId)}`
+      await navigator.clipboard.writeText(url.toString())
+      setLinkMessage(`Copied link for ${stepId}.`)
+    } catch {
+      // Ignore clipboard failures.
+    }
+  }
+
+  useEffect(() => {
+    if (linkMessage === null) return
+    const timeout = window.setTimeout(() => setLinkMessage(null), 1800)
+    return () => window.clearTimeout(timeout)
+  }, [linkMessage])
+
+  useEffect(() => {
+    if (filteredStepEntries.length === 0) {
+      setActiveStepId(null)
+      return
+    }
+    if (
+      !activeStepId ||
+      !filteredStepEntries.some((entry) => entry.step.id === activeStepId)
+    ) {
+      setActiveStepId(filteredStepEntries[0]?.step.id ?? null)
+    }
+  }, [activeStepId, filteredStepEntries])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || filteredStepEntries.length === 0) return
+    const hashStep = readStepFromHash()
+    if (!hashStep) return
+    if (!filteredStepEntries.some((entry) => entry.step.id === hashStep)) return
+    const frame = window.requestAnimationFrame(() => {
+      const node = stepCardRefs.current[hashStep]
+      if (node) {
+        node.scrollIntoView({ behavior: 'auto', block: 'start' })
+      }
+      setActiveStepId(hashStep)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [filteredStepEntries, selectedVersionId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const handleHashChange = () => {
+      const hashStep = readStepFromHash()
+      if (!hashStep) return
+      if (!filteredStepEntries.some((entry) => entry.step.id === hashStep)) return
+      const node = stepCardRefs.current[hashStep]
+      if (node) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+      setActiveStepId(hashStep)
+    }
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [filteredStepEntries])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || filteredStepEntries.length === 0) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort(
+            (a, b) =>
+              Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top)
+          )
+        const nextId = visible[0]?.target.getAttribute('data-step-id')
+        if (nextId) {
+          setActiveStepId(nextId)
+        }
+      },
+      {
+        root: null,
+        threshold: [0.25, 0.5, 0.75],
+        rootMargin: '-20% 0px -55% 0px',
+      }
+    )
+
+    for (const entry of filteredStepEntries) {
+      const node = stepCardRefs.current[entry.step.id]
+      if (node) observer.observe(node)
+    }
+
+    return () => observer.disconnect()
+  }, [filteredStepEntries])
 
   const onSelectVersion = (versionId: string) => {
     if (isEditing && draftIsDirty) {
@@ -891,95 +1113,164 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         </Card>
       )}
 
+      {linkMessage && (
+        <Card className="border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">{linkMessage}</Card>
+      )}
+
       {visibleSpec && selectedVersionId && (
-        <div className="space-y-8">
-          {visibleSpec.variables && visibleSpec.variables.length > 0 && (
-            <Card className="p-6">
-              <div className="text-xs uppercase tracking-wide text-slate-400">Variables</div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {visibleSpec.variables.map((variable) => (
-                  <div
-                    key={variable.id}
-                    className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
-                  >
-                    <div className="font-semibold text-slate-900">{variable.label}</div>
-                    <div className="text-slate-500">{variable.id}</div>
-                    {variable.sensitive && (
-                      <div className="mt-1 text-[10px] uppercase tracking-wide text-rose-500">
-                        Sensitive
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          <div className="space-y-4">
-            {isEditing && visibleSpec.steps.length === 0 && (
-              <div className="flex justify-center">
-                <Button variant="outline" size="sm" onClick={() => insertDraftStep(0)}>
-                  + Add first step
-                </Button>
-              </div>
-            )}
-
-            {visibleSpec.steps.map((step, index) => (
-              <div key={step.id || `${index}`}>
-                {isEditing && (
-                  <div className="mb-3 flex justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => insertDraftStep(index)}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+          <div className="space-y-8">
+            {visibleSpec.variables && visibleSpec.variables.length > 0 && (
+              <Card className="p-6">
+                <div className="text-xs uppercase tracking-wide text-slate-400">Variables</div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {visibleSpec.variables.map((variable) => (
+                    <div
+                      key={variable.id}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
                     >
-                      + Insert step here
-                    </Button>
-                  </div>
-                )}
-                <StepImageCard
-                  orgId={orgId}
-                  workflowId={workflowId}
-                  versionId={selectedVersionId}
-                  step={step}
-                  index={index}
-                  image={stepImageMap[step.id] ?? null}
-                  isEditing={isEditing}
-                  canMoveUp={index > 0}
-                  canMoveDown={index < visibleSpec.steps.length - 1}
-                  canDelete={visibleSpec.steps.length > 1}
-                  onMoveUp={() => moveDraftStep(index, 'up')}
-                  onMoveDown={() => moveDraftStep(index, 'down')}
-                  onDelete={() => deleteDraftStep(index)}
-                  onInsertAfter={() => insertDraftStep(index + 1)}
-                  onStepTitleChange={(value) =>
-                    updateDraftStep(index, (current) => ({
-                      ...current,
-                      title: value,
-                    }))
-                  }
-                  onStepInstructionChange={(value) =>
-                    updateDraftStep(index, (current) => ({
-                      ...current,
-                      instructions: value,
-                    }))
-                  }
-                />
-              </div>
-            ))}
-
-            {isEditing && (
-              <div className="flex justify-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => insertDraftStep(visibleSpec.steps.length)}
-                >
-                  + Add step
-                </Button>
-              </div>
+                      <div className="font-semibold text-slate-900">{variable.label}</div>
+                      <div className="text-slate-500">{variable.id}</div>
+                      {variable.sensitive && (
+                        <div className="mt-1 text-[10px] uppercase tracking-wide text-rose-500">
+                          Sensitive
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Card>
             )}
+
+            <Card className="p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="text-sm font-semibold text-slate-900">Find in guide</div>
+                <div className="text-xs text-slate-500">
+                  {isEditing
+                    ? 'Search disabled while editing.'
+                    : `${filteredStepEntries.length} of ${visibleSpec.steps.length} steps`}
+                </div>
+              </div>
+              <InputGroup className="mt-3">
+                <InputGroupInput
+                  value={stepSearchQuery}
+                  onChange={(event) => setStepSearchQuery(event.target.value)}
+                  placeholder="Search title, instructions, or why…"
+                  disabled={isEditing}
+                />
+              </InputGroup>
+            </Card>
+
+            <div className="space-y-4">
+              {isEditing && visibleSpec.steps.length === 0 && (
+                <div className="flex justify-center">
+                  <Button variant="outline" size="sm" onClick={() => insertDraftStep(0)}>
+                    + Add first step
+                  </Button>
+                </div>
+              )}
+
+              {!isEditing && filteredStepEntries.length === 0 && (
+                <Card className="p-5 text-sm text-slate-600">
+                  No steps match your search.
+                </Card>
+              )}
+
+              {filteredStepEntries.map(({ step, index }) => (
+                <div
+                  key={step.id || `${index}`}
+                  data-step-id={step.id}
+                  ref={(node) => {
+                    if (!step.id) return
+                    stepCardRefs.current[step.id] = node
+                  }}
+                  className={`scroll-mt-24 rounded-2xl ${
+                    activeStepId === step.id ? 'ring-2 ring-[color:var(--trope-accent)]/35' : ''
+                  }`}
+                >
+                  {isEditing && (
+                    <div className="mb-3 flex justify-center">
+                      <Button variant="ghost" size="sm" onClick={() => insertDraftStep(index)}>
+                        + Insert step here
+                      </Button>
+                    </div>
+                  )}
+                  <StepImageCard
+                    csrfToken={csrfToken}
+                    orgId={orgId}
+                    workflowId={workflowId}
+                    versionId={selectedVersionId}
+                    step={step}
+                    index={index}
+                    image={stepImageMap[step.id] ?? null}
+                    isEditing={isEditing}
+                    canMoveUp={index > 0}
+                    canMoveDown={index < visibleSpec.steps.length - 1}
+                    canDelete={visibleSpec.steps.length > 1}
+                    onMoveUp={() => moveDraftStep(index, 'up')}
+                    onMoveDown={() => moveDraftStep(index, 'down')}
+                    onDelete={() => deleteDraftStep(index)}
+                    onInsertAfter={() => insertDraftStep(index + 1)}
+                    onCopyStepLink={() => copyStepLink(step.id)}
+                    onStepTitleChange={(value) =>
+                      updateDraftStep(index, (current) => ({
+                        ...current,
+                        title: value,
+                      }))
+                    }
+                    onStepInstructionChange={(value) =>
+                      updateDraftStep(index, (current) => ({
+                        ...current,
+                        instructions: value,
+                      }))
+                    }
+                  />
+                </div>
+              ))}
+
+              {isEditing && (
+                <div className="flex justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => insertDraftStep(visibleSpec.steps.length)}
+                  >
+                    + Add step
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
+
+          <aside className="hidden lg:block">
+            <Card className="sticky top-24 p-4">
+              <div className="text-sm font-semibold text-slate-900">Guide outline</div>
+              <div className="mt-1 text-xs text-slate-500">
+                {filteredStepEntries.length} steps
+              </div>
+              <nav className="mt-3 max-h-[70vh] space-y-1 overflow-auto pr-1">
+                {filteredStepEntries.map(({ step, index }) => (
+                  <Button
+                    key={`toc-${step.id || index}`}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => focusStep(step.id)}
+                    className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                      activeStepId === step.id
+                        ? 'bg-slate-100 text-slate-900'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="font-mono text-[10px] text-slate-400">{index + 1}</span>
+                    <span className="line-clamp-2">
+                      {step.title?.trim() || `Step ${index + 1}`}
+                    </span>
+                  </Button>
+                ))}
+              </nav>
+            </Card>
+          </aside>
         </div>
       )}
     </div>
