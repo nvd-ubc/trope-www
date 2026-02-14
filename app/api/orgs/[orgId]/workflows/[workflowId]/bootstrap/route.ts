@@ -50,8 +50,7 @@ export async function GET(
 
   const summaryResult = await fetchInternalJson<WorkflowSummaryPayload>(
     request,
-    `/api/orgs/${encodedOrgId}/workflow-summary/${encodedWorkflowId}`,
-    { timeoutMs: 1200 }
+    `/api/orgs/${encodedOrgId}/workflow-summary/${encodedWorkflowId}`
   )
 
   const failed = firstFailedResult(summaryResult)
@@ -76,6 +75,13 @@ export async function GET(
   }
 
   const versions = Array.isArray(summary.versions) ? summary.versions : []
+  const versionsByNewest = [...versions].sort((left, right) => {
+    const leftTime = Date.parse(String(left.created_at ?? ''))
+    const rightTime = Date.parse(String(right.created_at ?? ''))
+    const safeLeft = Number.isFinite(leftTime) ? leftTime : 0
+    const safeRight = Number.isFinite(rightTime) ? rightTime : 0
+    return safeRight - safeLeft
+  })
   const latestVersionId =
     typeof workflow.latest_version_id === 'string' && workflow.latest_version_id.trim().length > 0
       ? workflow.latest_version_id
@@ -83,7 +89,7 @@ export async function GET(
   const latestVersion =
     versions.find(
       (version) => typeof version.version_id === 'string' && version.version_id === latestVersionId
-    ) ?? versions[0] ?? null
+    ) ?? versionsByNewest[0] ?? null
 
   const role = summary.membership?.role ?? null
   const isAdmin = role === 'org_owner' || role === 'org_admin'
