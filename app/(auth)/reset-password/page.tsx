@@ -10,6 +10,7 @@ import ResetPasswordForm from './reset-password-form'
 type ResetSearchParams = {
   error?: string
   sent?: string
+  step?: string
 }
 
 const toSingle = (value: string | string[] | undefined) =>
@@ -22,6 +23,8 @@ export default function ResetPassword({
 }) {
   const error = toSingle(searchParams?.error)
   const sent = toSingle(searchParams?.sent)
+  const requestedStep = toSingle(searchParams?.step)
+  const step = requestedStep === 'confirm' || sent ? 'confirm' : 'request'
 
-  return <ResetPasswordForm error={error} sent={sent} />
+  return <ResetPasswordForm error={error} sent={sent} step={step} />
 }

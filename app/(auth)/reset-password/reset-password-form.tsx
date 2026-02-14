@@ -1,16 +1,22 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import AuthLogo from '../auth-logo'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
+
+type ResetStep = 'request' | 'confirm'
 
 type ResetPasswordFormProps = {
   error?: string
   sent?: string
+  step: ResetStep
 }
 
-export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ error, sent, step: initialStep }: ResetPasswordFormProps) {
   const { token: csrfToken, loading: csrfLoading } = useCsrfToken()
+  const [step, setStep] = useState<ResetStep>(initialStep)
+  const isConfirmStep = step === 'confirm'
 
   return (
     <>
@@ -18,7 +24,9 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
         <AuthLogo />
         <h1 className="text-2xl md:text-3xl font-medium text-slate-900">Reset your password</h1>
         <p className="mt-3 text-sm text-slate-600">
-          Enter your email to get a verification code, then set a new password.
+          {isConfirmStep
+            ? 'Enter the verification code from your email and set a new password.'
+            : "Enter your email and we'll send you a verification code."}
         </p>
       </div>
 
@@ -30,57 +38,114 @@ export default function ResetPasswordForm({ error, sent }: ResetPasswordFormProp
               {!error && sent && <p>Reset code sent. Check your email, then enter the code below.</p>}
             </div>
           )}
-          <form action="/api/auth/reset-password" method="post">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
-                  type="email"
-                  placeholder="you@example.com"
-                  required
-                />
+          {!isConfirmStep ? (
+            <>
+              <form action="/api/auth/reset-password" method="post">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email-request">
+                      Email
+                    </label>
+                    <input
+                      id="email-request"
+                      name="email"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                </div>
+                <input type="hidden" name="mode" value="request" />
+                <input type="hidden" name="csrf_token" value={csrfToken} />
+                <div className="mt-6">
+                  <button
+                    className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={csrfLoading || !csrfToken}
+                  >
+                    Send verification code
+                  </button>
+                </div>
+              </form>
+              <div className="mt-4 text-right">
+                <button
+                  className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
+                  type="button"
+                  onClick={() => setStep('confirm')}
+                >
+                  Already have a code?
+                </button>
               </div>
-              <div>
-                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="code">
-                  Verification code
-                </label>
-                <input
-                  id="code"
-                  name="code"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
-                  type="text"
-                  placeholder="123456"
-                />
+            </>
+          ) : (
+            <>
+              <form action="/api/auth/reset-password" method="post">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="email-confirm">
+                      Email
+                    </label>
+                    <input
+                      id="email-confirm"
+                      name="email"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="code-confirm">
+                      Verification code
+                    </label>
+                    <input
+                      id="code-confirm"
+                      name="code"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                      type="text"
+                      placeholder="123456"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="new-password-confirm">
+                      New password
+                    </label>
+                    <input
+                      id="new-password-confirm"
+                      name="new_password"
+                      className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="••••••••"
+                      required
+                    />
+                  </div>
+                </div>
+                <input type="hidden" name="mode" value="confirm" />
+                <input type="hidden" name="csrf_token" value={csrfToken} />
+                <div className="mt-6">
+                  <button
+                    className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={csrfLoading || !csrfToken}
+                  >
+                    Reset password
+                  </button>
+                </div>
+              </form>
+              <div className="mt-4 text-right">
+                <button
+                  className="text-sm font-medium text-[#1861C8] hover:text-[#1861C8]/80 transition"
+                  type="button"
+                  onClick={() => setStep('request')}
+                >
+                  Need a new code?
+                </button>
               </div>
-              <div>
-                <label className="block text-sm text-slate-700 font-medium mb-1.5" htmlFor="new-password">
-                  New password
-                </label>
-                <input
-                  id="new-password"
-                  name="new_password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 placeholder-slate-400 focus:border-[#1861C8] focus:ring-1 focus:ring-[#1861C8] transition"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-            <input type="hidden" name="csrf_token" value={csrfToken} />
-            <div className="mt-6">
-              <button
-                className="w-full py-3 px-4 text-sm font-semibold text-white bg-[#1861C8] rounded-full hover:bg-[#2171d8] transition disabled:cursor-not-allowed disabled:opacity-60"
-                disabled={csrfLoading || !csrfToken}
-              >
-                Reset password
-              </button>
-            </div>
-          </form>
+            </>
+          )}
         </div>
 
         <p className="text-center text-sm text-slate-600 mt-6">
