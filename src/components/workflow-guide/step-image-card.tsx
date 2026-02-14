@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer-dialog'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
@@ -31,6 +32,9 @@ export default function StepImageCard({
   fullSrc,
   maxHeightClass,
 }: StepImageCardProps) {
+  const focusZoomEnabled = process.env.NEXT_PUBLIC_TROPE_GUIDE_FOCUS_ZOOM === '1'
+  const [dialogOpen, setDialogOpen] = useState(false)
+
   const previewImage = useMemo(
     () =>
       image
@@ -78,7 +82,8 @@ export default function StepImageCard({
       }),
     [height, image?.render_hints, previewImage?.height, previewImage?.width, radar, width]
   )
-  const shouldApplyFocus = focusTransform.hasFocusCrop && Boolean(image?.render_hints)
+  const shouldApplyFocus =
+    focusZoomEnabled && focusTransform.hasFocusCrop && Boolean(image?.render_hints)
   const showRadar = Boolean(
     radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null)
   )
@@ -95,6 +100,64 @@ export default function StepImageCard({
     )
   }
 
+  const imageFrame = (
+    <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
+      <div
+        className="relative transition-transform duration-300 ease-out"
+        style={
+          shouldApplyFocus
+            ? {
+                transform: `scale(${focusTransform.zoomScale})`,
+                transformOrigin: `${focusTransform.transformOriginPercent.x}% ${focusTransform.transformOriginPercent.y}%`,
+                willChange: 'transform',
+              }
+            : undefined
+        }
+      >
+        <img
+          src={previewSrc}
+          alt={step.title}
+          loading="lazy"
+          className={`block h-auto w-auto max-w-full ${maxHeightClass}`}
+        />
+        {showRadar && radarPercent && (
+          <div className="pointer-events-none absolute inset-0">
+            <div
+              className="absolute -translate-x-1/2 -translate-y-1/2"
+              style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
+            >
+              <div className="relative h-5 w-5">
+                <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
+                <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  if (focusZoomEnabled) {
+    return (
+      <>
+        <button
+          type="button"
+          className="group mt-4 block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]"
+          onClick={() => setDialogOpen(true)}
+        >
+          {imageFrame}
+        </button>
+        <StepImageViewerDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          step={step}
+          fullSrc={fullSrc}
+          image={image}
+        />
+      </>
+    )
+  }
+
   return (
     <a
       href={fullSrc}
@@ -102,40 +165,7 @@ export default function StepImageCard({
       rel="noreferrer"
       className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
     >
-      <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
-        <div
-          className="relative transition-transform duration-300 ease-out"
-          style={
-            shouldApplyFocus
-              ? {
-                  transform: `scale(${focusTransform.zoomScale})`,
-                  transformOrigin: `${focusTransform.transformOriginPercent.x}% ${focusTransform.transformOriginPercent.y}%`,
-                  willChange: 'transform',
-                }
-              : undefined
-          }
-        >
-          <img
-            src={previewSrc}
-            alt={step.title}
-            loading="lazy"
-            className={`block h-auto w-auto max-w-full ${maxHeightClass}`}
-          />
-          {showRadar && radarPercent && (
-            <div className="pointer-events-none absolute inset-0">
-              <div
-                className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
-              >
-                <div className="relative h-5 w-5">
-                  <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
-                  <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {imageFrame}
     </a>
   )
 }
