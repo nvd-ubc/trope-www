@@ -54,7 +54,7 @@ export default function StepImageCard({
   maxHeightClass,
   onTelemetryEvent,
 }: StepImageCardProps) {
-  const focusZoomEnabled = process.env.NEXT_PUBLIC_TROPE_GUIDE_FOCUS_ZOOM === '1'
+  const focusZoomEnabled = true
   const [dialogOpen, setDialogOpen] = useState(false)
   const focusTelemetryKeyRef = useRef<string | null>(null)
 
