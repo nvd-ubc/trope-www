@@ -5,7 +5,11 @@ import Link from 'next/link'
 import { CONTACT_EMAIL, SALES_CALL_URL } from '@/lib/constants'
 import AuthLink from './header-auth-link'
 
-export default function MobileMenu() {
+type MobileMenuProps = {
+  initialAuthState: 'authenticated' | 'unauthenticated'
+}
+
+export default function MobileMenu({ initialAuthState }: MobileMenuProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState<boolean>(false)
   const salesHref = SALES_CALL_URL || `mailto:${CONTACT_EMAIL}`
 
@@ -115,7 +119,11 @@ export default function MobileMenu() {
             </Link>
           </li>
           <li>
-            <AuthLink className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2" onClick={closeNav} />
+            <AuthLink
+              className="flex font-medium text-sm text-slate-600 hover:text-slate-900 py-2"
+              initialAuthState={initialAuthState}
+              onClick={closeNav}
+            />
           </li>
           <li>
             <a className="flex font-medium text-sm text-[#1861C8] hover:text-[#1861C8]/80 py-2" href={salesHref} onClick={closeNav}>
