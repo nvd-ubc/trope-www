@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer-dialog'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
@@ -23,6 +23,27 @@ type StepImageCardProps = {
   previewSrc: string | null
   fullSrc: string | null
   maxHeightClass: string
+  onTelemetryEvent?: (
+    eventType:
+      | 'workflow_doc_focus_applied'
+      | 'workflow_doc_focus_fallback'
+      | 'workflow_doc_step_image_open_full',
+    properties: Record<string, unknown>
+  ) => void
+}
+
+const confidenceBucket = (value: number | null | undefined): string => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'unknown'
+  if (value >= 0.75) return 'high'
+  if (value >= 0.55) return 'medium'
+  return 'low'
+}
+
+const zoomBucket = (value: number): string => {
+  if (!Number.isFinite(value) || value <= 1.05) return 'none'
+  if (value <= 1.25) return 'mild'
+  if (value <= 1.6) return 'medium'
+  return 'strong'
 }
 
 export default function StepImageCard({
@@ -31,9 +52,11 @@ export default function StepImageCard({
   previewSrc,
   fullSrc,
   maxHeightClass,
+  onTelemetryEvent,
 }: StepImageCardProps) {
   const focusZoomEnabled = process.env.NEXT_PUBLIC_TROPE_GUIDE_FOCUS_ZOOM === '1'
   const [dialogOpen, setDialogOpen] = useState(false)
+  const focusTelemetryKeyRef = useRef<string | null>(null)
 
   const previewImage = useMemo(
     () =>
@@ -100,6 +123,51 @@ export default function StepImageCard({
     )
   }
 
+  const source = (image?.render_hints?.source ?? 'none').toString()
+  const baseTelemetryProperties = {
+    step_id: step.id,
+    step_kind: step.kind ?? null,
+    source,
+    confidence_bucket: confidenceBucket(image?.render_hints?.confidence ?? null),
+    zoom_bucket: zoomBucket(focusTransform.zoomScale),
+  } satisfies Record<string, unknown>
+
+  const fallbackReason = (() => {
+    if (!image?.render_hints) return 'missing_render_hints'
+    if (!focusTransform.hasFocusCrop) return 'no_focus_crop'
+    return 'focus_disabled'
+  })()
+
+  useEffect(() => {
+    if (!focusZoomEnabled || !onTelemetryEvent) return
+    const key = `${step.id}:${image?.step_id ?? 'no-image'}:${shouldApplyFocus ? 'applied' : fallbackReason}`
+    if (focusTelemetryKeyRef.current === key) return
+    if (shouldApplyFocus) {
+      onTelemetryEvent('workflow_doc_focus_applied', baseTelemetryProperties)
+    } else {
+      onTelemetryEvent('workflow_doc_focus_fallback', {
+        ...baseTelemetryProperties,
+        fallback_reason: fallbackReason,
+      })
+    }
+    focusTelemetryKeyRef.current = key
+  }, [
+    baseTelemetryProperties,
+    fallbackReason,
+    focusZoomEnabled,
+    image?.step_id,
+    onTelemetryEvent,
+    shouldApplyFocus,
+    step.id,
+  ])
+
+  const emitOpenFullTelemetry = () => {
+    onTelemetryEvent?.('workflow_doc_step_image_open_full', {
+      ...baseTelemetryProperties,
+      focus_enabled: focusZoomEnabled,
+    })
+  }
+
   const imageFrame = (
     <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
       <div
@@ -143,7 +211,10 @@ export default function StepImageCard({
         <button
           type="button"
           className="group mt-4 block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]"
-          onClick={() => setDialogOpen(true)}
+          onClick={() => {
+            emitOpenFullTelemetry()
+            setDialogOpen(true)
+          }}
         >
           {imageFrame}
         </button>
@@ -164,6 +235,7 @@ export default function StepImageCard({
       target="_blank"
       rel="noreferrer"
       className="group mt-4 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+      onClick={emitOpenFullTelemetry}
     >
       {imageFrame}
     </a>

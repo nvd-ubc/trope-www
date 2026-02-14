@@ -360,6 +360,19 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                       previewSrc={previewSrc}
                       fullSrc={fullSrc}
                       maxHeightClass="max-h-[22rem]"
+                      onTelemetryEvent={(eventType, properties) => {
+                        fetch(`/api/shares/${encodeURIComponent(shareId)}/events`, {
+                          method: 'POST',
+                          headers: { 'content-type': 'application/json' },
+                          body: JSON.stringify({
+                            event_type: eventType,
+                            surface: 'web_share_doc',
+                            ...properties,
+                          }),
+                        }).catch(() => {
+                          // Ignore telemetry failures.
+                        })
+                      }}
                     />
                     <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                     {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}

@@ -1424,6 +1424,28 @@ export default function WorkflowDetailClient({
                         previewSrc={previewSrc}
                         fullSrc={fullSrc}
                         maxHeightClass="max-h-[20rem]"
+                        onTelemetryEvent={(eventType, properties) => {
+                          if (!csrfToken) return
+                          fetch(
+                            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                              workflowId
+                            )}/events`,
+                            {
+                              method: 'POST',
+                              headers: {
+                                'content-type': 'application/json',
+                                'x-csrf-token': csrfToken,
+                              },
+                              body: JSON.stringify({
+                                event_type: eventType,
+                                surface: 'web_workflow_detail',
+                                ...properties,
+                              }),
+                            }
+                          ).catch(() => {
+                            // Ignore telemetry failures.
+                          })
+                        }}
                       />
                       <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                       {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
