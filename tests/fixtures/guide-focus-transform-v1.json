@@ -1,0 +1,94 @@
+{
+  "cases": [
+    {
+      "name": "safe-crop-rect-focus",
+      "input": {
+        "image": { "width": 1920, "height": 1080 },
+        "viewport": { "width": 960, "height": 540 },
+        "render_hints": {
+          "algorithm": "focus_hints_v1",
+          "source": "radar",
+          "confidence": 0.9,
+          "focus_center": { "x": 960, "y": 540, "coordinate_space": "step_image_pixels_v1" },
+          "safe_crop_rect": {
+            "x": 480,
+            "y": 270,
+            "width": 960,
+            "height": 540,
+            "coordinate_space": "step_image_pixels_v1"
+          }
+        },
+        "radar": { "x": 960, "y": 540, "coordinate_space": "step_image_pixels_v1" }
+      },
+      "expected": {
+        "crop_rect": { "x": 441, "y": 248, "width": 1037, "height": 584 },
+        "zoom_scale": 1.851495,
+        "radar_percent": { "left": 50.048216, "top": 50.0 },
+        "has_focus_crop": true
+      }
+    },
+    {
+      "name": "derive-from-center-and-zoom",
+      "input": {
+        "image": { "width": 1600, "height": 900 },
+        "viewport": { "width": 400, "height": 225 },
+        "render_hints": {
+          "algorithm": "focus_hints_v1",
+          "source": "element_frame",
+          "confidence": 0.62,
+          "focus_center": { "x": 1200, "y": 180, "coordinate_space": "step_image_pixels_v1" },
+          "recommended_zoom_scale": 2
+        },
+        "radar": { "x": 1300, "y": 100, "coordinate_space": "step_image_pixels_v1" }
+      },
+      "expected": {
+        "crop_rect": { "x": 736, "y": 0, "width": 864, "height": 487 },
+        "zoom_scale": 1.851852,
+        "radar_percent": { "left": 65.277778, "top": 20.533881 },
+        "has_focus_crop": true
+      }
+    },
+    {
+      "name": "no-hints-full-frame",
+      "input": {
+        "image": { "width": 1000, "height": 500 },
+        "viewport": { "width": 500, "height": 250 },
+        "render_hints": null,
+        "radar": { "x": 100, "y": 100, "coordinate_space": "step_image_pixels_v1" }
+      },
+      "expected": {
+        "crop_rect": { "x": 0, "y": 0, "width": 1000, "height": 500 },
+        "zoom_scale": 1,
+        "radar_percent": { "left": 10, "top": 20 },
+        "has_focus_crop": false
+      }
+    },
+    {
+      "name": "radar-outside-crop",
+      "input": {
+        "image": { "width": 1200, "height": 800 },
+        "viewport": { "width": 300, "height": 200 },
+        "render_hints": {
+          "algorithm": "focus_hints_v1",
+          "source": "radar",
+          "confidence": 0.88,
+          "focus_center": { "x": 300, "y": 200, "coordinate_space": "step_image_pixels_v1" },
+          "safe_crop_rect": {
+            "x": 0,
+            "y": 0,
+            "width": 600,
+            "height": 400,
+            "coordinate_space": "step_image_pixels_v1"
+          }
+        },
+        "radar": { "x": 1000, "y": 700, "coordinate_space": "step_image_pixels_v1" }
+      },
+      "expected": {
+        "crop_rect": { "x": 0, "y": 0, "width": 648, "height": 432 },
+        "zoom_scale": 1.851852,
+        "radar_percent": null,
+        "has_focus_crop": true
+      }
+    }
+  ]
+}
