@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import {
   formatCaptureTimestamp,
+  resolveStepFocusFallbackReason,
   resolveStepImageVariant,
   shouldRenderStepRadar,
   type GuideMediaStepImage,
@@ -205,6 +206,36 @@ describe('guide media helpers', () => {
         height: 120,
       }),
       true
+    )
+  })
+
+  it('falls back from weak pointer focus hints to full-frame view', () => {
+    assert.equal(
+      resolveStepFocusFallbackReason({
+        step: { kind: 'click_target' },
+        renderHints: {
+          source: 'element_frame',
+          confidence: 0.62,
+        },
+        hasFocusCrop: true,
+        zoomScale: 1.18,
+      }),
+      'weak_pointer_focus_hint'
+    )
+  })
+
+  it('keeps focus for strong radar pointer hints', () => {
+    assert.equal(
+      resolveStepFocusFallbackReason({
+        step: { kind: 'click_target' },
+        renderHints: {
+          source: 'radar',
+          confidence: 0.86,
+        },
+        hasFocusCrop: true,
+        zoomScale: 1.75,
+      }),
+      null
     )
   })
 })

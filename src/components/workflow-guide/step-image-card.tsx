@@ -6,6 +6,7 @@ import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
+  resolveStepFocusFallbackReason,
   resolveStepImageVariant,
   shouldRenderStepRadar,
   type GuideMediaStepImage,
@@ -105,7 +106,13 @@ export default function StepImageCard({
     }),
     [height, image?.render_hints, previewImage?.height, previewImage?.width, radar, width]
   )
-  const shouldApplyFocus = focusTransform.hasFocusCrop && Boolean(image?.render_hints)
+  const fallbackReason = resolveStepFocusFallbackReason({
+    step,
+    renderHints: image?.render_hints ?? null,
+    hasFocusCrop: focusTransform.hasFocusCrop,
+    zoomScale: focusTransform.zoomScale,
+  })
+  const shouldApplyFocus = fallbackReason === null
   const showRadar = Boolean(
     radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null)
   )
@@ -116,14 +123,6 @@ export default function StepImageCard({
   const imageWidth = typeof width === 'number' && width > 0 ? width : 1
   const imageHeight = typeof height === 'number' && height > 0 ? height : 1
 
-  if (!hasImage || !previewSrc || !fullSrc) {
-    return (
-      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-        No screenshot available for this step.
-      </div>
-    )
-  }
-
   const source = (image?.render_hints?.source ?? 'none').toString()
   const baseTelemetryProperties = {
     step_id: step.id,
@@ -133,13 +132,9 @@ export default function StepImageCard({
     zoom_bucket: zoomBucket(focusTransform.zoomScale),
   } satisfies Record<string, unknown>
 
-  const fallbackReason = (() => {
-    if (!image?.render_hints) return 'missing_render_hints'
-    return 'no_focus_crop'
-  })()
-
   useEffect(() => {
     if (!onTelemetryEvent) return
+    if (!hasImage || !previewSrc || !fullSrc) return
     const key = `${step.id}:${image?.step_id ?? 'no-image'}:${shouldApplyFocus ? 'applied' : fallbackReason}`
     if (focusTelemetryKeyRef.current === key) return
     if (shouldApplyFocus) {
@@ -154,8 +149,11 @@ export default function StepImageCard({
   }, [
     baseTelemetryProperties,
     fallbackReason,
+    fullSrc,
+    hasImage,
     image?.step_id,
     onTelemetryEvent,
+    previewSrc,
     shouldApplyFocus,
     step.id,
   ])
@@ -165,6 +163,14 @@ export default function StepImageCard({
       ...baseTelemetryProperties,
       focus_enabled: true,
     })
+  }
+
+  if (!hasImage || !previewSrc || !fullSrc) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+        No screenshot available for this step.
+      </div>
+    )
   }
 
   return (

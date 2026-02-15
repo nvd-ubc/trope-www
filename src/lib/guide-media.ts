@@ -209,7 +209,7 @@ const expectedEventTypeFromStep = (step: GuideStepLike): string => {
   return isNonEmptyString(rawType) ? rawType.trim().toLowerCase() : ''
 }
 
-const stepIsClickLike = (step: GuideStepLike): boolean => {
+export const isStepClickLike = (step: GuideStepLike): boolean => {
   const expectedType = expectedEventTypeFromStep(step)
   if (expectedType === 'click') return true
   if (expectedType === 'keypress' || expectedType === 'input' || expectedType === 'navigation') {
@@ -229,7 +229,7 @@ export const shouldRenderStepRadar = (params: {
   width: number | null
   height: number | null
 }): boolean => {
-  if (!stepIsClickLike(params.step)) return false
+  if (!isStepClickLike(params.step)) return false
 
   const radar = params.radar
   if (!radar) return false
@@ -251,4 +251,38 @@ export const shouldRenderStepRadar = (params: {
   }
 
   return true
+}
+
+type StepFocusFallbackReason =
+  | 'missing_render_hints'
+  | 'no_focus_crop'
+  | 'weak_pointer_focus_hint'
+
+const MIN_POINTER_AUTO_FOCUS_ZOOM = 1.22
+const MIN_POINTER_AUTO_FOCUS_CONFIDENCE = 0.7
+
+const toFiniteNumber = (value: unknown): number | null =>
+  typeof value === 'number' && Number.isFinite(value) ? value : null
+
+export const resolveStepFocusFallbackReason = (params: {
+  step: GuideStepLike
+  renderHints: GuideMediaRenderHints | null | undefined
+  hasFocusCrop: boolean
+  zoomScale: number
+}): StepFocusFallbackReason | null => {
+  if (!params.renderHints) return 'missing_render_hints'
+  if (!params.hasFocusCrop) return 'no_focus_crop'
+
+  if (!isStepClickLike(params.step)) return null
+
+  const source = (params.renderHints.source ?? '').toString().trim().toLowerCase()
+  if (source === 'radar' || source === 'click_event') return null
+
+  const confidence = toFiniteNumber(params.renderHints.confidence)
+  const hasStrongConfidence =
+    (confidence !== null && confidence >= MIN_POINTER_AUTO_FOCUS_CONFIDENCE) ||
+    params.zoomScale >= MIN_POINTER_AUTO_FOCUS_ZOOM
+  if (hasStrongConfidence) return null
+
+  return 'weak_pointer_focus_hint'
 }
