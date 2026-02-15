@@ -53,7 +53,6 @@ const staticItems: CommandItemRecord[] = [
   { label: 'Tasks', path: 'tasks' },
   { label: 'Teammates', path: 'teammates' },
   { label: 'Insights', path: 'insights' },
-  { label: 'Community', path: 'community' },
   { label: 'Workflows', path: 'workflows' },
   { label: 'Runs', path: 'runs' },
   { label: 'Alerts', path: 'alerts' },

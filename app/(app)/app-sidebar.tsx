@@ -3,7 +3,6 @@ import {
   BellRing,
   BookOpenText,
   Cog,
-  Compass,
   Gauge,
   Home,
   ListChecks,
@@ -94,14 +93,6 @@ export default function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Community">
-                  <WorkspaceNavLink path="community">
-                    <Compass />
-                    <span>Community</span>
-                  </WorkspaceNavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

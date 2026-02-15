@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Badge from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   DashboardHomeSkeleton,
@@ -56,11 +57,51 @@ type MyInsights = {
   }
 }
 
+type DocInsights = {
+  doc?: {
+    doc_id: string
+    title: string
+    status?: string
+  }
+  summary?: {
+    views?: number
+    guided_starts?: number
+    guided_completions?: number
+    completion_rate?: number | null
+    runs_total?: number
+    runs_completed?: number
+    run_success_rate?: number | null
+  }
+}
+
 type InsightsBootstrapResponse = {
   teamInsights?: TeamInsights | null
   myInsights?: MyInsights | null
   error?: string
 }
+
+type DocOption = {
+  doc_id: string
+  title: string
+}
+
+type DocsRecentResponse = {
+  recents?: Array<{
+    doc_id: string
+    title: string
+  }>
+}
+
+type DocInsightsResponse = {
+  doc?: DocInsights['doc']
+  summary?: DocInsights['summary']
+}
+
+const timeframeOptions: Array<{ label: string; value: number }> = [
+  { label: 'Last 7 days', value: 7 },
+  { label: 'Last 30 days', value: 30 },
+  { label: 'Last 90 days', value: 90 },
+]
 
 const asPercent = (value?: number | null) => {
   if (typeof value !== 'number' || Number.isNaN(value)) return '—'
@@ -71,32 +112,108 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [days, setDays] = useState<number>(30)
+  const [selectedDocId, setSelectedDocId] = useState<string>('all')
+  const [docOptions, setDocOptions] = useState<DocOption[]>([])
   const [teamInsights, setTeamInsights] = useState<TeamInsights | null>(null)
   const [myInsights, setMyInsights] = useState<MyInsights | null>(null)
+  const [docInsights, setDocInsights] = useState<DocInsights | null>(null)
+
+  useEffect(() => {
+    let active = true
+
+    const loadDocOptions = async () => {
+      try {
+        const response = await fetch(
+          `/api/orgs/${encodeURIComponent(orgId)}/docs/recent`,
+          { cache: 'no-store' }
+        )
+        if (!response.ok) {
+          return
+        }
+        const payload = (await response.json().catch(() => null)) as DocsRecentResponse | null
+        if (!active) return
+
+        const options = Array.from(
+          new Map(
+            (payload?.recents ?? [])
+              .filter((entry) => Boolean(entry?.doc_id))
+              .map((entry) => [
+                entry.doc_id,
+                {
+                  doc_id: entry.doc_id,
+                  title: entry.title || entry.doc_id,
+                },
+              ])
+          ).values()
+        )
+        setDocOptions(options)
+      } catch {
+        if (!active) return
+      }
+    }
+
+    loadDocOptions()
+    return () => {
+      active = false
+    }
+  }, [orgId])
 
   useEffect(() => {
     let active = true
 
     const load = async () => {
       try {
-        const response = await fetch(
-          `/api/orgs/${encodeURIComponent(orgId)}/insights/bootstrap`,
-          { cache: 'no-store' }
-        )
+        const params = new URLSearchParams()
+        params.set('days', String(days))
+        const scopedDocId = selectedDocId === 'all' ? null : selectedDocId
+        if (scopedDocId) {
+          params.set('doc_id', scopedDocId)
+        }
 
-        if (response.status === 401) {
+        const bootstrapUrl =
+          `/api/orgs/${encodeURIComponent(orgId)}/insights/bootstrap?${params.toString()}`
+        const docInsightsUrl = scopedDocId
+          ? `/api/orgs/${encodeURIComponent(orgId)}/insights/docs/${encodeURIComponent(scopedDocId)}?days=${days}`
+          : null
+
+        const [bootstrapResponse, docResponse] = await Promise.all([
+          fetch(bootstrapUrl, { cache: 'no-store' }),
+          docInsightsUrl
+            ? fetch(docInsightsUrl, { cache: 'no-store' })
+            : Promise.resolve(null),
+        ])
+
+        if (bootstrapResponse.status === 401 || docResponse?.status === 401) {
           router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/insights`)
           return
         }
 
-        const payload = (await response.json().catch(() => null)) as InsightsBootstrapResponse | null
-        if (!response.ok || !payload?.teamInsights || !payload?.myInsights) {
+        const bootstrapPayload = (await bootstrapResponse.json().catch(() => null)) as InsightsBootstrapResponse | null
+        if (!bootstrapResponse.ok || !bootstrapPayload?.teamInsights || !bootstrapPayload?.myInsights) {
           throw new Error('Unable to load insights.')
         }
 
+        let nextDocInsights: DocInsights | null = null
+        if (docResponse) {
+          if (docResponse.ok) {
+            const payload = (await docResponse.json().catch(() => null)) as DocInsightsResponse | null
+            if (payload?.summary && payload?.doc) {
+              nextDocInsights = {
+                doc: payload.doc,
+                summary: payload.summary,
+              }
+            }
+          } else if (docResponse.status !== 404) {
+            throw new Error('Unable to load doc insights.')
+          }
+        }
+
         if (!active) return
-        setTeamInsights(payload.teamInsights)
-        setMyInsights(payload.myInsights)
+        setTeamInsights(bootstrapPayload.teamInsights)
+        setMyInsights(bootstrapPayload.myInsights)
+        setDocInsights(nextDocInsights)
+        setError(null)
         setLoading(false)
       } catch (err) {
         if (!active) return
@@ -105,11 +222,12 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
       }
     }
 
+    setLoading(true)
     load()
     return () => {
       active = false
     }
-  }, [orgId, router])
+  }, [days, orgId, router, selectedDocId])
 
   const mySummary = myInsights?.summary ?? {}
   const teamSummary = teamInsights?.summary ?? {}
@@ -126,6 +244,10 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
     return <ErrorNotice title="Unable to load insights" message={error ?? 'Unable to load insights.'} />
   }
 
+  const selectedDocLabel = selectedDocId === 'all'
+    ? 'All documents'
+    : docOptions.find((entry) => entry.doc_id === selectedDocId)?.title ?? selectedDocId
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -139,7 +261,56 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
             <Badge variant="neutral">Team Insights</Badge>
           </>
         }
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={String(days)} onValueChange={(value) => setDays(Number(value))}>
+              <SelectTrigger size="sm" className="min-w-[10rem]">
+                <SelectValue placeholder="Timeframe" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeframeOptions.map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedDocId} onValueChange={setSelectedDocId}>
+              <SelectTrigger size="sm" className="min-w-[12rem]">
+                <SelectValue placeholder="All documents" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All documents</SelectItem>
+                {docOptions.map((option) => (
+                  <SelectItem key={option.doc_id} value={option.doc_id}>
+                    {option.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        }
       />
+
+      {selectedDocId !== 'all' && (
+        <SectionCard
+          title={docInsights?.doc?.title ? `Selected doc: ${docInsights.doc.title}` : 'Selected doc insights'}
+          description={`${selectedDocLabel} in the selected timeframe.`}
+        >
+          {!docInsights && (
+            <div className="rounded-lg border border-dashed border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+              No activity found for this document in the selected timeframe.
+            </div>
+          )}
+          {docInsights && (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <MetricCard label="Views" value={docInsights.summary?.views ?? 0} />
+              <MetricCard label="Guided completions" value={docInsights.summary?.guided_completions ?? 0} />
+              <MetricCard label="Run success rate" value={asPercent(docInsights.summary?.run_success_rate)} />
+            </div>
+          )}
+        </SectionCard>
+      )}
 
       <Tabs defaultValue="my">
         <TabsList>
@@ -220,3 +391,4 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
     </div>
   )
 }
+

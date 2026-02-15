@@ -14,10 +14,13 @@ export async function GET(
 ) {
   const { orgId } = await params
   const encodedOrgId = encodeURIComponent(orgId)
+  const url = new URL(request.url)
+  const query = url.searchParams.toString()
+  const suffix = query ? `?${query}` : ''
 
   const [teamResult, myResult] = await Promise.all([
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/insights`),
-    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/insights/me`),
+    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/insights${suffix}`),
+    fetchInternalJson(request, `/api/orgs/${encodedOrgId}/insights/me${suffix}`),
   ])
 
   const failed = firstFailedResult(teamResult, myResult)

@@ -21,7 +21,6 @@ const labelForSegment = (segment: string) => {
     tasks: 'Tasks',
     teammates: 'Teammates',
     insights: 'Insights',
-    community: 'Community',
     workflows: 'Workflows',
     runs: 'Runs',
     alerts: 'Alerts',
