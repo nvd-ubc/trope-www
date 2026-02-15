@@ -382,6 +382,8 @@ const StepImageCard = ({
   onStepInstructionChange,
   redactionMasks,
   onRedactionMasksChange,
+  showRedactionEditor,
+  onToggleRedactionEditor,
 }: {
   csrfToken: string | null
   orgId: string
@@ -403,6 +405,8 @@ const StepImageCard = ({
   onStepInstructionChange: (value: string) => void
   redactionMasks: GuideRedactionMask[]
   onRedactionMasksChange: (masks: GuideRedactionMask[]) => void
+  showRedactionEditor: boolean
+  onToggleRedactionEditor: () => void
 }) => {
   const kindLabel = formatKind(step.kind)
   const isManual = (step.kind ?? '').trim().toLowerCase() === 'manual'
@@ -558,6 +562,14 @@ const StepImageCard = ({
           )}
 
           {isEditing && fullSrc && (
+            <div className="mt-3">
+              <Button variant="outline" size="sm" onClick={onToggleRedactionEditor}>
+                {showRedactionEditor ? 'Hide redaction editor' : 'Edit redactions'}
+              </Button>
+            </div>
+          )}
+
+          {isEditing && fullSrc && showRedactionEditor && (
             <RedactionMaskEditor
               imageSrc={fullSrc}
               masks={redactionMasks}
@@ -642,12 +654,18 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [saveRequestId, setSaveRequestId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const isEditingRef = useRef(false)
   const [stepSearchQuery, setStepSearchQuery] = useState('')
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
+  const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
   const [linkMessage, setLinkMessage] = useState<string | null>(null)
   const stepCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
+
+  useEffect(() => {
+    isEditingRef.current = isEditing
+  }, [isEditing])
 
   useEffect(() => {
     let active = true
@@ -720,6 +738,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
           setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
           setSaveVisibility('org')
+          setOpenRedactionEditorStepId(null)
           setIsEditing(false)
           setSpecError(null)
           skipInitialSpecFetchRef.current = true
@@ -731,6 +750,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setRedactionMasksByStepId({})
           setDraftRedactionMasksByStepId({})
           setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
+          setOpenRedactionEditorStepId(null)
           setSpecError(payload.specError ?? null)
         }
       } catch (err) {
@@ -778,6 +798,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setDraftRedactionMasksByStepId({})
       setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
       setSaveVisibility('org')
+      setOpenRedactionEditorStepId(null)
       return
     }
 
@@ -794,7 +815,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setSaveMessage(null)
       setSaveRequestId(null)
       try {
-        const [specResponse, versionResponse, redactionsResponse] = await Promise.all([
+        const [specResponse, versionResponse] = await Promise.all([
           fetch(
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
               workflowId
@@ -805,12 +826,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
               workflowId
             )}/versions/${encodeURIComponent(selectedVersionId)}`,
-            { cache: 'no-store' }
-          ),
-          fetch(
-            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-              workflowId
-            )}/versions/${encodeURIComponent(selectedVersionId)}/guide-redactions`,
             { cache: 'no-store' }
           ),
         ])
@@ -838,26 +853,48 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           specJson,
           workflow?.title ?? specJson.workflow_title ?? workflowId
         )
-        const redactionsJson =
-          redactionsResponse.ok || redactionsResponse.status === 404
-            ? await redactionsResponse.json().catch(() => null)
-            : null
-        const parsedGuideRedactions = parseGuideRedactionsDocument(redactionsJson)
-        const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(
-          buildRedactionMaskMap(parsedGuideRedactions),
-          normalized.steps
-        )
         setVersionDetail(versionPayload.version)
         setSpec(normalized)
         setDraftSpec(cloneSpec(normalized))
         setBaselineFingerprint(
           buildSaveFingerprint(normalized, workflow?.title ?? normalized.workflow_title ?? workflowId)
         )
-        setRedactionMasksByStepId(normalizedRedactionMasksByStepId)
-        setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
-        setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+        setRedactionMasksByStepId({})
+        setDraftRedactionMasksByStepId({})
+        setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
+        setOpenRedactionEditorStepId(null)
         setIsEditing(false)
+
+        const loadRedactions = async () => {
+          try {
+            const redactionsResponse = await fetch(
+              `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                workflowId
+              )}/versions/${encodeURIComponent(selectedVersionId)}/guide-redactions`,
+              { cache: 'no-store' }
+            )
+            const redactionsJson =
+              redactionsResponse.ok || redactionsResponse.status === 404
+                ? await redactionsResponse.json().catch(() => null)
+                : null
+            const parsedGuideRedactions = parseGuideRedactionsDocument(redactionsJson)
+            const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(
+              buildRedactionMaskMap(parsedGuideRedactions),
+              normalized.steps
+            )
+            if (!active || isEditingRef.current) return
+            setRedactionMasksByStepId(normalizedRedactionMasksByStepId)
+            setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+            setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+          } catch {
+            if (!active || isEditingRef.current) return
+            setRedactionMasksByStepId({})
+            setDraftRedactionMasksByStepId({})
+            setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
+          }
+        }
+        void loadRedactions()
       } catch (err) {
         if (!active) return
         setSpec(null)
@@ -867,6 +904,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         setDraftRedactionMasksByStepId({})
         setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
+        setOpenRedactionEditorStepId(null)
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
         if (active) setSpecLoading(false)
@@ -931,6 +969,18 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       return haystack.includes(normalizedStepSearch)
     })
   }, [isEditing, normalizedStepSearch, stepEntries])
+
+  useEffect(() => {
+    if (!isEditing) {
+      setOpenRedactionEditorStepId(null)
+      return
+    }
+    if (!openRedactionEditorStepId) return
+    const steps = Array.isArray(draftSpec?.steps) ? draftSpec.steps : []
+    if (!steps.some((step) => step.id === openRedactionEditorStepId)) {
+      setOpenRedactionEditorStepId(null)
+    }
+  }, [draftSpec?.steps, isEditing, openRedactionEditorStepId])
 
   const setStepHash = (stepId: string) => {
     if (typeof window === 'undefined') return
@@ -1066,6 +1116,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setSaveMessage(null)
     setSaveRequestId(null)
     setSaveVisibility('org')
+    setOpenRedactionEditorStepId(null)
     setSelectedVersionId(versionId)
     const params = new URLSearchParams(searchParams.toString())
     params.set('versionId', versionId)
@@ -1107,6 +1158,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         delete next[deletedStepId]
         return next
       })
+      setOpenRedactionEditorStepId((current) => (current === deletedStepId ? null : current))
     }
   }
 
@@ -1130,6 +1182,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
     setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
     setSaveVisibility('org')
+    setOpenRedactionEditorStepId(null)
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -1157,6 +1210,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
     }
     setSaveVisibility('org')
+    setOpenRedactionEditorStepId(null)
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -1583,6 +1637,13 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         instructions: value,
                       }))
                     }
+                    showRedactionEditor={openRedactionEditorStepId === step.id}
+                    onToggleRedactionEditor={() => {
+                      if (!isEditing) return
+                      setOpenRedactionEditorStepId((current) =>
+                        current === step.id ? null : step.id
+                      )
+                    }}
                     redactionMasks={
                       (isEditing ? draftRedactionMasksByStepId : redactionMasksByStepId)[step.id] ?? []
                     }
