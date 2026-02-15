@@ -16,6 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import RedactionMaskEditor, {
+  type GuideRedactionMask,
+  type GuideRedactionMaskKind,
+} from '@/components/workflow-guide/redaction-mask-editor'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
@@ -66,7 +70,23 @@ type GuideMedia = {
 type VersionDetailResponse = {
   version: WorkflowVersionSummary & {
     guide_media?: GuideMedia | null
+    guide_redactions?: {
+      key?: string | null
+      download_url?: string | null
+      steps_count?: number | null
+      masks_count?: number | null
+    } | null
   }
+}
+
+type GuideRedactionsDocument = {
+  version: 'redactions.v1'
+  steps: Array<{
+    step_id: string
+    screenshot: {
+      masks: GuideRedactionMask[]
+    }
+  }>
 }
 
 type GuideVariable = {
@@ -126,6 +146,7 @@ type GuideBootstrapResponse = {
   selectedVersionId?: string | null
   spec?: GuideSpec | null
   versionDetail?: VersionDetailResponse['version'] | null
+  guideRedactions?: GuideRedactionsDocument | null
   specError?: string | null
   error?: string
 }
@@ -188,6 +209,158 @@ const formatReleaseLabel = (index: number) => `Release ${index + 1}`
 
 const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
 
+const clampUnit = (value: unknown): number | null => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  return Math.max(0, Math.min(1, value))
+}
+
+const normalizeGuideRedactionMask = (value: unknown): GuideRedactionMask | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  const kindRaw = typeof record.kind === 'string' ? record.kind.trim().toLowerCase() : 'blur'
+  const kind: GuideRedactionMaskKind =
+    kindRaw === 'solid' || kindRaw === 'pixelate' || kindRaw === 'blur' ? kindRaw : 'blur'
+  const rectValue =
+    record.rect && typeof record.rect === 'object' && !Array.isArray(record.rect)
+      ? (record.rect as Record<string, unknown>)
+      : null
+  if (!rectValue) return null
+  const x = clampUnit(rectValue.x)
+  const y = clampUnit(rectValue.y)
+  const width = clampUnit(rectValue.width)
+  const height = clampUnit(rectValue.height)
+  if (x === null || y === null || width === null || height === null || width <= 0 || height <= 0) {
+    return null
+  }
+  const id =
+    typeof record.id === 'string' && record.id.trim().length > 0
+      ? record.id.trim()
+      : `mask_${Math.random().toString(36).slice(2, 10)}`
+  const strength =
+    typeof record.strength === 'number' && Number.isFinite(record.strength)
+      ? Math.max(0, Math.min(1, record.strength))
+      : undefined
+  const color =
+    typeof record.color === 'string' && record.color.trim().length > 0
+      ? record.color.trim()
+      : undefined
+
+  return {
+    id,
+    kind,
+    rect: { x, y, width, height },
+    strength,
+    color,
+  }
+}
+
+const parseGuideRedactionsDocument = (value: unknown): GuideRedactionsDocument | null => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+  const record = value as Record<string, unknown>
+  if (record.version !== 'redactions.v1') return null
+  const stepsRaw = Array.isArray(record.steps) ? record.steps : []
+  const steps: GuideRedactionsDocument['steps'] = []
+  for (const stepRaw of stepsRaw) {
+    if (!stepRaw || typeof stepRaw !== 'object' || Array.isArray(stepRaw)) continue
+    const stepRecord = stepRaw as Record<string, unknown>
+    const stepId = typeof stepRecord.step_id === 'string' ? stepRecord.step_id.trim() : ''
+    if (!stepId) continue
+    const screenshot =
+      stepRecord.screenshot && typeof stepRecord.screenshot === 'object' && !Array.isArray(stepRecord.screenshot)
+        ? (stepRecord.screenshot as Record<string, unknown>)
+        : null
+    const masksRaw = screenshot && Array.isArray(screenshot.masks) ? screenshot.masks : []
+    const masks = masksRaw
+      .map((mask) => normalizeGuideRedactionMask(mask))
+      .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+    if (masks.length === 0) continue
+    steps.push({
+      step_id: stepId,
+      screenshot: { masks },
+    })
+  }
+  return { version: 'redactions.v1', steps }
+}
+
+const buildRedactionMaskMap = (
+  document: GuideRedactionsDocument | null
+): Record<string, GuideRedactionMask[]> => {
+  const map: Record<string, GuideRedactionMask[]> = {}
+  for (const step of document?.steps ?? []) {
+    map[step.step_id] = [...step.screenshot.masks]
+  }
+  return map
+}
+
+const buildGuideRedactionsDocument = (
+  masksByStepId: Record<string, GuideRedactionMask[]>
+): GuideRedactionsDocument => {
+  const steps = Object.entries(masksByStepId)
+    .map(([stepId, masks]) => ({
+      step_id: stepId,
+      screenshot: {
+        masks: masks
+          .filter((mask) => mask.rect.width > 0 && mask.rect.height > 0)
+          .map((mask) => ({
+            id: mask.id,
+            kind: mask.kind,
+            rect: {
+              x: Math.max(0, Math.min(1, mask.rect.x)),
+              y: Math.max(0, Math.min(1, mask.rect.y)),
+              width: Math.max(0, Math.min(1, mask.rect.width)),
+              height: Math.max(0, Math.min(1, mask.rect.height)),
+            },
+            strength:
+              typeof mask.strength === 'number'
+                ? Math.max(0, Math.min(1, mask.strength))
+                : undefined,
+            color: mask.kind === 'solid' ? mask.color ?? '#000000' : undefined,
+          })),
+      },
+    }))
+    .filter((step) => step.screenshot.masks.length > 0)
+    .sort((left, right) => left.step_id.localeCompare(right.step_id))
+
+  return {
+    version: 'redactions.v1',
+    steps,
+  }
+}
+
+const stableRedactionFingerprint = (masksByStepId: Record<string, GuideRedactionMask[]>): string =>
+  JSON.stringify(buildGuideRedactionsDocument(masksByStepId))
+
+const cloneRedactionMaskMap = (
+  masksByStepId: Record<string, GuideRedactionMask[]>
+): Record<string, GuideRedactionMask[]> =>
+  JSON.parse(JSON.stringify(masksByStepId)) as Record<string, GuideRedactionMask[]>
+
+type SaveVisibility = 'org' | 'private'
+
+const EMPTY_REDACTION_FINGERPRINT = stableRedactionFingerprint({})
+
+const normalizeRedactionMaskMapForSteps = (
+  masksByStepId: Record<string, GuideRedactionMask[]>,
+  steps: GuideStep[]
+): Record<string, GuideRedactionMask[]> => {
+  const allowedStepIds = new Set(
+    steps
+      .map((step) => (typeof step.id === 'string' ? step.id.trim() : ''))
+      .filter((stepId) => stepId.length > 0)
+  )
+  const normalized: Record<string, GuideRedactionMask[]> = {}
+  for (const [stepId, masks] of Object.entries(masksByStepId)) {
+    if (!allowedStepIds.has(stepId)) continue
+    const normalizedMasks = masks
+      .map((mask) => normalizeGuideRedactionMask(mask))
+      .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+    if (normalizedMasks.length > 0) {
+      normalized[stepId] = normalizedMasks
+    }
+  }
+  return normalized
+}
+
 const StepImageCard = ({
   csrfToken,
   orgId,
@@ -207,6 +380,8 @@ const StepImageCard = ({
   onCopyStepLink,
   onStepTitleChange,
   onStepInstructionChange,
+  redactionMasks,
+  onRedactionMasksChange,
 }: {
   csrfToken: string | null
   orgId: string
@@ -226,6 +401,8 @@ const StepImageCard = ({
   onCopyStepLink: () => void
   onStepTitleChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
+  redactionMasks: GuideRedactionMask[]
+  onRedactionMasksChange: (masks: GuideRedactionMask[]) => void
 }) => {
   const kindLabel = formatKind(step.kind)
   const isManual = (step.kind ?? '').trim().toLowerCase() === 'manual'
@@ -379,6 +556,14 @@ const StepImageCard = ({
               Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
             </div>
           )}
+
+          {isEditing && fullSrc && (
+            <RedactionMaskEditor
+              imageSrc={fullSrc}
+              masks={redactionMasks}
+              onChange={onRedactionMasksChange}
+            />
+          )}
         </>
       )}
 
@@ -439,6 +624,16 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [spec, setSpec] = useState<GuideSpec | null>(null)
   const [draftSpec, setDraftSpec] = useState<GuideSpec | null>(null)
   const [baselineFingerprint, setBaselineFingerprint] = useState<string | null>(null)
+  const [redactionMasksByStepId, setRedactionMasksByStepId] = useState<
+    Record<string, GuideRedactionMask[]>
+  >({})
+  const [draftRedactionMasksByStepId, setDraftRedactionMasksByStepId] = useState<
+    Record<string, GuideRedactionMask[]>
+  >({})
+  const [baselineRedactionFingerprint, setBaselineRedactionFingerprint] = useState<string>(
+    EMPTY_REDACTION_FINGERPRINT
+  )
+  const [saveVisibility, setSaveVisibility] = useState<SaveVisibility>('org')
   const [loading, setLoading] = useState(true)
   const [specLoading, setSpecLoading] = useState(false)
   const [specError, setSpecError] = useState<string | null>(null)
@@ -507,6 +702,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             payload.spec,
             payload.workflow.workflow.title ?? payload.spec.workflow_title ?? workflowId
           )
+          const parsedGuideRedactions = parseGuideRedactionsDocument(payload.guideRedactions)
+          const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(
+            buildRedactionMaskMap(parsedGuideRedactions),
+            normalized.steps
+          )
           setVersionDetail(payload.versionDetail)
           setSpec(normalized)
           setDraftSpec(cloneSpec(normalized))
@@ -516,6 +716,10 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
               payload.workflow.workflow.title ?? normalized.workflow_title ?? workflowId
             )
           )
+          setRedactionMasksByStepId(normalizedRedactionMasksByStepId)
+          setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+          setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+          setSaveVisibility('org')
           setIsEditing(false)
           setSpecError(null)
           skipInitialSpecFetchRef.current = true
@@ -524,6 +728,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setSpec(null)
           setDraftSpec(null)
           setBaselineFingerprint(null)
+          setRedactionMasksByStepId({})
+          setDraftRedactionMasksByStepId({})
+          setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
           setSpecError(payload.specError ?? null)
         }
       } catch (err) {
@@ -567,6 +774,10 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setDraftSpec(null)
       setVersionDetail(null)
       setBaselineFingerprint(null)
+      setRedactionMasksByStepId({})
+      setDraftRedactionMasksByStepId({})
+      setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
+      setSaveVisibility('org')
       return
     }
 
@@ -583,7 +794,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setSaveMessage(null)
       setSaveRequestId(null)
       try {
-        const [specResponse, versionResponse] = await Promise.all([
+        const [specResponse, versionResponse, redactionsResponse] = await Promise.all([
           fetch(
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
               workflowId
@@ -594,6 +805,12 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
             `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
               workflowId
             )}/versions/${encodeURIComponent(selectedVersionId)}`,
+            { cache: 'no-store' }
+          ),
+          fetch(
+            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+              workflowId
+            )}/versions/${encodeURIComponent(selectedVersionId)}/guide-redactions`,
             { cache: 'no-store' }
           ),
         ])
@@ -621,18 +838,35 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           specJson,
           workflow?.title ?? specJson.workflow_title ?? workflowId
         )
+        const redactionsJson =
+          redactionsResponse.ok || redactionsResponse.status === 404
+            ? await redactionsResponse.json().catch(() => null)
+            : null
+        const parsedGuideRedactions = parseGuideRedactionsDocument(redactionsJson)
+        const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(
+          buildRedactionMaskMap(parsedGuideRedactions),
+          normalized.steps
+        )
         setVersionDetail(versionPayload.version)
         setSpec(normalized)
         setDraftSpec(cloneSpec(normalized))
         setBaselineFingerprint(
           buildSaveFingerprint(normalized, workflow?.title ?? normalized.workflow_title ?? workflowId)
         )
+        setRedactionMasksByStepId(normalizedRedactionMasksByStepId)
+        setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+        setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+        setSaveVisibility('org')
         setIsEditing(false)
       } catch (err) {
         if (!active) return
         setSpec(null)
         setDraftSpec(null)
         setVersionDetail(null)
+        setRedactionMasksByStepId({})
+        setDraftRedactionMasksByStepId({})
+        setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
+        setSaveVisibility('org')
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
         if (active) setSpecLoading(false)
@@ -662,11 +896,28 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     [selectedVersionId, versions]
   )
 
-  const draftIsDirty = useMemo(() => {
+  const draftSpecIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
     const fingerprint = buildSaveFingerprint(draftSpec, workflow?.title ?? workflowId)
     return fingerprint !== baselineFingerprint
   }, [baselineFingerprint, draftSpec, isEditing, workflow?.title, workflowId])
+
+  const normalizedDraftRedactionMasksByStepId = useMemo(
+    () =>
+      normalizeRedactionMaskMapForSteps(
+        draftRedactionMasksByStepId,
+        Array.isArray(draftSpec?.steps) ? draftSpec.steps : []
+      ),
+    [draftRedactionMasksByStepId, draftSpec?.steps]
+  )
+
+  const draftRedactionsAreDirty = useMemo(() => {
+    if (!isEditing) return false
+    const draftFingerprint = stableRedactionFingerprint(normalizedDraftRedactionMasksByStepId)
+    return draftFingerprint !== baselineRedactionFingerprint
+  }, [baselineRedactionFingerprint, isEditing, normalizedDraftRedactionMasksByStepId])
+
+  const draftIsDirty = draftSpecIsDirty || draftRedactionsAreDirty
 
   const normalizedStepSearch = stepSearchQuery.trim().toLowerCase()
   const stepEntries = useMemo(
@@ -814,6 +1065,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
+    setSaveVisibility('org')
     setSelectedVersionId(versionId)
     const params = new URLSearchParams(searchParams.toString())
     params.set('versionId', versionId)
@@ -839,11 +1091,23 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }
 
   const deleteDraftStep = (index: number) => {
+    const deletedStepId =
+      draftSpec && Array.isArray(draftSpec.steps) && draftSpec.steps[index]
+        ? String((draftSpec.steps[index] as GuideStep).id ?? '').trim()
+        : ''
     setDraftSpec((prev) => {
       if (!prev || !Array.isArray(prev.steps) || prev.steps.length <= 1) return prev
       const steps = prev.steps.filter((_, stepIndex) => stepIndex !== index)
       return { ...prev, steps }
     })
+    if (deletedStepId) {
+      setDraftRedactionMasksByStepId((prev) => {
+        if (!Object.prototype.hasOwnProperty.call(prev, deletedStepId)) return prev
+        const next = cloneRedactionMaskMap(prev)
+        delete next[deletedStepId]
+        return next
+      })
+    }
   }
 
   const moveDraftStep = (index: number, direction: 'up' | 'down') => {
@@ -862,6 +1126,10 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     if (!spec || !isAdmin) return
     setDraftSpec(cloneSpec(spec))
     setBaselineFingerprint(buildSaveFingerprint(spec, workflow?.title ?? workflowId))
+    const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(redactionMasksByStepId, spec.steps)
+    setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+    setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+    setSaveVisibility('org')
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -876,10 +1144,19 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     if (spec) {
       setDraftSpec(cloneSpec(spec))
       setBaselineFingerprint(buildSaveFingerprint(spec, workflow?.title ?? workflowId))
+      const normalizedRedactionMasksByStepId = normalizeRedactionMaskMapForSteps(
+        redactionMasksByStepId,
+        spec.steps
+      )
+      setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+      setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
     } else {
       setDraftSpec(null)
       setBaselineFingerprint(null)
+      setDraftRedactionMasksByStepId({})
+      setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
     }
+    setSaveVisibility('org')
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -911,6 +1188,32 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       if (!Array.isArray(normalizedSpec.steps) || normalizedSpec.steps.length === 0) {
         throw new Error('At least one step is required before saving.')
       }
+      const normalizedRedactionMasks = normalizeRedactionMaskMapForSteps(
+        draftRedactionMasksByStepId,
+        normalizedSpec.steps
+      )
+      const redactionsFingerprint = stableRedactionFingerprint(normalizedRedactionMasks)
+      const shouldUploadRedactions = redactionsFingerprint !== baselineRedactionFingerprint
+      const redactionsDocument = buildGuideRedactionsDocument(normalizedRedactionMasks)
+
+      const artifactsToPresign: Array<{
+        name: string
+        filename: string
+        content_type: string
+      }> = [
+        {
+          name: 'guide_spec_override',
+          filename: `guide-spec-edited-${Date.now()}.json`,
+          content_type: 'application/json',
+        },
+      ]
+      if (shouldUploadRedactions) {
+        artifactsToPresign.push({
+          name: 'guide_redactions_override',
+          filename: `guide-redactions-edited-${Date.now()}.json`,
+          content_type: 'application/json',
+        })
+      }
 
       const presignResponse = await fetch('/api/artifacts/presign', {
         method: 'POST',
@@ -920,13 +1223,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         },
         body: JSON.stringify({
           org_id: orgId,
-          artifacts: [
-            {
-              name: 'guide_spec_override',
-              filename: `guide-spec-edited-${Date.now()}.json`,
-              content_type: 'application/json',
-            },
-          ],
+          artifacts: artifactsToPresign,
         }),
       })
       const presignRequestId = presignResponse.headers.get('x-trope-request-id')
@@ -938,14 +1235,26 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         throw new Error('Unable to prepare save artifact upload.')
       }
 
-      const artifact = presignPayload?.artifacts?.[0]
-      const uploadUrl = artifact?.upload_url ?? ''
-      const artifactKey = artifact?.key ?? ''
-      if (!uploadUrl || !artifactKey) {
+      const specArtifact = (presignPayload?.artifacts ?? []).find(
+        (artifact) => artifact.name === 'guide_spec_override'
+      )
+      const specUploadUrl = specArtifact?.upload_url ?? ''
+      const specArtifactKey = specArtifact?.key ?? ''
+      if (!specUploadUrl || !specArtifactKey) {
         throw new Error('Artifact upload details are missing.')
       }
+      const redactionsArtifact = shouldUploadRedactions
+        ? (presignPayload?.artifacts ?? []).find(
+            (artifact) => artifact.name === 'guide_redactions_override'
+          )
+        : null
+      const redactionsUploadUrl = redactionsArtifact?.upload_url ?? ''
+      const redactionsArtifactKey = redactionsArtifact?.key ?? ''
+      if (shouldUploadRedactions && (!redactionsUploadUrl || !redactionsArtifactKey)) {
+        throw new Error('Guide redaction upload details are missing.')
+      }
 
-      const uploadResponse = await fetch(uploadUrl, {
+      const uploadResponse = await fetch(specUploadUrl, {
         method: 'PUT',
         headers: {
           'content-type': 'application/json',
@@ -954,6 +1263,18 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       })
       if (!uploadResponse.ok) {
         throw new Error('Unable to upload edited guide spec.')
+      }
+      if (shouldUploadRedactions) {
+        const redactionsUploadResponse = await fetch(redactionsUploadUrl, {
+          method: 'PUT',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(redactionsDocument),
+        })
+        if (!redactionsUploadResponse.ok) {
+          throw new Error('Unable to upload guide redactions.')
+        }
       }
 
       const publishResponse = await fetch(
@@ -968,7 +1289,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           },
           body: JSON.stringify({
             base_version_id: selectedVersionId,
-            guide_spec_override_key: artifactKey,
+            guide_spec_override_key: specArtifactKey,
+            guide_redactions_override_key: shouldUploadRedactions ? redactionsArtifactKey : undefined,
+            visibility: saveVisibility,
           }),
         }
       )
@@ -991,7 +1314,12 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       params.set('versionId', nextVersionId)
       router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
       setIsEditing(false)
-      setSaveMessage('Edits saved as a new release.')
+      setSaveVisibility('org')
+      setSaveMessage(
+        saveVisibility === 'private'
+          ? 'Edits saved as a private draft.'
+          : 'Edits saved as a new org release.'
+      )
       setSaveRequestId(publishRequestId ?? presignRequestId)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Unable to save edits.')
@@ -1056,7 +1384,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                   onClick={handleSaveEdits}
                   disabled={saving || !draftIsDirty}
                 >
-                  {saving ? 'Saving…' : 'Save as new release'}
+                  {saving
+                    ? 'Saving…'
+                    : saveVisibility === 'private'
+                      ? 'Save as private draft'
+                      : 'Save as new org release'}
                 </Button>
               </>
             )}
@@ -1081,6 +1413,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                 {versions.map((version, index) => (
                   <SelectItem key={version.version_id} value={version.version_id}>
                     {formatReleaseLabel(index)} ({formatDate(version.created_at)})
+                    {version.status === 'private_draft' ? ' · Private draft' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1093,6 +1426,32 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           </div>
         </div>
       </Card>
+
+      {isAdmin && isEditing && (
+        <Card className="p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-slate-900">Save target</div>
+              <p className="mt-1 text-xs text-slate-500">
+                Private drafts are visible only to you until published to the org.
+              </p>
+            </div>
+            <Select
+              value={saveVisibility}
+              onValueChange={(value: SaveVisibility) => setSaveVisibility(value)}
+              disabled={saving}
+            >
+              <SelectTrigger className="h-9 min-w-[15rem] bg-white text-sm text-slate-800 shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="org">Org release</SelectItem>
+                <SelectItem value="private">Private draft (only me)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </Card>
+      )}
 
       {specLoading && <div className="text-sm text-slate-500">Loading guide…</div>}
 
@@ -1224,6 +1583,24 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         instructions: value,
                       }))
                     }
+                    redactionMasks={
+                      (isEditing ? draftRedactionMasksByStepId : redactionMasksByStepId)[step.id] ?? []
+                    }
+                    onRedactionMasksChange={(masks) => {
+                      if (!isEditing) return
+                      setDraftRedactionMasksByStepId((prev) => {
+                        const normalizedMasks = masks
+                          .map((mask) => normalizeGuideRedactionMask(mask))
+                          .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+                        const next = cloneRedactionMaskMap(prev)
+                        if (normalizedMasks.length > 0) {
+                          next[step.id] = normalizedMasks
+                        } else {
+                          delete next[step.id]
+                        }
+                        return next
+                      })
+                    }}
                   />
                 </div>
               ))}
