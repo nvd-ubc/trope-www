@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 
 import {
   buildSaveFingerprint,
+  createDraftStep,
   getRadarPercent,
   normalizeSpecForPublish,
 } from '../src/lib/guide-editor'
@@ -136,5 +137,47 @@ describe('guide editor helpers', () => {
       getRadarPercent({ x: 1, y: 2, coordinate_space: 'virtual_desktop_pixels_v1' }, 100, 100),
       null
     )
+  })
+
+  it('creates manual callout drafts with stable defaults', () => {
+    const step = createDraftStep()
+    assert.equal(step.kind, 'manual')
+    assert.equal(step.callout_style, 'note')
+    assert.deepEqual(step.video_ranges, [])
+    assert.deepEqual(step.anchors?.layout, [{ position_hint: 'manual' }])
+  })
+
+  it('normalizes callout style only for manual steps', () => {
+    const normalized = normalizeSpecForPublish(
+      {
+        workflow_title: 'Guide',
+        app: 'Desktop',
+        version: '1',
+        steps: [
+          {
+            id: 'manual_1',
+            title: 'Heads up',
+            instructions: 'Double-check this.',
+            kind: 'manual',
+            callout_style: 'ALERT',
+            anchors: { text: [], icons: [], layout: [{ position_hint: 'manual' }] },
+            video_ranges: [],
+          },
+          {
+            id: 'step_2',
+            title: 'Click save',
+            instructions: 'Save changes.',
+            kind: 'click_target',
+            callout_style: 'tip',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [{ start_s: 0, end_s: 1 }],
+          },
+        ],
+      },
+      'Fallback'
+    )
+
+    assert.equal(normalized.steps[0]?.callout_style, 'alert')
+    assert.equal(normalized.steps[1]?.callout_style, undefined)
   })
 })

@@ -27,13 +27,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
-import { getRadarPercent } from '@/lib/guide-editor'
 import {
   formatCaptureTimestamp,
-  resolveStepImageVariant,
-  shouldRenderStepRadar,
   type GuideMediaStepImage as StepImage,
 } from '@/lib/guide-media'
 
@@ -163,6 +161,13 @@ type GuideSpec = {
     description?: string
   }>
   steps: Array<GuideStep>
+}
+
+type WorkflowExportCreateResponse = {
+  export?: {
+    export_id?: string | null
+  } | null
+  message?: string
 }
 
 type GuideStep = {
@@ -305,6 +310,10 @@ export default function WorkflowDetailClient({
   const [specLoading, setSpecLoading] = useState(false)
   const [specError, setSpecError] = useState<string | null>(null)
   const [shareId, setShareId] = useState<string | null>(null)
+  const [shareContentMode, setShareContentMode] = useState<'text_only' | 'media' | null>(null)
+  const [shareIncludeMedia, setShareIncludeMedia] = useState(false)
+  const [shareEmbedAllowed, setShareEmbedAllowed] = useState(false)
+  const [shareEmbedMode, setShareEmbedMode] = useState<boolean | null>(null)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
@@ -529,6 +538,8 @@ export default function WorkflowDetailClient({
   useEffect(() => {
     if (!shareId) {
       setShareUrl(null)
+      setShareContentMode(null)
+      setShareEmbedMode(null)
       return
     }
     if (typeof window !== 'undefined') {
@@ -564,11 +575,15 @@ export default function WorkflowDetailClient({
             'content-type': 'application/json',
             'x-csrf-token': csrfToken,
           },
-          body: JSON.stringify({ version_id: selectedVersionId }),
+          body: JSON.stringify({
+            version_id: selectedVersionId,
+            include_media: shareIncludeMedia,
+            embed_enabled: shareEmbedAllowed,
+          }),
         }
       )
       const payload = (await response.json().catch(() => null)) as
-        | { share?: { share_id?: string }; message?: string }
+        | { share?: { share_id?: string; content_mode?: string | null; embed_enabled?: boolean | null }; message?: string }
         | null
       if (!response.ok) {
         setRequestId(response.headers.get('x-trope-request-id'))
@@ -576,9 +591,59 @@ export default function WorkflowDetailClient({
       }
       const nextShareId = payload?.share?.share_id ?? null
       setShareId(nextShareId)
-      setActionMessage('Share link created.')
+      const contentMode = payload?.share?.content_mode === 'text_only' ? 'text_only' : 'media'
+      setShareContentMode(contentMode)
+      setShareEmbedMode(payload?.share?.embed_enabled === true)
+      setActionMessage(contentMode === 'media' ? 'Share link created with screenshots.' : 'Text-only share link created.')
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Unable to create share link.')
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
+  const handleExportVersion = async (format: 'pdf' | 'markdown') => {
+    if (!csrfToken || !selectedVersionId) return
+    setPendingAction(`export:${format}`)
+    setActionError(null)
+    setActionMessage(null)
+    setRequestId(null)
+    try {
+      const response = await fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}/versions/${encodeURIComponent(selectedVersionId)}/exports`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-csrf-token': csrfToken,
+          },
+          body: JSON.stringify({ format }),
+        }
+      )
+      const payload = (await response.json().catch(() => null)) as WorkflowExportCreateResponse | null
+      if (!response.ok) {
+        setRequestId(response.headers.get('x-trope-request-id'))
+        throw new Error(payload?.message || 'Unable to export workflow version.')
+      }
+      const exportId = payload?.export?.export_id?.trim()
+      if (!exportId) {
+        throw new Error('Export succeeded but no export ID was returned.')
+      }
+
+      const downloadPath =
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}` +
+        `/versions/${encodeURIComponent(selectedVersionId)}/exports/${encodeURIComponent(exportId)}/download`
+      const downloadLink = document.createElement('a')
+      downloadLink.href = downloadPath
+      downloadLink.rel = 'noopener'
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+      setActionMessage(format === 'pdf' ? 'PDF export ready.' : 'Markdown export ready.')
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Unable to export workflow version.')
     } finally {
       setPendingAction(null)
     }
@@ -722,7 +787,7 @@ export default function WorkflowDetailClient({
   }, [failedRuns])
 
   if (loading) {
-    return <WorkflowDetailSkeleton />
+    return <WorkflowDetailSkeleton workflowId={workflowId} />
   }
 
   if (error || !workflow) {
@@ -799,6 +864,38 @@ export default function WorkflowDetailClient({
         actions={
           <>
             {isAdmin && (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
+                <Checkbox
+                  id="share-include-media"
+                  checked={shareIncludeMedia}
+                  onCheckedChange={(checked) => setShareIncludeMedia(checked === true)}
+                  disabled={!selectedVersionId || pendingAction === 'share'}
+                />
+                <label
+                  htmlFor="share-include-media"
+                  className="cursor-pointer text-xs font-medium text-muted-foreground"
+                >
+                  Include screenshots
+                </label>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1">
+                <Checkbox
+                  id="share-embed-enabled"
+                  checked={shareEmbedAllowed}
+                  onCheckedChange={(checked) => setShareEmbedAllowed(checked === true)}
+                  disabled={!selectedVersionId || pendingAction === 'share'}
+                />
+                <label
+                  htmlFor="share-embed-enabled"
+                  className="cursor-pointer text-xs font-medium text-muted-foreground"
+                >
+                  Allow embed mode
+                </label>
+              </div>
+            )}
+            {isAdmin && (
               <Button
                 variant="outline"
                 size="sm"
@@ -808,6 +905,24 @@ export default function WorkflowDetailClient({
                 Create share link
               </Button>
             )}
+            <ButtonGroup>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportVersion('pdf')}
+                disabled={!csrfToken || !selectedVersionId || pendingAction?.startsWith('export:') === true}
+              >
+                {pendingAction === 'export:pdf' ? 'Exporting PDF…' : 'Export PDF'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportVersion('markdown')}
+                disabled={!csrfToken || !selectedVersionId || pendingAction?.startsWith('export:') === true}
+              >
+                {pendingAction === 'export:markdown' ? 'Exporting Markdown…' : 'Export Markdown'}
+              </Button>
+            </ButtonGroup>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon-sm" aria-label="Workflow actions">
@@ -1305,6 +1420,20 @@ export default function WorkflowDetailClient({
           {shareId && (
             <div className="mt-4 rounded-xl border border-border bg-muted/40 px-4 py-3 text-sm text-foreground">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">Share link</div>
+              {shareContentMode && (
+                <div className="mt-2">
+                  <Badge variant={shareContentMode === 'media' ? 'success' : 'warning'}>
+                    {shareContentMode === 'media' ? 'Screenshots enabled' : 'Text-only share'}
+                  </Badge>
+                </div>
+              )}
+              {shareEmbedMode !== null && (
+                <div className="mt-2">
+                  <Badge variant={shareEmbedMode ? 'info' : 'neutral'}>
+                    {shareEmbedMode ? 'Embed enabled' : 'Embed disabled'}
+                  </Badge>
+                </div>
+              )}
               {shareUrl ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <span className="break-all font-mono text-xs">{shareUrl}</span>
@@ -1384,20 +1513,6 @@ export default function WorkflowDetailClient({
                     ?.map((layout) => layout.region || layout.relative_to || layout.position_hint)
                     .filter((value): value is string => Boolean(value))
                   const image = stepImageMap[step.id] ?? null
-                  const previewImage = image
-                    ? resolveStepImageVariant(image, { surface: 'card', requestedVariant: 'preview' })
-                    : null
-                  const radar = image?.radar ?? null
-                  const radarWidth = image?.width ?? previewImage?.width ?? null
-                  const radarHeight = image?.height ?? previewImage?.height ?? null
-                  const radarPercent = shouldRenderStepRadar({
-                    step,
-                    radar,
-                    width: radarWidth,
-                    height: radarHeight,
-                  })
-                    ? getRadarPercent(radar, radarWidth, radarHeight)
-                    : null
                   const previewSrc = image
                     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
                         workflowId
@@ -1412,7 +1527,6 @@ export default function WorkflowDetailClient({
                         step.id
                       )}?variant=full`
                     : null
-                  const hasImage = Boolean(previewSrc && (previewImage?.downloadUrl || image?.download_url))
                   const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
 
                   return (
@@ -1435,41 +1549,35 @@ export default function WorkflowDetailClient({
                           )}
                         </div>
                       </div>
-                      {hasImage && previewSrc && fullSrc && (
-                        <a
-                          href={fullSrc}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="group mt-3 block overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
-                        >
-                          <div className="relative mx-auto w-fit max-w-full overflow-hidden bg-slate-100">
-                            <img
-                              src={previewSrc}
-                              alt={step.title}
-                              loading="lazy"
-                              className="block h-auto max-h-[20rem] w-auto max-w-full transition group-hover:scale-[1.01]"
-                            />
-                            {radarPercent && (
-                              <div className="pointer-events-none absolute inset-0">
-                                <div
-                                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                                  style={{ left: `${radarPercent.left}%`, top: `${radarPercent.top}%` }}
-                                >
-                                  <div className="relative h-5 w-5">
-                                    <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
-                                    <div className="absolute inset-[5px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </a>
-                      )}
-                      {!hasImage && (
-                        <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                          No screenshot available for this step.
-                        </div>
-                      )}
+                      <GuideStepImageCard
+                        step={step}
+                        image={image}
+                        previewSrc={previewSrc}
+                        fullSrc={fullSrc}
+                        maxHeightClass="max-h-[20rem]"
+                        onTelemetryEvent={(eventType, properties) => {
+                          if (!csrfToken) return
+                          fetch(
+                            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                              workflowId
+                            )}/events`,
+                            {
+                              method: 'POST',
+                              headers: {
+                                'content-type': 'application/json',
+                                'x-csrf-token': csrfToken,
+                              },
+                              body: JSON.stringify({
+                                event_type: eventType,
+                                surface: 'web_workflow_detail',
+                                ...properties,
+                              }),
+                            }
+                          ).catch(() => {
+                            // Ignore telemetry failures.
+                          })
+                        }}
+                      />
                       <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
                       {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
 

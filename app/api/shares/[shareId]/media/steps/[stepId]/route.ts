@@ -27,6 +27,22 @@ export async function GET(
   }
 
   const payload = (await shareResponse.json().catch(() => null)) as unknown
+  const share =
+    payload && typeof payload === 'object' && !Array.isArray(payload)
+      ? (payload as { share?: unknown }).share
+      : null
+  const contentMode =
+    share && typeof share === 'object' && !Array.isArray(share)
+      ? (share as { content_mode?: unknown }).content_mode
+      : null
+  const shareAllowsMedia = contentMode !== 'text_only'
+  if (!shareAllowsMedia) {
+    return NextResponse.json(
+      { error: 'share_media_disabled', message: 'Screenshots are disabled for this share.' },
+      { status: 403 }
+    )
+  }
+
   const version =
     payload && typeof payload === 'object' && !Array.isArray(payload)
       ? (payload as { version?: unknown }).version

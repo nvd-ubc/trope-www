@@ -6,6 +6,30 @@ export type GuideMediaRadar = {
   reason_code?: string | null
 }
 
+export type GuideMediaPoint = {
+  x: number
+  y: number
+  coordinate_space: 'step_image_pixels_v1'
+}
+
+export type GuideMediaRect = {
+  x: number
+  y: number
+  width: number
+  height: number
+  coordinate_space: 'step_image_pixels_v1'
+}
+
+export type GuideMediaRenderHints = {
+  algorithm?: 'focus_hints_v1' | string | null
+  source?: 'radar' | 'click_event' | 'element_frame' | 'layout_anchor' | 'center' | string | null
+  confidence?: number | null
+  focus_center?: GuideMediaPoint | null
+  safe_crop_rect?: GuideMediaRect | null
+  recommended_zoom_scale?: number | null
+  recommended_focus_radius_px?: number | null
+}
+
 type GuideStepLike = {
   kind?: string | null
   expected_event?: unknown
@@ -29,6 +53,7 @@ export type GuideMediaStepImage = {
   capture_t_s?: number | null
   capture_t_source?: string | null
   radar?: GuideMediaRadar | null
+  render_hints?: GuideMediaRenderHints | null
   variants?: {
     preview?: GuideMediaVariantDescriptor | null
     full?: GuideMediaVariantDescriptor | null

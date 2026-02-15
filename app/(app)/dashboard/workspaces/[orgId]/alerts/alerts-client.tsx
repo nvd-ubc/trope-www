@@ -311,7 +311,17 @@ export default function AlertsClient({ orgId }: { orgId: string }) {
   }
 
   if (loading) {
-    return <DataTableSkeleton rows={7} columns={7} />
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Alerts"
+          description="Resolve staleness, failures, and governance risks."
+          backHref={`/dashboard/workspaces/${encodeURIComponent(orgId)}`}
+          backLabel="Back to workspace"
+        />
+        <DataTableSkeleton rows={7} columns={7} />
+      </div>
+    )
   }
 
   if (error && alerts.length === 0) {

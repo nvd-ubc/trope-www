@@ -1,9 +1,14 @@
 import Link from 'next/link'
+import { readAuthSession } from '@/lib/server/auth'
 import Logo from './logo'
 import MobileMenu from './mobile-menu'
 import AuthLink from './header-auth-link'
 
-export default function Header() {
+export default async function Header() {
+  const session = await readAuthSession()
+  const initialAuthState =
+    session?.accessToken || session?.refreshToken ? 'authenticated' : 'unauthenticated'
+
   return (
     <header className="absolute w-full z-30">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -44,7 +49,10 @@ export default function Header() {
 
           <ul className="flex-1 flex justify-end items-center">
             <li className="mr-4">
-              <AuthLink className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out" />
+              <AuthLink
+                className="font-medium text-sm text-slate-600 hover:text-slate-900 whitespace-nowrap transition duration-150 ease-in-out"
+                initialAuthState={initialAuthState}
+              />
             </li>
             <li>
               <Link
@@ -57,7 +65,7 @@ export default function Header() {
             </li>
           </ul>
 
-          <MobileMenu />
+          <MobileMenu initialAuthState={initialAuthState} />
         </div>
       </div>
     </header>

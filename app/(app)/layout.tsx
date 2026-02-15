@@ -9,6 +9,7 @@ import WorkspaceSwitcher from './workspace-switcher'
 import CommandPalette from './command-palette'
 import ProfileCompletionGate from './profile-completion-gate'
 import AppUserMenu from './app-user-menu'
+import AppNotificationBell from './app-notification-bell'
 
 export default function AppLayout({
   children,
@@ -40,23 +41,18 @@ export default function AppLayout({
                   Press <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-foreground">⌘K</span>{' '}
                   to search
                 </Button>
+                <AppNotificationBell />
                 <WorkspaceSwitcher />
                 <AppUserMenu />
               </div>
             </div>
           </header>
           <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">
-            <Suspense
-              fallback={
-                <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground shadow-sm">
-                  Loading dashboard…
-                </div>
-              }
-            >
-              <div className="mx-auto w-full max-w-[1200px]">
+            <div className="mx-auto w-full max-w-[1200px]">
+              <Suspense fallback={children}>
                 <ProfileCompletionGate>{children}</ProfileCompletionGate>
-              </div>
-            </Suspense>
+              </Suspense>
+            </div>
           </main>
         </SidebarInset>
       </SidebarProvider>

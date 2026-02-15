@@ -1,4 +1,4 @@
-import WorkspaceOverviewClient from './workspace-overview-client'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,5 +8,5 @@ export default async function WorkspaceOverviewPage({
   params: Promise<{ orgId: string }>
 }) {
   const { orgId } = await params
-  return <WorkspaceOverviewClient orgId={orgId} />
+  redirect(`/dashboard/workspaces/${encodeURIComponent(orgId)}/home`)
 }

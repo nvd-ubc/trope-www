@@ -32,6 +32,11 @@ type VersionDetailPayload = {
   version?: unknown
 }
 
+type GuideRedactionsPayload = {
+  version?: string
+  steps?: unknown[]
+}
+
 const sortVersionsByDate = (versions: Array<{ version_id: string; created_at: string }>) =>
   [...versions].sort((a, b) => {
     const aTime = new Date(a.created_at).getTime()
@@ -106,9 +111,10 @@ export async function GET(
 
   let specResult: Awaited<ReturnType<typeof fetchInternalJson>> | null = null
   let versionDetailResult: Awaited<ReturnType<typeof fetchInternalJson<VersionDetailPayload>>> | null = null
+  let redactionsResult: Awaited<ReturnType<typeof fetchInternalJson<GuideRedactionsPayload>>> | null = null
   if (selectedVersionId) {
     const encodedVersionId = encodeURIComponent(selectedVersionId)
-    const [guideSpecResponse, versionResponse] = await Promise.all([
+    const [guideSpecResponse, versionResponse, guideRedactionsResponse] = await Promise.all([
       fetchInternalJson(
         request,
         `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}/guide-spec`,
@@ -119,9 +125,15 @@ export async function GET(
         `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}`,
         { timeoutMs: 1500 }
       ),
+      fetchInternalJson<GuideRedactionsPayload>(
+        request,
+        `/api/orgs/${encodedOrgId}/workflows/${encodedWorkflowId}/versions/${encodedVersionId}/guide-redactions`,
+        { timeoutMs: 1500 }
+      ),
     ])
     specResult = guideSpecResponse
     versionDetailResult = versionResponse
+    redactionsResult = guideRedactionsResponse
   }
 
   const specError = (() => {
@@ -144,6 +156,7 @@ export async function GET(
     selectedVersionId,
     spec: specResult?.ok ? specResult.data : null,
     versionDetail: versionDetailResult?.ok ? versionDetailResult.data?.version ?? null : null,
+    guideRedactions: redactionsResult?.ok ? redactionsResult.data : null,
     specError,
   })
   applyBootstrapMeta(
@@ -153,7 +166,8 @@ export async function GET(
     versionsResult,
     orgResult,
     ...(specResult ? [specResult] : []),
-    ...(versionDetailResult ? [versionDetailResult] : [])
+    ...(versionDetailResult ? [versionDetailResult] : []),
+    ...(redactionsResult ? [redactionsResult] : [])
   )
   return response
 }
