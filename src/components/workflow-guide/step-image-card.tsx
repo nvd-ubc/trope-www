@@ -171,7 +171,7 @@ export default function StepImageCard({
     <>
       <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
         <StepImageCanvas
-          src={previewSrc}
+          src={fullSrc}
           alt={step.title}
           focusTransform={focusTransform}
           sourceImageSize={{ width: imageWidth, height: imageHeight }}
