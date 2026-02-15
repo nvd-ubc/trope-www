@@ -163,6 +163,13 @@ type GuideSpec = {
   steps: Array<GuideStep>
 }
 
+type WorkflowExportCreateResponse = {
+  export?: {
+    export_id?: string | null
+  } | null
+  message?: string
+}
+
 type GuideStep = {
   id: string
   title: string
@@ -595,6 +602,53 @@ export default function WorkflowDetailClient({
     }
   }
 
+  const handleExportVersion = async (format: 'pdf' | 'markdown') => {
+    if (!csrfToken || !selectedVersionId) return
+    setPendingAction(`export:${format}`)
+    setActionError(null)
+    setActionMessage(null)
+    setRequestId(null)
+    try {
+      const response = await fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}/versions/${encodeURIComponent(selectedVersionId)}/exports`,
+        {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-csrf-token': csrfToken,
+          },
+          body: JSON.stringify({ format }),
+        }
+      )
+      const payload = (await response.json().catch(() => null)) as WorkflowExportCreateResponse | null
+      if (!response.ok) {
+        setRequestId(response.headers.get('x-trope-request-id'))
+        throw new Error(payload?.message || 'Unable to export workflow version.')
+      }
+      const exportId = payload?.export?.export_id?.trim()
+      if (!exportId) {
+        throw new Error('Export succeeded but no export ID was returned.')
+      }
+
+      const downloadPath =
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}` +
+        `/versions/${encodeURIComponent(selectedVersionId)}/exports/${encodeURIComponent(exportId)}/download`
+      const downloadLink = document.createElement('a')
+      downloadLink.href = downloadPath
+      downloadLink.rel = 'noopener'
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      document.body.removeChild(downloadLink)
+      setActionMessage(format === 'pdf' ? 'PDF export ready.' : 'Markdown export ready.')
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Unable to export workflow version.')
+    } finally {
+      setPendingAction(null)
+    }
+  }
+
   const updateWorkflow = async (payload: Record<string, unknown>) => {
     if (!csrfToken) return
     setSettingsSaving(true)
@@ -851,6 +905,24 @@ export default function WorkflowDetailClient({
                 Create share link
               </Button>
             )}
+            <ButtonGroup>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportVersion('pdf')}
+                disabled={!csrfToken || !selectedVersionId || pendingAction?.startsWith('export:') === true}
+              >
+                {pendingAction === 'export:pdf' ? 'Exporting PDF…' : 'Export PDF'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void handleExportVersion('markdown')}
+                disabled={!csrfToken || !selectedVersionId || pendingAction?.startsWith('export:') === true}
+              >
+                {pendingAction === 'export:markdown' ? 'Exporting Markdown…' : 'Export Markdown'}
+              </Button>
+            </ButtonGroup>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon-sm" aria-label="Workflow actions">
