@@ -275,9 +275,6 @@ export const resolveStepFocusFallbackReason = (params: {
 
   if (!isStepClickLike(params.step)) return null
 
-  const source = (params.renderHints.source ?? '').toString().trim().toLowerCase()
-  if (source === 'radar' || source === 'click_event') return null
-
   const confidence = toFiniteNumber(params.renderHints.confidence)
   const hasStrongConfidence =
     (confidence !== null && confidence >= MIN_POINTER_AUTO_FOCUS_CONFIDENCE) ||

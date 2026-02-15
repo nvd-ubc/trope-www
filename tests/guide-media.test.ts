@@ -238,4 +238,19 @@ describe('guide media helpers', () => {
       null
     )
   })
+
+  it('falls back for weak radar pointer hints', () => {
+    assert.equal(
+      resolveStepFocusFallbackReason({
+        step: { kind: 'click_target' },
+        renderHints: {
+          source: 'radar',
+          confidence: 0.58,
+        },
+        hasFocusCrop: true,
+        zoomScale: 1.18,
+      }),
+      'weak_pointer_focus_hint'
+    )
+  })
 })
