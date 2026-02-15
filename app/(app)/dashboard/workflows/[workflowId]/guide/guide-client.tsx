@@ -655,6 +655,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [saving, setSaving] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const isEditingRef = useRef(false)
+  const redactionDraftTouchedRef = useRef(false)
   const [stepSearchQuery, setStepSearchQuery] = useState('')
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
   const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
@@ -739,6 +740,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
           setSaveVisibility('org')
           setOpenRedactionEditorStepId(null)
+          redactionDraftTouchedRef.current = false
           setIsEditing(false)
           setSpecError(null)
           skipInitialSpecFetchRef.current = true
@@ -751,6 +753,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setDraftRedactionMasksByStepId({})
           setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
           setOpenRedactionEditorStepId(null)
+          redactionDraftTouchedRef.current = false
           setSpecError(payload.specError ?? null)
         }
       } catch (err) {
@@ -799,6 +802,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
       setSaveVisibility('org')
       setOpenRedactionEditorStepId(null)
+      redactionDraftTouchedRef.current = false
       return
     }
 
@@ -864,6 +868,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
         setOpenRedactionEditorStepId(null)
+        redactionDraftTouchedRef.current = false
         setIsEditing(false)
 
         const loadRedactions = async () => {
@@ -883,15 +888,14 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
               buildRedactionMaskMap(parsedGuideRedactions),
               normalized.steps
             )
-            if (!active || isEditingRef.current) return
+            if (!active) return
             setRedactionMasksByStepId(normalizedRedactionMasksByStepId)
-            setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
             setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
+            if (!isEditingRef.current || !redactionDraftTouchedRef.current) {
+              setDraftRedactionMasksByStepId(cloneRedactionMaskMap(normalizedRedactionMasksByStepId))
+            }
           } catch {
-            if (!active || isEditingRef.current) return
-            setRedactionMasksByStepId({})
-            setDraftRedactionMasksByStepId({})
-            setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
+            // Keep current redaction state when optional fetch fails.
           }
         }
         void loadRedactions()
@@ -905,6 +909,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
         setOpenRedactionEditorStepId(null)
+        redactionDraftTouchedRef.current = false
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
         if (active) setSpecLoading(false)
@@ -1117,6 +1122,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setSaveRequestId(null)
     setSaveVisibility('org')
     setOpenRedactionEditorStepId(null)
+    redactionDraftTouchedRef.current = false
     setSelectedVersionId(versionId)
     const params = new URLSearchParams(searchParams.toString())
     params.set('versionId', versionId)
@@ -1183,6 +1189,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
     setSaveVisibility('org')
     setOpenRedactionEditorStepId(null)
+    redactionDraftTouchedRef.current = false
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -1211,6 +1218,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     }
     setSaveVisibility('org')
     setOpenRedactionEditorStepId(null)
+    redactionDraftTouchedRef.current = false
     setSaveError(null)
     setSaveMessage(null)
     setSaveRequestId(null)
@@ -1649,6 +1657,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     }
                     onRedactionMasksChange={(masks) => {
                       if (!isEditing) return
+                      redactionDraftTouchedRef.current = true
                       setDraftRedactionMasksByStepId((prev) => {
                         const normalizedMasks = masks
                           .map((mask) => normalizeGuideRedactionMask(mask))
