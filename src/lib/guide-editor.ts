@@ -32,14 +32,15 @@ export const createStepId = () => `step_${Math.random().toString(36).slice(2, 10
 
 export const createDraftStep = (): GuideEditorStep => ({
   id: createStepId(),
-  title: 'New step',
-  instructions: '',
-  kind: 'informational',
+  title: 'Manual step',
+  instructions: 'Describe the manual action to perform.',
+  kind: 'manual',
+  callout_style: 'note',
   video_ranges: [],
   anchors: {
     text: [],
     icons: [],
-    layout: [],
+    layout: [{ position_hint: 'manual' }],
   },
 })
 
@@ -79,12 +80,25 @@ export const normalizeStepForPublish = (step: GuideEditorStep, index: number): G
   const iconAnchors = Array.isArray(anchors.icons) ? anchors.icons : []
   const layoutAnchors = Array.isArray(anchors.layout) ? anchors.layout : []
   const videoRanges = Array.isArray(step.video_ranges) ? step.video_ranges : []
+  const kind =
+    typeof step.kind === 'string' && step.kind.trim()
+      ? step.kind.trim().toLowerCase()
+      : undefined
+  const calloutStyleRaw =
+    typeof step.callout_style === 'string' && step.callout_style.trim()
+      ? step.callout_style.trim().toLowerCase()
+      : undefined
+  const calloutStyle =
+    calloutStyleRaw === 'tip' || calloutStyleRaw === 'note' || calloutStyleRaw === 'alert'
+      ? calloutStyleRaw
+      : undefined
 
-  return {
+  const normalized: GuideEditorStep = {
     ...step,
     id,
     title,
     instructions,
+    kind,
     video_ranges: videoRanges,
     anchors: {
       ...anchors,
@@ -93,6 +107,14 @@ export const normalizeStepForPublish = (step: GuideEditorStep, index: number): G
       layout: layoutAnchors,
     },
   }
+
+  if (kind === 'manual' && calloutStyle) {
+    normalized.callout_style = calloutStyle
+  } else {
+    delete normalized.callout_style
+  }
+
+  return normalized
 }
 
 export const normalizeSpecForPublish = (

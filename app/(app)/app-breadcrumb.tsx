@@ -16,6 +16,11 @@ const labelForSegment = (segment: string) => {
   const map: Record<string, string> = {
     dashboard: 'Dashboard',
     workspaces: 'Workspaces',
+    home: 'Home',
+    docs: 'Documents',
+    tasks: 'Tasks',
+    teammates: 'Teammates',
+    insights: 'Insights',
     workflows: 'Workflows',
     runs: 'Runs',
     alerts: 'Alerts',

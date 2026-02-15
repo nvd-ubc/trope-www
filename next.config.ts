@@ -12,6 +12,24 @@ const nextConfig: NextConfig = {
 					{ key: "X-Robots-Tag", value: "noindex" },
 				],
 			},
+			{
+				source: "/share/:path*",
+				headers: [
+					{ key: "Cache-Control", value: "no-store" },
+					{ key: "Pragma", value: "no-cache" },
+					{ key: "Referrer-Policy", value: "no-referrer" },
+					{ key: "X-Robots-Tag", value: "noindex, nofollow" },
+				],
+			},
+			{
+				source: "/api/shares/:path*",
+				headers: [
+					{ key: "Cache-Control", value: "no-store" },
+					{ key: "Pragma", value: "no-cache" },
+					{ key: "Referrer-Policy", value: "no-referrer" },
+					{ key: "X-Robots-Tag", value: "noindex, nofollow" },
+				],
+			},
 		];
 	},
 	async redirects() {

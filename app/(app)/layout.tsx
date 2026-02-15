@@ -9,6 +9,7 @@ import WorkspaceSwitcher from './workspace-switcher'
 import CommandPalette from './command-palette'
 import ProfileCompletionGate from './profile-completion-gate'
 import AppUserMenu from './app-user-menu'
+import AppNotificationBell from './app-notification-bell'
 
 export default function AppLayout({
   children,
@@ -40,6 +41,7 @@ export default function AppLayout({
                   Press <span className="rounded bg-muted px-1 py-0.5 text-[10px] font-medium text-foreground">⌘K</span>{' '}
                   to search
                 </Button>
+                <AppNotificationBell />
                 <WorkspaceSwitcher />
                 <AppUserMenu />
               </div>
