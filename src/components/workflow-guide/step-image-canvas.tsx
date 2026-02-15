@@ -49,6 +49,7 @@ export default function StepImageCanvas({
   imageClassName,
 }: StepImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const controlsRef = useRef<{
     zoomIn: () => void
     zoomOut: () => void
@@ -62,6 +63,7 @@ export default function StepImageCanvas({
     positionY: 0,
   })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
+  const [renderedImageSize, setRenderedImageSize] = useState({ width: 0, height: 0 })
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
 
@@ -85,6 +87,31 @@ export default function StepImageCanvas({
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (!imageRef.current) return
+    const updateSize = (width: number, height: number) => {
+      const safeWidth = Math.max(0, Math.round(width))
+      const safeHeight = Math.max(0, Math.round(height))
+      setRenderedImageSize((previous) => {
+        if (previous.width === safeWidth && previous.height === safeHeight) {
+          return previous
+        }
+        return { width: safeWidth, height: safeHeight }
+      })
+    }
+
+    const initialRect = imageRef.current.getBoundingClientRect()
+    updateSize(initialRect.width, initialRect.height)
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      updateSize(entry.contentRect.width, entry.contentRect.height)
+    })
+    observer.observe(imageRef.current)
+    return () => observer.disconnect()
+  }, [src])
+
   const setTransform = useCallback((x: number, y: number, scale: number, animated = true) => {
     controlsRef.current?.setTransform(
       x,
@@ -106,17 +133,22 @@ export default function StepImageCanvas({
     if (viewportSize.width <= 0 || viewportSize.height <= 0) {
       return
     }
+    const focusImageWidth = renderedImageSize.width > 0 ? renderedImageSize.width : sourceImageSize.width
+    const focusImageHeight = renderedImageSize.height > 0 ? renderedImageSize.height : sourceImageSize.height
+    if (focusImageWidth <= 0 || focusImageHeight <= 0) {
+      return
+    }
     const focused = computeGuideCanvasFocusTransform({
       focusTransform,
       viewportWidth: viewportSize.width,
       viewportHeight: viewportSize.height,
-      imageWidth: sourceImageSize.width,
-      imageHeight: sourceImageSize.height,
+      imageWidth: focusImageWidth,
+      imageHeight: focusImageHeight,
       minScale: MIN_SCALE,
       maxScale: MAX_SCALE,
     })
     setTransform(focused.positionX, focused.positionY, focused.scale)
-  }, [focusTransform, resetToFit, setTransform, sourceImageSize.height, sourceImageSize.width, viewportSize.height, viewportSize.width])
+  }, [focusTransform, renderedImageSize.height, renderedImageSize.width, resetToFit, setTransform, sourceImageSize.height, sourceImageSize.width, viewportSize.height, viewportSize.width])
 
   useEffect(() => {
     if (!active) return
@@ -251,6 +283,7 @@ export default function StepImageCanvas({
           >
             <div className="relative">
               <img
+                ref={imageRef}
                 src={src}
                 alt={alt}
                 className={compact
