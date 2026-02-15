@@ -1703,14 +1703,16 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     variant="ghost"
                     size="sm"
                     onClick={() => focusStep(step.id)}
-                    className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                    className={`grid h-auto w-full grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-2 whitespace-normal rounded-md px-2 py-2 text-left text-xs leading-5 transition ${
                       activeStepId === step.id
                         ? 'bg-slate-100 text-slate-900'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <span className="font-mono text-[10px] text-slate-400">{index + 1}</span>
-                    <span className="line-clamp-2">
+                    <span className="pt-0.5 text-right font-mono text-[10px] leading-5 text-slate-400">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 break-words line-clamp-2">
                       {step.title?.trim() || `Step ${index + 1}`}
                     </span>
                   </Button>
