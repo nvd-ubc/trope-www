@@ -184,6 +184,7 @@ export default function StepImageCard({
           radarPercent={radarPercent}
           showRadar={showRadar}
           active
+          autoFocusOnActive={shouldApplyFocus}
           compact
           showControls={false}
           imageClassName={maxHeightClass}
