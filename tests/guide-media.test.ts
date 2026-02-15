@@ -224,6 +224,21 @@ describe('guide media helpers', () => {
     )
   })
 
+  it('falls back for pointer steps when focus source is element_frame even with higher zoom', () => {
+    assert.equal(
+      resolveStepFocusFallbackReason({
+        step: { kind: 'click_target' },
+        renderHints: {
+          source: 'element_frame',
+          confidence: 0.9,
+        },
+        hasFocusCrop: true,
+        zoomScale: 1.8,
+      }),
+      'weak_pointer_focus_hint'
+    )
+  })
+
   it('keeps focus for strong radar pointer hints', () => {
     assert.equal(
       resolveStepFocusFallbackReason({

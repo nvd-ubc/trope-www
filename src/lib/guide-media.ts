@@ -275,6 +275,12 @@ export const resolveStepFocusFallbackReason = (params: {
 
   if (!isStepClickLike(params.step)) return null
 
+  const source = (params.renderHints.source ?? '').toString().trim().toLowerCase()
+  const pointerFocusSourceAllowed = source === 'radar' || source === 'click_event'
+  if (!pointerFocusSourceAllowed) {
+    return 'weak_pointer_focus_hint'
+  }
+
   const confidence = toFiniteNumber(params.renderHints.confidence)
   const hasStrongConfidence =
     (confidence !== null && confidence >= MIN_POINTER_AUTO_FOCUS_CONFIDENCE) ||
