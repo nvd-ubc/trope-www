@@ -63,6 +63,9 @@ const snapshotToFocusOverride = (snapshot: StepImageCanvasTransformSnapshot): { 
 
   const focusX = (viewportWidth / 2 - snapshot.positionX) / scale
   const focusY = (viewportHeight / 2 - snapshot.positionY) / scale
+  const normalizedScale = Math.max(1, scale)
+  const compensatedScale =
+    normalizedScale > 1.001 ? normalizedScale * CONTEXT_MARGIN_COMPENSATION : normalizedScale
   return {
     center_unit: {
       x: clampUnit(focusX / imageWidth),
@@ -70,7 +73,7 @@ const snapshotToFocusOverride = (snapshot: StepImageCanvasTransformSnapshot): { 
     },
     // computeFocusTransformV1 applies a context margin to the crop, which reduces the effective zoom.
     // Compensate so reopening + saving without edits doesn't "drift" outward on each save.
-    zoom_scale: Math.min(MAX_SAVED_ZOOM_SCALE, Math.max(1, scale) * CONTEXT_MARGIN_COMPENSATION),
+    zoom_scale: Math.min(MAX_SAVED_ZOOM_SCALE, compensatedScale),
   }
 }
 
