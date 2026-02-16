@@ -10,6 +10,7 @@ import {
 describe('guide cursor helpers', () => {
   it('parses known overlay modes', () => {
     assert.equal(parseGuideCursorOverlayMode('radar_dot'), 'radar_dot')
+    assert.equal(parseGuideCursorOverlayMode('captured_cursor'), 'captured_cursor')
     assert.equal(parseGuideCursorOverlayMode('NONE'), 'none')
   })
 
