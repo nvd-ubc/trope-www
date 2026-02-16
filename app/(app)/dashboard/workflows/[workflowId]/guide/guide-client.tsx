@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { toast } from 'sonner'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
@@ -21,6 +22,7 @@ import RedactionMaskEditor, {
   type GuideRedactionMaskKind,
 } from '@/components/workflow-guide/redaction-mask-editor'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
@@ -28,10 +30,7 @@ import {
   createDraftStep,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
-import {
-  formatCaptureTimestamp,
-  type GuideMediaStepImage as StepImage,
-} from '@/lib/guide-media'
+import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
 type WorkflowDefinition = {
   org_id: string
@@ -57,10 +56,6 @@ type WorkflowDetailResponse = {
   latest_version?: (WorkflowVersionSummary & {
     guide_media?: GuideMedia | null
   }) | null
-}
-
-type VersionsResponse = {
-  versions: WorkflowVersionSummary[]
 }
 
 type GuideMedia = {
@@ -123,6 +118,24 @@ type GuideSpec = {
   [key: string]: unknown
 }
 
+const resolveStepWhyText = (step: GuideStep): string => {
+  const candidates = [
+    step.why,
+    step.rationale,
+    step.reason,
+    step.why_this_matters,
+    step.why_this_step,
+    step.justification,
+  ]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim()
+      if (trimmed) return trimmed
+    }
+  }
+  return ''
+}
+
 type ArtifactsPresignResponse = {
   artifacts?: Array<{
     name?: string
@@ -140,6 +153,7 @@ type VersionsCreateResponse = {
 
 type GuideBootstrapResponse = {
   orgId?: string | null
+  orgName?: string | null
   workflow?: WorkflowDetailResponse | null
   versions?: WorkflowVersionSummary[] | null
   membershipRole?: string | null
@@ -149,18 +163,6 @@ type GuideBootstrapResponse = {
   guideRedactions?: GuideRedactionsDocument | null
   specError?: string | null
   error?: string
-}
-
-const formatDate = (value?: string | null) => {
-  if (!value) return 'Unknown'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-const formatKind = (kind?: string | null) => {
-  if (!kind) return null
-  return kind.replace(/_/g, ' ')
 }
 
 const resolveCalloutStyle = (step: GuideStep): 'tip' | 'note' | 'alert' => {
@@ -197,15 +199,6 @@ const calloutToneClass = (style: 'tip' | 'note' | 'alert') => {
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
-
-const sortVersionsByDate = (versions: WorkflowVersionSummary[]) =>
-  [...versions].sort((a, b) => {
-    const aTime = new Date(a.created_at).getTime()
-    const bTime = new Date(b.created_at).getTime()
-    return bTime - aTime
-  })
-
-const formatReleaseLabel = (index: number) => `Release ${index + 1}`
 
 const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
 
@@ -381,6 +374,7 @@ const StepImageCard = ({
   onStepTitleChange,
   onStepInstructionChange,
   redactionMasks,
+  lockedMaskIds,
   onRedactionMasksChange,
   showRedactionEditor,
   onToggleRedactionEditor,
@@ -404,41 +398,19 @@ const StepImageCard = ({
   onStepTitleChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
   redactionMasks: GuideRedactionMask[]
+  lockedMaskIds: string[]
   onRedactionMasksChange: (masks: GuideRedactionMask[]) => void
   showRedactionEditor: boolean
   onToggleRedactionEditor: () => void
 }) => {
-  const kindLabel = formatKind(step.kind)
   const isManual = (step.kind ?? '').trim().toLowerCase() === 'manual'
   const calloutStyle = resolveCalloutStyle(step)
   const calloutTone = calloutToneClass(calloutStyle)
-  const anchorText = (step.anchors?.text ?? [])
-    .map((anchor) => {
-      if (anchor && typeof anchor === 'object' && !Array.isArray(anchor)) {
-        const record = anchor as { string?: string }
-        return record.string
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
-  const iconText = (step.anchors?.icons ?? [])
-    .map((icon) => {
-      if (icon && typeof icon === 'object' && !Array.isArray(icon)) {
-        const record = icon as { description?: string }
-        return record.description
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
-  const layoutText = (step.anchors?.layout ?? [])
-    .map((layout) => {
-      if (layout && typeof layout === 'object' && !Array.isArray(layout)) {
-        const record = layout as { region?: string; relative_to?: string; position_hint?: string }
-        return record.region || record.relative_to || record.position_hint
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
+  const whyText = resolveStepWhyText(step)
+  const instructionText =
+    typeof step.instructions === 'string' && step.instructions.trim().length > 0
+      ? step.instructions.trim()
+      : step.title
 
   const previewSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
@@ -456,7 +428,6 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
-  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
   const sendGuideEvent = (
     eventType:
       | 'workflow_doc_focus_applied'
@@ -484,54 +455,68 @@ const StepImageCard = ({
     })
   }
 
+  if (!isEditing) {
+    return (
+      <ReadonlyStepCard
+        step={step}
+        index={index}
+        image={image}
+        previewSrc={previewSrc}
+        fullSrc={fullSrc}
+        imageMaxHeightClass="max-h-[27rem]"
+        onTelemetryEvent={sendGuideEvent}
+        onCopyStepLink={onCopyStepLink}
+        instructionText={instructionText}
+        whyText={whyText}
+        manualCallout={
+          isManual
+            ? {
+                label: calloutStyle,
+                instructionText: step.instructions,
+                containerClassName: calloutTone.container,
+                badgeClassName: calloutTone.badge,
+              }
+            : null
+        }
+      />
+    )
+  }
+
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
-          {isEditing ? (
-            <InputGroup className="mt-1">
-              <InputGroupInput
-                value={step.title}
-                onChange={(event) => onStepTitleChange(event.target.value)}
-                className="text-base font-semibold text-slate-900"
-                placeholder={`Step ${index + 1}`}
-              />
-            </InputGroup>
-          ) : (
-            <div className="text-base font-semibold text-slate-900">{step.title}</div>
-          )}
+    <div className="group/step rounded-2xl border border-slate-200 bg-white p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
+              {index + 1}
+            </div>
+            <div className="min-w-0 flex-1">
+              <InputGroup>
+                <InputGroupInput
+                  value={step.title}
+                  onChange={(event) => onStepTitleChange(event.target.value)}
+                  className="h-10 text-base font-semibold text-slate-900 sm:text-lg"
+                  placeholder={`Step ${index + 1}`}
+                />
+              </InputGroup>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onCopyStepLink}>
-            Copy step link
-          </Button>
-          {kindLabel && (
-            <Badge variant="info" className="text-[10px]">
-              {kindLabel}
-            </Badge>
-          )}
-          {captureTimestamp && (
-            <Badge variant="neutral" className="text-[10px]">
-              t={captureTimestamp}
-            </Badge>
-          )}
-          {isEditing && (
-            <ButtonGroup>
-              <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
-                Up
-              </Button>
-              <Button variant="outline" size="sm" onClick={onMoveDown} disabled={!canMoveDown}>
-                Down
-              </Button>
-              <Button variant="outline" size="sm" onClick={onInsertAfter}>
-                + Step
-              </Button>
-              <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
-                Delete
-              </Button>
-            </ButtonGroup>
-          )}
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
+              Up
+            </Button>
+            <Button variant="outline" size="sm" onClick={onMoveDown} disabled={!canMoveDown}>
+              Down
+            </Button>
+            <Button variant="outline" size="sm" onClick={onInsertAfter}>
+              + Step
+            </Button>
+            <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
+              Delete
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
 
@@ -555,13 +540,13 @@ const StepImageCard = ({
             onTelemetryEvent={sendGuideEvent}
           />
 
-          {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
+          {radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
             <div className="mt-2 text-xs text-slate-500">
               Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
             </div>
           )}
 
-          {isEditing && fullSrc && (
+          {fullSrc && (
             <div className="mt-3">
               <Button variant="outline" size="sm" onClick={onToggleRedactionEditor}>
                 {showRedactionEditor ? 'Hide redaction editor' : 'Edit redactions'}
@@ -569,48 +554,24 @@ const StepImageCard = ({
             </div>
           )}
 
-          {isEditing && fullSrc && showRedactionEditor && (
+          {fullSrc && showRedactionEditor && (
             <RedactionMaskEditor
               imageSrc={fullSrc}
               masks={redactionMasks}
+              lockedMaskIds={lockedMaskIds}
               onChange={onRedactionMasksChange}
             />
           )}
         </>
       )}
 
-      {isEditing ? (
-        <Textarea
-          value={step.instructions}
-          onChange={(event) => onStepInstructionChange(event.target.value)}
-          className="mt-4 text-sm text-slate-700"
-          rows={3}
-          placeholder="Describe the action clearly."
-        />
-      ) : !isManual ? (
-        <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
-      ) : null}
-      {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
-
-      {!isEditing && (anchorText.length > 0 || iconText.length > 0 || layoutText.length > 0) && (
-        <div className="mt-4 space-y-2 text-xs text-slate-500">
-          {anchorText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Text anchors:</span> {anchorText.join(', ')}
-            </div>
-          )}
-          {iconText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Icon anchors:</span> {iconText.join(', ')}
-            </div>
-          )}
-          {layoutText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Layout anchors:</span> {layoutText.join(', ')}
-            </div>
-          )}
-        </div>
-      )}
+      <Textarea
+        value={step.instructions}
+        onChange={(event) => onStepInstructionChange(event.target.value)}
+        className="mt-4 text-sm text-slate-700"
+        rows={3}
+        placeholder="Describe the action clearly."
+      />
     </div>
   )
 }
@@ -624,11 +585,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const versionIdParam = (searchParams.get('versionId') ?? '').trim()
 
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [orgName, setOrgName] = useState<string | null>(null)
   const [resolveError, setResolveError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
 
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null)
-  const [versions, setVersions] = useState<WorkflowVersionSummary[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
   const [versionDetail, setVersionDetail] = useState<VersionDetailResponse['version'] | null>(null)
   const [membershipRole, setMembershipRole] = useState<string | null>(null)
@@ -656,10 +617,8 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [isEditing, setIsEditing] = useState(false)
   const isEditingRef = useRef(false)
   const redactionDraftTouchedRef = useRef(false)
-  const [stepSearchQuery, setStepSearchQuery] = useState('')
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
   const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
-  const [linkMessage, setLinkMessage] = useState<string | null>(null)
   const stepCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
@@ -674,6 +633,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setLoading(true)
       setResolveError(null)
       setOrgId(null)
+      setOrgName(null)
       setRequestId(null)
       setSpecError(null)
       try {
@@ -701,8 +661,8 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         if (!active) return
         const orgIdentifier = payload.orgId
         setOrgId(orgIdentifier)
+        setOrgName(payload.orgName?.trim() || null)
         setWorkflow(payload.workflow.workflow)
-        setVersions(sortVersionsByDate(payload.versions ?? []))
         setMembershipRole(payload.membershipRole ?? null)
         setSelectedVersionId(payload.selectedVersionId ?? null)
 
@@ -934,10 +894,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }, [versionDetail?.guide_media?.step_images])
 
   const visibleSpec = isEditing ? draftSpec : spec
-  const selectedVersion = useMemo(
-    () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
-    [selectedVersionId, versions]
-  )
 
   const draftSpecIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
@@ -962,18 +918,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
   const draftIsDirty = draftSpecIsDirty || draftRedactionsAreDirty
 
-  const normalizedStepSearch = stepSearchQuery.trim().toLowerCase()
   const stepEntries = useMemo(
     () => (visibleSpec?.steps ?? []).map((step, index) => ({ step, index })),
     [visibleSpec?.steps]
   )
-  const filteredStepEntries = useMemo(() => {
-    if (isEditing || !normalizedStepSearch) return stepEntries
-    return stepEntries.filter(({ step }) => {
-      const haystack = [step.title, step.instructions, step.why ?? ''].join('\n').toLowerCase()
-      return haystack.includes(normalizedStepSearch)
-    })
-  }, [isEditing, normalizedStepSearch, stepEntries])
+  const filteredStepEntries = stepEntries
 
   useEffect(() => {
     if (!isEditing) {
@@ -1016,23 +965,19 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setStepHash(stepId)
   }
 
-  const copyStepLink = async (stepId: string) => {
+  const copyStepLink = async (stepId: string, stepTitle?: string) => {
     if (typeof window === 'undefined') return
+    const titleLabel =
+      typeof stepTitle === 'string' && stepTitle.trim().length > 0 ? stepTitle.trim() : stepId
     try {
       const url = new URL(window.location.href)
       url.hash = `step=${encodeURIComponent(stepId)}`
       await navigator.clipboard.writeText(url.toString())
-      setLinkMessage(`Copied link for ${stepId}.`)
+      toast.success(`Copied link for ${titleLabel}.`)
     } catch {
       // Ignore clipboard failures.
     }
   }
-
-  useEffect(() => {
-    if (linkMessage === null) return
-    const timeout = window.setTimeout(() => setLinkMessage(null), 1800)
-    return () => window.clearTimeout(timeout)
-  }, [linkMessage])
 
   useEffect(() => {
     if (filteredStepEntries.length === 0) {
@@ -1108,26 +1053,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
     return () => observer.disconnect()
   }, [filteredStepEntries])
-
-  const onSelectVersion = (versionId: string) => {
-    if (isEditing && draftIsDirty) {
-      const proceed = window.confirm(
-        'You have unsaved edits. Switch releases and discard those edits?'
-      )
-      if (!proceed) return
-    }
-    setIsEditing(false)
-    setSaveError(null)
-    setSaveMessage(null)
-    setSaveRequestId(null)
-    setSaveVisibility('org')
-    setOpenRedactionEditorStepId(null)
-    redactionDraftTouchedRef.current = false
-    setSelectedVersionId(versionId)
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('versionId', versionId)
-    router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
-  }
 
   const updateDraftStep = (index: number, updater: (step: GuideStep) => GuideStep) => {
     setDraftSpec((prev) => {
@@ -1225,21 +1150,14 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setIsEditing(false)
   }
 
-  const refreshVersions = async (): Promise<WorkflowVersionSummary[]> => {
-    if (!orgId) return []
-    const response = await fetch(
-      `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
-      { cache: 'no-store' }
-    )
-    if (!response.ok) {
-      throw new Error('Unable to refresh releases.')
-    }
-    const payload = (await response.json().catch(() => null)) as VersionsResponse | null
-    return sortVersionsByDate(payload?.versions ?? [])
-  }
-
   const handleSaveEdits = async () => {
     if (!csrfToken || !orgId || !selectedVersionId || !draftSpec) return
+    if (draftRedactionsAreDirty) {
+      const shouldProceed = window.confirm(
+        'Screenshot redactions are permanent, apply to all workflow versions, and cannot be undone. Continue?'
+      )
+      if (!shouldProceed) return
+    }
     setSaving(true)
     setSaveError(null)
     setSaveMessage(null)
@@ -1369,8 +1287,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       }
 
       const nextVersionId = publishPayload.version.version_id
-      const refreshedVersions = await refreshVersions()
-      setVersions(refreshedVersions)
       setSelectedVersionId(nextVersionId)
       const params = new URLSearchParams(searchParams.toString())
       params.set('versionId', nextVersionId)
@@ -1409,7 +1325,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       <PageHeader
         eyebrow={isEditing ? 'Workflow guide editor' : 'Workflow guide'}
         title={workflow?.title ?? workflowId}
-        description={`Workspace: ${orgId}`}
+        description={`Workspace: ${orgName || orgId}`}
         actions={
           <ButtonGroup>
             <Button
@@ -1463,32 +1379,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         }
       />
 
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-slate-900">Release</div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={selectedVersionId ?? undefined} onValueChange={onSelectVersion}>
-              <SelectTrigger className="h-9 min-w-[17rem] bg-white text-sm text-slate-800 shadow-sm">
-                <SelectValue placeholder="Select a release" />
-              </SelectTrigger>
-              <SelectContent>
-                {versions.map((version, index) => (
-                  <SelectItem key={version.version_id} value={version.version_id}>
-                    {formatReleaseLabel(index)} ({formatDate(version.created_at)})
-                    {version.status === 'private_draft' ? ' · Private draft' : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedVersion && (
-              <span className="text-xs text-slate-500">
-                {selectedVersion.steps_count ? `${selectedVersion.steps_count} steps` : ''}
-              </span>
-            )}
-          </div>
-        </div>
-      </Card>
-
       {isAdmin && isEditing && (
         <Card className="p-4 sm:p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1534,10 +1424,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         </Card>
       )}
 
-      {linkMessage && (
-        <Card className="border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">{linkMessage}</Card>
-      )}
-
       {visibleSpec && selectedVersionId && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="space-y-8">
@@ -1563,25 +1449,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
               </Card>
             )}
 
-            <Card className="p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-slate-900">Find in guide</div>
-                <div className="text-xs text-slate-500">
-                  {isEditing
-                    ? 'Search disabled while editing.'
-                    : `${filteredStepEntries.length} of ${visibleSpec.steps.length} steps`}
-                </div>
-              </div>
-              <InputGroup className="mt-3">
-                <InputGroupInput
-                  value={stepSearchQuery}
-                  onChange={(event) => setStepSearchQuery(event.target.value)}
-                  placeholder="Search title, instructions, or why…"
-                  disabled={isEditing}
-                />
-              </InputGroup>
-            </Card>
-
             <div className="space-y-4">
               {isEditing && visibleSpec.steps.length === 0 && (
                 <div className="flex justify-center">
@@ -1593,7 +1460,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
               {!isEditing && filteredStepEntries.length === 0 && (
                 <Card className="p-5 text-sm text-slate-600">
-                  No steps match your search.
+                  No guide steps available.
                 </Card>
               )}
 
@@ -1632,7 +1499,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     onMoveDown={() => moveDraftStep(index, 'down')}
                     onDelete={() => deleteDraftStep(index)}
                     onInsertAfter={() => insertDraftStep(index + 1)}
-                    onCopyStepLink={() => copyStepLink(step.id)}
+                    onCopyStepLink={() => copyStepLink(step.id, step.title)}
                     onStepTitleChange={(value) =>
                       updateDraftStep(index, (current) => ({
                         ...current,
@@ -1655,6 +1522,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     redactionMasks={
                       (isEditing ? draftRedactionMasksByStepId : redactionMasksByStepId)[step.id] ?? []
                     }
+                    lockedMaskIds={(redactionMasksByStepId[step.id] ?? []).map((mask) => mask.id)}
                     onRedactionMasksChange={(masks) => {
                       if (!isEditing) return
                       redactionDraftTouchedRef.current = true
@@ -1662,9 +1530,17 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         const normalizedMasks = masks
                           .map((mask) => normalizeGuideRedactionMask(mask))
                           .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+                        const lockedMasks = (redactionMasksByStepId[step.id] ?? [])
+                          .map((mask) => normalizeGuideRedactionMask(mask))
+                          .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+                        const lockedMaskIdSet = new Set(lockedMasks.map((mask) => mask.id))
+                        const mergedMasks = [
+                          ...lockedMasks,
+                          ...normalizedMasks.filter((mask) => !lockedMaskIdSet.has(mask.id)),
+                        ]
                         const next = cloneRedactionMaskMap(prev)
-                        if (normalizedMasks.length > 0) {
-                          next[step.id] = normalizedMasks
+                        if (mergedMasks.length > 0) {
+                          next[step.id] = mergedMasks
                         } else {
                           delete next[step.id]
                         }
@@ -1703,14 +1579,16 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     variant="ghost"
                     size="sm"
                     onClick={() => focusStep(step.id)}
-                    className={`flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left text-xs transition ${
+                    className={`grid h-auto w-full grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-x-2 whitespace-normal rounded-md px-2 py-2 text-left text-xs leading-5 transition ${
                       activeStepId === step.id
                         ? 'bg-slate-100 text-slate-900'
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    <span className="font-mono text-[10px] text-slate-400">{index + 1}</span>
-                    <span className="line-clamp-2">
+                    <span className="pt-0.5 text-right font-mono text-[10px] leading-5 text-slate-400">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 break-words line-clamp-2">
                       {step.title?.trim() || `Step ${index + 1}`}
                     </span>
                   </Button>

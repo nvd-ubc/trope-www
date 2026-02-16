@@ -49,6 +49,7 @@ export default function StepImageCanvas({
   imageClassName,
 }: StepImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const controlsRef = useRef<{
     zoomIn: () => void
     zoomOut: () => void
@@ -62,8 +63,10 @@ export default function StepImageCanvas({
     positionY: 0,
   })
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 })
+  const [renderedImageSize, setRenderedImageSize] = useState({ width: 0, height: 0 })
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -84,6 +87,31 @@ export default function StepImageCanvas({
     observer.observe(containerRef.current)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!imageRef.current) return
+    const updateSize = (width: number, height: number) => {
+      const safeWidth = Math.max(0, Math.round(width))
+      const safeHeight = Math.max(0, Math.round(height))
+      setRenderedImageSize((previous) => {
+        if (previous.width === safeWidth && previous.height === safeHeight) {
+          return previous
+        }
+        return { width: safeWidth, height: safeHeight }
+      })
+    }
+
+    const initialRect = imageRef.current.getBoundingClientRect()
+    updateSize(initialRect.width, initialRect.height)
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      updateSize(entry.contentRect.width, entry.contentRect.height)
+    })
+    observer.observe(imageRef.current)
+    return () => observer.disconnect()
+  }, [src])
 
   const setTransform = useCallback((x: number, y: number, scale: number, animated = true) => {
     controlsRef.current?.setTransform(
@@ -106,17 +134,22 @@ export default function StepImageCanvas({
     if (viewportSize.width <= 0 || viewportSize.height <= 0) {
       return
     }
+    const focusImageWidth = renderedImageSize.width > 0 ? renderedImageSize.width : sourceImageSize.width
+    const focusImageHeight = renderedImageSize.height > 0 ? renderedImageSize.height : sourceImageSize.height
+    if (focusImageWidth <= 0 || focusImageHeight <= 0) {
+      return
+    }
     const focused = computeGuideCanvasFocusTransform({
       focusTransform,
       viewportWidth: viewportSize.width,
       viewportHeight: viewportSize.height,
-      imageWidth: sourceImageSize.width,
-      imageHeight: sourceImageSize.height,
+      imageWidth: focusImageWidth,
+      imageHeight: focusImageHeight,
       minScale: MIN_SCALE,
       maxScale: MAX_SCALE,
     })
     setTransform(focused.positionX, focused.positionY, focused.scale)
-  }, [focusTransform, resetToFit, setTransform, sourceImageSize.height, sourceImageSize.width, viewportSize.height, viewportSize.width])
+  }, [focusTransform, renderedImageSize.height, renderedImageSize.width, resetToFit, setTransform, sourceImageSize.height, sourceImageSize.width, viewportSize.height, viewportSize.width])
 
   useEffect(() => {
     if (!active) return
@@ -213,6 +246,8 @@ export default function StepImageCanvas({
         className={`relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
         tabIndex={0}
         onKeyDown={handleKeyboard}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         aria-label={`Step image zoom canvas at ${ariaZoom}`}
       >
         <TransformWrapper
@@ -251,6 +286,7 @@ export default function StepImageCanvas({
           >
             <div className="relative">
               <img
+                ref={imageRef}
                 src={src}
                 alt={alt}
                 className={compact
@@ -312,7 +348,7 @@ export default function StepImageCanvas({
             </div>
           </div>
         )}
-        {transformState.scale > 1.02 && (
+        {transformState.scale > 1.02 && isHovered && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
             <div className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-white shadow-sm">
               {isPanning ? 'Panning...' : 'Drag to pan'}

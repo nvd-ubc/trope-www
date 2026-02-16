@@ -27,13 +27,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
-import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
-import {
-  formatCaptureTimestamp,
-  type GuideMediaStepImage as StepImage,
-} from '@/lib/guide-media'
+import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
 type WorkflowDefinition = {
   org_id: string
@@ -176,11 +173,6 @@ type GuideStep = {
   why?: string
   instructions: string
   kind?: string
-  anchors?: {
-    text?: Array<{ string?: string; area_hint?: string }>
-    icons?: Array<{ description?: string }>
-    layout?: Array<{ region?: string; relative_to?: string; position_hint?: string }>
-  }
 }
 
 const formatDate = (value?: string | null) => {
@@ -247,11 +239,6 @@ const toTitleCase = (value: string) =>
 const formatStatus = (status?: string | null) => {
   if (!status) return 'Unknown'
   return toTitleCase(status.replace(/_/g, ' '))
-}
-
-const formatKind = (kind?: string | null) => {
-  if (!kind) return null
-  return kind.replace(/_/g, ' ')
 }
 
 const resolveCadenceDays = (cadence?: string | null, customDays?: number | null) => {
@@ -845,7 +832,7 @@ export default function WorkflowDetailClient({
     ? versions.findIndex((version) => version.version_id === selectedVersion.version_id)
     : -1
   const selectedVersionLabel = selectedVersion
-    ? `${selectedVersionIndex >= 0 ? `Release ${selectedVersionIndex + 1} · ` : ''}${formatDate(selectedVersion.created_at)}`
+    ? `${selectedVersionIndex >= 0 ? `Release ${versions.length - selectedVersionIndex} · ` : ''}${formatDate(selectedVersion.created_at)}`
     : null
 
   return (
@@ -1410,7 +1397,9 @@ export default function WorkflowDetailClient({
                   }`}
                 >
                   <div className="flex min-h-10 flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-tight">
-                    <span className="font-semibold text-foreground">Release {index + 1}</span>
+                    <span className="font-semibold text-foreground">
+                      Release {versions.length - index}
+                    </span>
                     <span className="text-sm text-muted-foreground">{releaseMeta}</span>
                   </div>
                 </Button>
@@ -1502,16 +1491,6 @@ export default function WorkflowDetailClient({
 
               <div className="space-y-4">
                 {spec.steps.map((step, index) => {
-                  const kindLabel = formatKind(step.kind)
-                  const anchorText = step.anchors?.text
-                    ?.map((anchor) => anchor.string)
-                    .filter((value): value is string => Boolean(value))
-                  const iconText = step.anchors?.icons
-                    ?.map((icon) => icon.description)
-                    .filter((value): value is string => Boolean(value))
-                  const layoutText = step.anchors?.layout
-                    ?.map((layout) => layout.region || layout.relative_to || layout.position_hint)
-                    .filter((value): value is string => Boolean(value))
                   const image = stepImageMap[step.id] ?? null
                   const previewSrc = image
                     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
@@ -1527,83 +1506,39 @@ export default function WorkflowDetailClient({
                         step.id
                       )}?variant=full`
                     : null
-                  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
 
                   return (
-                    <div key={step.id} className="rounded-2xl border border-slate-200 bg-white p-5">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <div>
-                          <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
-                          <div className="text-sm font-semibold text-slate-900">{step.title}</div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {kindLabel && (
-                            <Badge variant="info" className="text-[10px]">
-                              {kindLabel}
-                            </Badge>
-                          )}
-                          {captureTimestamp && (
-                            <Badge variant="neutral" className="text-[10px]">
-                              t={captureTimestamp}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <GuideStepImageCard
-                        step={step}
-                        image={image}
-                        previewSrc={previewSrc}
-                        fullSrc={fullSrc}
-                        maxHeightClass="max-h-[20rem]"
-                        onTelemetryEvent={(eventType, properties) => {
-                          if (!csrfToken) return
-                          fetch(
-                            `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-                              workflowId
-                            )}/events`,
-                            {
-                              method: 'POST',
-                              headers: {
-                                'content-type': 'application/json',
-                                'x-csrf-token': csrfToken,
-                              },
-                              body: JSON.stringify({
-                                event_type: eventType,
-                                surface: 'web_workflow_detail',
-                                ...properties,
-                              }),
-                            }
-                          ).catch(() => {
-                            // Ignore telemetry failures.
-                          })
-                        }}
-                      />
-                      <p className="mt-3 text-sm text-slate-700">{step.instructions}</p>
-                      {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
-
-                      {(anchorText?.length || iconText?.length || layoutText?.length) && (
-                        <div className="mt-3 space-y-2 text-xs text-slate-500">
-                          {anchorText && anchorText.length > 0 && (
-                            <div>
-                              <span className="font-semibold text-slate-600">Text anchors:</span>{' '}
-                              {anchorText.join(', ')}
-                            </div>
-                          )}
-                          {iconText && iconText.length > 0 && (
-                            <div>
-                              <span className="font-semibold text-slate-600">Icon anchors:</span>{' '}
-                              {iconText.join(', ')}
-                            </div>
-                          )}
-                          {layoutText && layoutText.length > 0 && (
-                            <div>
-                              <span className="font-semibold text-slate-600">Layout hints:</span>{' '}
-                              {layoutText.join(', ')}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <ReadonlyStepCard
+                      key={step.id}
+                      step={step}
+                      index={index}
+                      image={image}
+                      previewSrc={previewSrc}
+                      fullSrc={fullSrc}
+                      imageMaxHeightClass="max-h-[20rem]"
+                      onTelemetryEvent={(eventType, properties) => {
+                        if (!csrfToken) return
+                        fetch(
+                          `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+                            workflowId
+                          )}/events`,
+                          {
+                            method: 'POST',
+                            headers: {
+                              'content-type': 'application/json',
+                              'x-csrf-token': csrfToken,
+                            },
+                            body: JSON.stringify({
+                              event_type: eventType,
+                              surface: 'web_workflow_detail',
+                              ...properties,
+                            }),
+                          }
+                        ).catch(() => {
+                          // Ignore telemetry failures.
+                        })
+                      }}
+                    />
                   )
                 })}
               </div>

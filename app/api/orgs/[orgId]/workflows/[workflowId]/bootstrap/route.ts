@@ -38,6 +38,7 @@ const emptyMembersResult = (): InternalJsonFetchResult<MembersPayload> => ({
   data: { members: [] },
   requestId: null,
   serverTiming: null,
+  setCookies: [],
 })
 
 export const runtime = 'nodejs'
