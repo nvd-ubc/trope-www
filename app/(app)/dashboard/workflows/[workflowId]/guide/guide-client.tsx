@@ -30,6 +30,7 @@ import {
   createDraftStep,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
+import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
 type WorkflowDefinition = {
@@ -882,18 +883,21 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     }
   }, [orgId, selectedVersionId, workflow?.title, workflowId])
 
-  const stepImageMap = useMemo(() => {
-    const map: Record<string, StepImage> = {}
-    const images = versionDetail?.guide_media?.step_images ?? []
-    for (const image of images) {
-      if (image?.step_id) {
-        map[image.step_id] = image
-      }
-    }
-    return map
-  }, [versionDetail?.guide_media?.step_images])
-
   const visibleSpec = isEditing ? draftSpec : spec
+
+  const derivedStepImages = useMemo(() => {
+    const steps = Array.isArray(visibleSpec?.steps) ? visibleSpec.steps : []
+    const stepImages = versionDetail?.guide_media?.step_images ?? []
+    return deriveGuideStepImagesWithFocus({
+      steps: steps as unknown as Array<{
+        id: string
+        kind?: string | null
+        expected_event?: unknown
+        [key: string]: unknown
+      }>,
+      stepImages,
+    })
+  }, [versionDetail?.guide_media?.step_images, visibleSpec?.steps])
 
   const draftSpecIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
@@ -1490,7 +1494,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     versionId={selectedVersionId}
                     step={step}
                     index={index}
-                    image={stepImageMap[step.id] ?? null}
+                    image={derivedStepImages[step.id]?.image ?? null}
                     isEditing={isEditing}
                     canMoveUp={index > 0}
                     canMoveDown={index < visibleSpec.steps.length - 1}
