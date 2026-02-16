@@ -204,4 +204,85 @@ describe('guide editor helpers', () => {
     assert.equal(normalized.steps[0]?.callout_style, 'alert')
     assert.equal(normalized.steps[1]?.callout_style, undefined)
   })
+
+  it('normalizes cursor overlay mode with radar-dot default', () => {
+    const withDefault = normalizeSpecForPublish(
+      {
+        workflow_title: 'Guide',
+        app: 'Desktop',
+        version: '1',
+        steps: [
+          {
+            id: 'step_1',
+            title: 'Open app',
+            instructions: 'Open the app.',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+        ],
+      },
+      'Fallback'
+    )
+    assert.equal(withDefault.cursor_overlay_mode, 'radar_dot')
+
+    const withExplicitNone = normalizeSpecForPublish(
+      {
+        workflow_title: 'Guide',
+        app: 'Desktop',
+        version: '1',
+        cursor_overlay_mode: 'NONE',
+        steps: [
+          {
+            id: 'step_1',
+            title: 'Open app',
+            instructions: 'Open the app.',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+        ],
+      },
+      'Fallback'
+    )
+    assert.equal(withExplicitNone.cursor_overlay_mode, 'none')
+
+    const withCapturedCursor = normalizeSpecForPublish(
+      {
+        workflow_title: 'Guide',
+        app: 'Desktop',
+        version: '1',
+        cursor_overlay_mode: 'captured_cursor',
+        steps: [
+          {
+            id: 'step_1',
+            title: 'Open app',
+            instructions: 'Open the app.',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+        ],
+      },
+      'Fallback'
+    )
+    assert.equal(withCapturedCursor.cursor_overlay_mode, 'captured_cursor')
+
+    const withInvalid = normalizeSpecForPublish(
+      {
+        workflow_title: 'Guide',
+        app: 'Desktop',
+        version: '1',
+        cursor_overlay_mode: 'sparkle',
+        steps: [
+          {
+            id: 'step_1',
+            title: 'Open app',
+            instructions: 'Open the app.',
+            anchors: { text: [], icons: [], layout: [] },
+            video_ranges: [],
+          },
+        ],
+      },
+      'Fallback'
+    )
+    assert.equal(withInvalid.cursor_overlay_mode, 'radar_dot')
+  })
 })

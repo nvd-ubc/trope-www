@@ -3,8 +3,11 @@ import assert from 'node:assert/strict'
 
 import {
   formatCaptureTimestamp,
+  resolveCursorTrackPulseKind,
+  resolveRenderableCursorTrack,
   resolveStepFocusFallbackReason,
   resolveStepImageVariant,
+  sampleRenderableCursorTrackPoint,
   shouldRenderStepRadar,
   type GuideMediaStepImage,
 } from '../src/lib/guide-media'
@@ -207,6 +210,72 @@ describe('guide media helpers', () => {
       }),
       true
     )
+  })
+
+  it('normalizes cursor track points into renderable percentages', () => {
+    const track = resolveRenderableCursorTrack({
+      cursorTrack: {
+        coordinate_space: 'step_image_pixels_v1',
+        duration_ms: 600,
+        sample_rate_hz: 30,
+        points: [
+          { t_ms: 0, x: 20, y: 10, kind: 'move' },
+          { t_ms: 200, x: 60, y: 30, kind: 'mouse_down' },
+          { t_ms: 350, x: 100, y: 50, kind: 'mouse_up' },
+        ],
+      },
+      width: 200,
+      height: 100,
+    })
+
+    assert.ok(track)
+    assert.equal(track.durationMs, 600)
+    assert.equal(track.points.length, 3)
+    assert.deepEqual(track.points[1], {
+      tMs: 200,
+      leftPercent: 30,
+      topPercent: 30,
+      kind: 'mouse_down',
+    })
+  })
+
+  it('rejects cursor track when coordinates are unusable', () => {
+    const track = resolveRenderableCursorTrack({
+      cursorTrack: {
+        coordinate_space: 'virtual_desktop_pixels_v1',
+        points: [{ t_ms: 0, x: 20, y: 10, kind: 'move' }],
+      },
+      width: 200,
+      height: 100,
+    })
+
+    assert.equal(track, null)
+  })
+
+  it('samples cursor track positions with interpolation', () => {
+    const track = resolveRenderableCursorTrack({
+      cursorTrack: {
+        coordinate_space: 'step_image_pixels_v1',
+        duration_ms: 600,
+        points: [
+          { t_ms: 0, x: 0, y: 0, kind: 'move' },
+          { t_ms: 200, x: 100, y: 0, kind: 'move' },
+          { t_ms: 400, x: 100, y: 100, kind: 'mouse_up' },
+        ],
+      },
+      width: 100,
+      height: 100,
+    })
+    assert.ok(track)
+
+    const sampled = sampleRenderableCursorTrackPoint(track, 100)
+    assert.ok(sampled)
+    assert.equal(sampled.leftPercent, 50)
+    assert.equal(sampled.topPercent, 0)
+    assert.equal(sampled.kind, 'move')
+
+    const clickPulse = resolveCursorTrackPulseKind(track, 420, 40)
+    assert.equal(clickPulse, 'mouse_up')
   })
 
   it('falls back from weak pointer focus hints to full-frame view', () => {

@@ -30,6 +30,7 @@ import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/compon
 import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
+import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
 import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 import { computeDurationPercentileMs, summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
@@ -152,6 +153,7 @@ type GuideSpec = {
   workflow_title: string
   app: string
   version: string
+  cursor_overlay_mode?: string | null
   variables?: Array<{
     id: string
     label: string
@@ -438,6 +440,7 @@ export default function WorkflowDetailClient({
     }
     return map
   }, [spec?.steps, versionDetail?.guide_media?.step_images])
+  const cursorOverlayMode = resolveGuideCursorOverlayMode(spec?.cursor_overlay_mode)
   const guidePageHref = useMemo(() => {
     const base = `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide`
     const params = new URLSearchParams()
@@ -1538,6 +1541,7 @@ export default function WorkflowDetailClient({
                       image={image}
                       previewSrc={previewSrc}
                       fullSrc={fullSrc}
+                      cursorOverlayMode={cursorOverlayMode}
                       imageMaxHeightClass="max-h-[20rem]"
                       onTelemetryEvent={(eventType, properties) => {
                         if (!csrfToken) return

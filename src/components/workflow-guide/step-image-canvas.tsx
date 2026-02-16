@@ -7,6 +7,11 @@ import {
   clampGuideCanvasScale,
   computeGuideCanvasFocusTransform,
 } from '@/lib/guide-focus-web'
+import {
+  resolveCursorTrackPulseKind,
+  sampleRenderableCursorTrackPoint,
+  type GuideMediaRenderableCursorTrack,
+} from '@/lib/guide-media'
 import type { GuideFocusTransformResult } from '@/lib/guide-focus'
 
 export type StepImageCanvasTransformSnapshot = {
@@ -24,6 +29,8 @@ type StepImageCanvasProps = {
   sourceImageSize: { width: number; height: number }
   radarPercent: { left: number; top: number } | null
   showRadar: boolean
+  cursorTrack?: GuideMediaRenderableCursorTrack | null
+  showCapturedCursor?: boolean
   active: boolean
   autoFocusOnActive?: boolean
   showControls?: boolean
@@ -54,6 +61,8 @@ export default function StepImageCanvas({
   sourceImageSize,
   radarPercent,
   showRadar,
+  cursorTrack = null,
+  showCapturedCursor = false,
   active,
   autoFocusOnActive = true,
   showControls = true,
@@ -83,6 +92,7 @@ export default function StepImageCanvas({
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [cursorTrackTimeMs, setCursorTrackTimeMs] = useState(0)
 
   useEffect(() => {
     if (!transformSnapshotRef) return
@@ -236,6 +246,49 @@ export default function StepImageCanvas({
     return () => window.clearTimeout(id)
   }, [active, autoFocusOnActive, focusTransform.hasFocusCrop, jumpToFocus, resetToFit])
 
+  const trackDurationMs = Math.max(1, cursorTrack?.durationMs ?? 1)
+  const shouldAnimateCursorTrack = Boolean(
+    showCapturedCursor && active && cursorTrack && cursorTrack.points.length > 0
+  )
+
+  useEffect(() => {
+    if (!shouldAnimateCursorTrack || !cursorTrack) {
+      setCursorTrackTimeMs(0)
+      return
+    }
+
+    if (prefersReducedMotion) {
+      setCursorTrackTimeMs(cursorTrack.points[cursorTrack.points.length - 1]?.tMs ?? 0)
+      return
+    }
+
+    let frameId = 0
+    const startedAt = performance.now()
+    const tick = (now: number) => {
+      const elapsed = (now - startedAt) % trackDurationMs
+      setCursorTrackTimeMs(elapsed)
+      frameId = window.requestAnimationFrame(tick)
+    }
+    frameId = window.requestAnimationFrame(tick)
+    return () => window.cancelAnimationFrame(frameId)
+  }, [cursorTrack, prefersReducedMotion, shouldAnimateCursorTrack, trackDurationMs])
+
+  const cursorTrackPoint = useMemo(
+    () =>
+      shouldAnimateCursorTrack && cursorTrack
+        ? sampleRenderableCursorTrackPoint(cursorTrack, cursorTrackTimeMs)
+        : null,
+    [cursorTrack, cursorTrackTimeMs, shouldAnimateCursorTrack]
+  )
+
+  const cursorPulseKind = useMemo(
+    () =>
+      shouldAnimateCursorTrack && cursorTrack
+        ? resolveCursorTrackPulseKind(cursorTrack, cursorTrackTimeMs)
+        : null,
+    [cursorTrack, cursorTrackTimeMs, shouldAnimateCursorTrack]
+  )
+
   const handleKeyboard = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
     if (!controlsRef.current) return
     if (event.key === '+' || event.key === '=') {
@@ -382,6 +435,31 @@ export default function StepImageCanvas({
                     <div className="relative h-6 w-6">
                       <div className="absolute inset-0 rounded-full bg-[color:var(--trope-accent)] opacity-25" />
                       <div className="absolute inset-[6px] rounded-full bg-[color:var(--trope-accent)] shadow-sm" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showCapturedCursor && cursorTrackPoint && (
+                <div className="pointer-events-none absolute inset-0">
+                  <div
+                    className="absolute -translate-x-1/2 -translate-y-1/2"
+                    style={{
+                      left: `${cursorTrackPoint.leftPercent}%`,
+                      top: `${cursorTrackPoint.topPercent}%`,
+                    }}
+                  >
+                    <div className="relative h-5 w-5">
+                      {cursorPulseKind && (
+                        <div
+                          className={`absolute -inset-3 rounded-full border-2 ${
+                            cursorPulseKind === 'mouse_down'
+                              ? 'border-amber-400/80'
+                              : 'border-emerald-400/80'
+                          } animate-ping`}
+                        />
+                      )}
+                      <div className="absolute inset-0 rounded-full border-2 border-white bg-slate-900 shadow-[0_1px_4px_rgba(15,23,42,0.35)]" />
+                      <div className="absolute inset-[6px] rounded-full bg-[color:var(--trope-accent)]" />
                     </div>
                   </div>
                 </div>

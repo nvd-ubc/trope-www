@@ -2,6 +2,7 @@
 
 import { Link2 } from 'lucide-react'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import { type GuideCursorOverlayMode } from '@/lib/guide-cursor'
 import { type GuideMediaStepImage } from '@/lib/guide-media'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +28,7 @@ type ReadonlyStepCardProps = {
   image: GuideMediaStepImage | null
   previewSrc: string | null
   fullSrc: string | null
+  cursorOverlayMode?: GuideCursorOverlayMode | string | null
   imageMaxHeightClass?: string
   onTelemetryEvent?: (
     eventType:
@@ -80,6 +82,7 @@ export default function ReadonlyStepCard({
   image,
   previewSrc,
   fullSrc,
+  cursorOverlayMode,
   imageMaxHeightClass = 'max-h-[27rem]',
   onTelemetryEvent,
   onCopyStepLink,
@@ -150,6 +153,7 @@ export default function ReadonlyStepCard({
           image={image}
           previewSrc={previewSrc}
           fullSrc={fullSrc}
+          cursorOverlayMode={cursorOverlayMode}
           maxHeightClass={imageMaxHeightClass}
           onTelemetryEvent={onTelemetryEvent}
         />
