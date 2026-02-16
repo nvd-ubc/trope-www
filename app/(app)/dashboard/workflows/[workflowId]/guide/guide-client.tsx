@@ -460,20 +460,26 @@ const StepImageCard = ({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={onCopyStepLink}
-              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)] transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trope-accent)]/35"
-              aria-label={`Copy link for step ${index + 1}`}
-              title="Copy step link"
-            >
-              <span className="transition-opacity duration-200 ease-out group-hover/step:opacity-0 group-focus-within/step:opacity-0">
+            {isEditing ? (
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
                 {index + 1}
-              </span>
-              <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ease-out group-hover/step:opacity-100 group-focus-within/step:opacity-100">
-                <Link2 className="size-5" />
-              </span>
-            </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onCopyStepLink}
+                className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)] transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trope-accent)]/35"
+                aria-label={`Copy link for step ${index + 1}`}
+                title="Copy step link"
+              >
+                <span className="transition-opacity duration-200 ease-out group-hover/step:opacity-0 group-focus-within/step:opacity-0">
+                  {index + 1}
+                </span>
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ease-out group-hover/step:opacity-100 group-focus-within/step:opacity-100">
+                  <Link2 className="size-5" />
+                </span>
+              </button>
+            )}
             <div className="min-w-0 flex-1">
               {isEditing ? (
                 <InputGroup>
