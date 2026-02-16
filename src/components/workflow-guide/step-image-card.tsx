@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import StepImageCanvas from '@/components/workflow-guide/step-image-canvas'
 import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer-dialog'
+import {
+  resolveGuideCursorOverlayMode,
+  type GuideCursorOverlayMode,
+} from '@/lib/guide-cursor'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
@@ -25,6 +29,7 @@ type StepImageCardProps = {
   previewSrc: string | null
   fullSrc: string | null
   maxHeightClass: string
+  cursorOverlayMode?: GuideCursorOverlayMode | string | null
   onTelemetryEvent?: (
     eventType:
       | 'workflow_doc_focus_applied'
@@ -54,10 +59,12 @@ export default function StepImageCard({
   previewSrc,
   fullSrc,
   maxHeightClass,
+  cursorOverlayMode,
   onTelemetryEvent,
 }: StepImageCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const focusTelemetryKeyRef = useRef<string | null>(null)
+  const resolvedCursorOverlayMode = resolveGuideCursorOverlayMode(cursorOverlayMode)
 
   const previewImage = useMemo(
     () =>
@@ -113,9 +120,9 @@ export default function StepImageCard({
     zoomScale: focusTransform.zoomScale,
   })
   const shouldApplyFocus = fallbackReason === null
-  const showRadar = Boolean(
-    radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null)
-  )
+  const showRadar =
+    resolvedCursorOverlayMode === 'radar_dot' &&
+    Boolean(radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null))
 
   const hasImage = Boolean(
     previewSrc && fullSrc && (previewImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url)
@@ -208,6 +215,7 @@ export default function StepImageCard({
         step={step}
         fullSrc={fullSrc}
         image={image}
+        cursorOverlayMode={resolvedCursorOverlayMode}
       />
     </>
   )

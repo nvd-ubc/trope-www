@@ -8,6 +8,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import StepImageCanvas from '@/components/workflow-guide/step-image-canvas'
+import {
+  resolveGuideCursorOverlayMode,
+  type GuideCursorOverlayMode,
+} from '@/lib/guide-cursor'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
@@ -29,6 +33,7 @@ type StepImageViewerDialogProps = {
   step: GuideStepLike
   fullSrc: string | null
   image: GuideMediaStepImage | null
+  cursorOverlayMode?: GuideCursorOverlayMode | string | null
 }
 
 export default function StepImageViewerDialog({
@@ -37,7 +42,9 @@ export default function StepImageViewerDialog({
   step,
   fullSrc,
   image,
+  cursorOverlayMode,
 }: StepImageViewerDialogProps) {
+  const resolvedCursorOverlayMode = resolveGuideCursorOverlayMode(cursorOverlayMode)
   const fullVariant = image
     ? resolveStepImageVariant(image, { surface: 'detail', requestedVariant: 'full' })
     : null
@@ -57,9 +64,9 @@ export default function StepImageViewerDialog({
   })
     ? getRadarPercent(image?.radar ?? null, width, height)
     : null
-  const showRadar = Boolean(
-    radarPercent && (!focusTransform.hasFocusCrop || focusTransform.radarPercentInCrop !== null)
-  )
+  const showRadar =
+    resolvedCursorOverlayMode === 'radar_dot' &&
+    Boolean(radarPercent && (!focusTransform.hasFocusCrop || focusTransform.radarPercentInCrop !== null))
   const imageWidth = typeof width === 'number' && width > 0 ? width : 1
   const imageHeight = typeof height === 'number' && height > 0 ? height : 1
 

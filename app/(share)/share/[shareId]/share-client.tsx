@@ -8,6 +8,7 @@ import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import Logo from '@/components/ui/logo'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
 import {
   formatCaptureTimestamp,
   type GuideMediaStepImage as StepImage,
@@ -53,6 +54,7 @@ type GuideSpec = {
   workflow_title: string
   app: string
   version: string
+  cursor_overlay_mode?: string | null
   variables?: Array<{
     id: string
     label: string
@@ -199,6 +201,7 @@ export default function ShareClient({ shareId }: { shareId: string }) {
     }
     return map
   }, [version?.guide_media?.step_images])
+  const cursorOverlayMode = resolveGuideCursorOverlayMode(spec?.cursor_overlay_mode)
   const shareContentMode = share?.content_mode === 'text_only' ? 'text_only' : 'media'
   const shareAllowsMedia = shareContentMode === 'media'
 
@@ -385,6 +388,7 @@ export default function ShareClient({ shareId }: { shareId: string }) {
                         image={image}
                         previewSrc={previewSrc}
                         fullSrc={fullSrc}
+                        cursorOverlayMode={cursorOverlayMode}
                         maxHeightClass="max-h-[22rem]"
                         onTelemetryEvent={(eventType, properties) => {
                           fetch(`/api/shares/${encodeURIComponent(shareId)}/events`, {
