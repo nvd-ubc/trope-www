@@ -337,6 +337,7 @@ const cloneRedactionMaskMap = (
 type SaveVisibility = 'org' | 'private'
 const CURSOR_OVERLAY_LABELS: Record<GuideCursorOverlayMode, string> = {
   radar_dot: 'Radar dot overlay',
+  captured_cursor: 'Captured cursor replay',
   none: 'No cursor overlay',
 }
 
@@ -1451,6 +1452,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="radar_dot">{CURSOR_OVERLAY_LABELS.radar_dot}</SelectItem>
+                  <SelectItem value="captured_cursor">
+                    {CURSOR_OVERLAY_LABELS.captured_cursor}
+                  </SelectItem>
                   <SelectItem value="none">{CURSOR_OVERLAY_LABELS.none}</SelectItem>
                 </SelectContent>
               </Select>

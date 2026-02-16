@@ -15,6 +15,7 @@ import {
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
+  resolveRenderableCursorTrack,
   resolveStepImageVariant,
   shouldRenderStepRadar,
   type GuideMediaStepImage,
@@ -50,6 +51,11 @@ export default function StepImageViewerDialog({
     : null
   const width = image?.width ?? fullVariant?.width ?? null
   const height = image?.height ?? fullVariant?.height ?? null
+  const cursorTrack = resolveRenderableCursorTrack({
+    cursorTrack: image?.cursor_track ?? null,
+    width,
+    height,
+  })
   const focusTransform = computeFocusTransformV1({
     image: { width, height },
     viewport: { width, height },
@@ -64,8 +70,10 @@ export default function StepImageViewerDialog({
   })
     ? getRadarPercent(image?.radar ?? null, width, height)
     : null
+  const showCapturedCursor = resolvedCursorOverlayMode === 'captured_cursor' && Boolean(cursorTrack)
   const showRadar =
-    resolvedCursorOverlayMode === 'radar_dot' &&
+    (resolvedCursorOverlayMode === 'radar_dot' ||
+      (resolvedCursorOverlayMode === 'captured_cursor' && !showCapturedCursor)) &&
     Boolean(radarPercent && (!focusTransform.hasFocusCrop || focusTransform.radarPercentInCrop !== null))
   const imageWidth = typeof width === 'number' && width > 0 ? width : 1
   const imageHeight = typeof height === 'number' && height > 0 ? height : 1
@@ -92,6 +100,8 @@ export default function StepImageViewerDialog({
               sourceImageSize={{ width: imageWidth, height: imageHeight }}
               radarPercent={radarPercent}
               showRadar={showRadar}
+              cursorTrack={cursorTrack}
+              showCapturedCursor={showCapturedCursor}
               active={open}
               autoFocusOnActive={false}
               showControls={false}

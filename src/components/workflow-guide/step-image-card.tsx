@@ -10,6 +10,7 @@ import {
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
+  resolveRenderableCursorTrack,
   resolveStepFocusFallbackReason,
   resolveStepImageVariant,
   shouldRenderStepRadar,
@@ -84,6 +85,15 @@ export default function StepImageCard({
   const radar = image?.radar ?? null
   const width = image?.width ?? previewImage?.width ?? null
   const height = image?.height ?? previewImage?.height ?? null
+  const cursorTrack = useMemo(
+    () =>
+      resolveRenderableCursorTrack({
+        cursorTrack: image?.cursor_track ?? null,
+        width,
+        height,
+      }),
+    [height, image?.cursor_track, width]
+  )
   const radarPercent = useMemo(
     () =>
       shouldRenderStepRadar({
@@ -120,8 +130,10 @@ export default function StepImageCard({
     zoomScale: focusTransform.zoomScale,
   })
   const shouldApplyFocus = fallbackReason === null
+  const showCapturedCursor = resolvedCursorOverlayMode === 'captured_cursor' && Boolean(cursorTrack)
   const showRadar =
-    resolvedCursorOverlayMode === 'radar_dot' &&
+    (resolvedCursorOverlayMode === 'radar_dot' ||
+      (resolvedCursorOverlayMode === 'captured_cursor' && !showCapturedCursor)) &&
     Boolean(radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null))
 
   const hasImage = Boolean(
@@ -190,6 +202,8 @@ export default function StepImageCard({
           sourceImageSize={{ width: imageWidth, height: imageHeight }}
           radarPercent={radarPercent}
           showRadar={showRadar}
+          cursorTrack={cursorTrack}
+          showCapturedCursor={showCapturedCursor}
           active
           autoFocusOnActive={shouldApplyFocus}
           compact

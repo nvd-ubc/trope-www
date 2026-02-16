@@ -1,4 +1,4 @@
-export const GUIDE_CURSOR_OVERLAY_MODES = ['radar_dot', 'none'] as const
+export const GUIDE_CURSOR_OVERLAY_MODES = ['radar_dot', 'captured_cursor', 'none'] as const
 
 export type GuideCursorOverlayMode = (typeof GUIDE_CURSOR_OVERLAY_MODES)[number]
 
