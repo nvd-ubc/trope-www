@@ -240,7 +240,6 @@ export default function HomeClient({ orgId }: { orgId: string }) {
         backLabel="Workspace overview"
         badges={
           <>
-            <Badge variant="info">Scribe parity</Badge>
             <Badge variant={unreadCount > 0 ? 'warning' : 'success'}>
               {unreadCount > 0 ? `${unreadCount} unread` : 'Inbox clear'}
             </Badge>
