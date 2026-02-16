@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Link2 } from 'lucide-react'
 import { toast } from 'sonner'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
@@ -23,6 +22,7 @@ import RedactionMaskEditor, {
   type GuideRedactionMaskKind,
 } from '@/components/workflow-guide/redaction-mask-editor'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
@@ -455,73 +455,68 @@ const StepImageCard = ({
     })
   }
 
+  if (!isEditing) {
+    return (
+      <ReadonlyStepCard
+        step={step}
+        index={index}
+        image={image}
+        previewSrc={previewSrc}
+        fullSrc={fullSrc}
+        imageMaxHeightClass="max-h-[27rem]"
+        onTelemetryEvent={sendGuideEvent}
+        onCopyStepLink={onCopyStepLink}
+        instructionText={instructionText}
+        whyText={whyText}
+        manualCallout={
+          isManual
+            ? {
+                label: calloutStyle,
+                instructionText: step.instructions,
+                containerClassName: calloutTone.container,
+                badgeClassName: calloutTone.badge,
+              }
+            : null
+        }
+      />
+    )
+  }
+
   return (
     <div className="group/step rounded-2xl border border-slate-200 bg-white p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-3">
-            {isEditing ? (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
-                {index + 1}
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={onCopyStepLink}
-                className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)] transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trope-accent)]/35"
-                aria-label={`Copy link for step ${index + 1}`}
-                title="Copy step link"
-              >
-                <span className="transition-opacity duration-200 ease-out group-hover/step:opacity-0 group-focus-within/step:opacity-0">
-                  {index + 1}
-                </span>
-                <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ease-out group-hover/step:opacity-100 group-focus-within/step:opacity-100">
-                  <Link2 className="size-5" />
-                </span>
-              </button>
-            )}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
+              {index + 1}
+            </div>
             <div className="min-w-0 flex-1">
-              {isEditing ? (
-                <InputGroup>
-                  <InputGroupInput
-                    value={step.title}
-                    onChange={(event) => onStepTitleChange(event.target.value)}
-                    className="h-10 text-base font-semibold text-slate-900 sm:text-lg"
-                    placeholder={`Step ${index + 1}`}
-                  />
-                </InputGroup>
-              ) : (
-                <div className="space-y-1">
-                  <p className="line-clamp-2 text-base font-medium leading-snug text-slate-900">
-                    {instructionText}
-                  </p>
-                  {whyText ? (
-                    <p className="text-sm text-slate-600">
-                      <span className="font-semibold text-slate-700">Why:</span> {whyText}
-                    </p>
-                  ) : null}
-                </div>
-              )}
+              <InputGroup>
+                <InputGroupInput
+                  value={step.title}
+                  onChange={(event) => onStepTitleChange(event.target.value)}
+                  className="h-10 text-base font-semibold text-slate-900 sm:text-lg"
+                  placeholder={`Step ${index + 1}`}
+                />
+              </InputGroup>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {isEditing ? (
-            <ButtonGroup>
-              <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
-                Up
-              </Button>
-              <Button variant="outline" size="sm" onClick={onMoveDown} disabled={!canMoveDown}>
-                Down
-              </Button>
-              <Button variant="outline" size="sm" onClick={onInsertAfter}>
-                + Step
-              </Button>
-              <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
-                Delete
-              </Button>
-            </ButtonGroup>
-          ) : null}
+          <ButtonGroup>
+            <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
+              Up
+            </Button>
+            <Button variant="outline" size="sm" onClick={onMoveDown} disabled={!canMoveDown}>
+              Down
+            </Button>
+            <Button variant="outline" size="sm" onClick={onInsertAfter}>
+              + Step
+            </Button>
+            <Button variant="outline" size="sm" onClick={onDelete} disabled={!canDelete}>
+              Delete
+            </Button>
+          </ButtonGroup>
         </div>
       </div>
 
@@ -545,13 +540,13 @@ const StepImageCard = ({
             onTelemetryEvent={sendGuideEvent}
           />
 
-          {isEditing && radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
+          {radar && isFiniteNumber(radar.x) && isFiniteNumber(radar.y) && (
             <div className="mt-2 text-xs text-slate-500">
               Click hotspot: x={Math.round(radar.x)}, y={Math.round(radar.y)}
             </div>
           )}
 
-          {isEditing && fullSrc && (
+          {fullSrc && (
             <div className="mt-3">
               <Button variant="outline" size="sm" onClick={onToggleRedactionEditor}>
                 {showRedactionEditor ? 'Hide redaction editor' : 'Edit redactions'}
@@ -559,7 +554,7 @@ const StepImageCard = ({
             </div>
           )}
 
-          {isEditing && fullSrc && showRedactionEditor && (
+          {fullSrc && showRedactionEditor && (
             <RedactionMaskEditor
               imageSrc={fullSrc}
               masks={redactionMasks}
@@ -570,15 +565,13 @@ const StepImageCard = ({
         </>
       )}
 
-      {isEditing ? (
-        <Textarea
-          value={step.instructions}
-          onChange={(event) => onStepInstructionChange(event.target.value)}
-          className="mt-4 text-sm text-slate-700"
-          rows={3}
-          placeholder="Describe the action clearly."
-        />
-      ) : null}
+      <Textarea
+        value={step.instructions}
+        onChange={(event) => onStepInstructionChange(event.target.value)}
+        className="mt-4 text-sm text-slate-700"
+        rows={3}
+        placeholder="Describe the action clearly."
+      />
     </div>
   )
 }
