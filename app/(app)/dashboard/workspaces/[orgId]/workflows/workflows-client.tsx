@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/table'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
 
 type WorkflowDefinition = {
   org_id: string
@@ -774,17 +775,21 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Owner</TableHeaderCell>
                   <TableHeaderCell>Review due</TableHeaderCell>
                   <TableHeaderCell>Last success</TableHeaderCell>
-                  <TableHeaderCell>Runs (7d)</TableHeaderCell>
+                  <TableHeaderCell>Lifecycle (7d)</TableHeaderCell>
                   <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filtered.map((workflow) => {
                   const latest = latestVersions[workflow.workflow_id]
-                  const runStats = workflow.run_stats_7d
+                  const lifecycle = summarizeRunLifecycle(workflow.run_stats_7d, workflow.metrics_7d)
                   const successRate =
                     typeof workflow.success_rate_7d === 'number'
                       ? `${Math.round(workflow.success_rate_7d * 100)}%`
+                      : '-'
+                  const completionRate =
+                    typeof lifecycle.completionRate === 'number'
+                      ? `${Math.round(lifecycle.completionRate * 100)}%`
                       : '-'
                   let reviewDue = '-'
                   if (workflow.review_cadence_days && workflow.last_reviewed_at) {
@@ -847,8 +852,12 @@ export default function WorkflowsClient({ orgId }: { orgId: string }) {
                       <TableCell>{reviewDue}</TableCell>
                       <TableCell>{formatDate(workflow.last_success_at ?? undefined)}</TableCell>
                       <TableCell>
-                        <div className="text-sm text-foreground">{runStats?.total ?? '-'}</div>
-                        <div className="text-xs text-muted-foreground">Success {successRate}</div>
+                        <div className="text-sm text-foreground">
+                          Attempted {lifecycle.attempted} · Completed {lifecycle.completed}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Conversion {completionRate} · Success {successRate}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>

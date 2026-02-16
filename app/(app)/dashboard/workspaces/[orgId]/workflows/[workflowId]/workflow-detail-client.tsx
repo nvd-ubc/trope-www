@@ -31,6 +31,7 @@ import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
+import { computeDurationPercentileMs, summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
 
 type WorkflowDefinition = {
   org_id: string
@@ -761,6 +762,10 @@ export default function WorkflowDetailClient({
     () => runs.filter((run) => run.status.toLowerCase() === 'failed'),
     [runs]
   )
+  const recentDurationP95 = useMemo(
+    () => computeDurationPercentileMs(runs, 0.95),
+    [runs]
+  )
 
   const errorClusters = useMemo(() => {
     const counts = new Map<string, number>()
@@ -794,6 +799,11 @@ export default function WorkflowDetailClient({
       ? `${Math.round(workflow.success_rate_7d * 100)}%`
       : '-'
   const metrics = workflow.metrics_7d
+  const lifecycle = summarizeRunLifecycle(runStats, metrics)
+  const completionRate =
+    typeof lifecycle.completionRate === 'number'
+      ? `${Math.round(lifecycle.completionRate * 100)}%`
+      : '-'
   const cadenceDays = resolveCadenceDays(
     workflow.expected_run_cadence,
     workflow.expected_run_cadence_days
@@ -994,20 +1004,24 @@ export default function WorkflowDetailClient({
               <div className="text-slate-900">{successRate}</div>
             </div>
             <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Runs (7d)</div>
-              <div className="text-slate-900">{runStats?.total ?? '-'}</div>
+              <div className="text-xs uppercase tracking-wide text-slate-400">Run attempts (7d)</div>
+              <div className="text-slate-900">{lifecycle.attempted}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-400">Runs completed (7d)</div>
+              <div className="text-slate-900">{lifecycle.completed}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-400">Attempt to complete (7d)</div>
+              <div className="text-slate-900">{completionRate}</div>
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wide text-slate-400">Duration p95 (recent)</div>
+              <div className="text-slate-900">{formatDuration(recentDurationP95)}</div>
             </div>
             <div>
               <div className="text-xs uppercase tracking-wide text-slate-400">Views (7d)</div>
               <div className="text-slate-900">{metrics?.views ?? 0}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Guided starts (7d)</div>
-              <div className="text-slate-900">{metrics?.guided_starts ?? 0}</div>
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wide text-slate-400">Guided completions (7d)</div>
-              <div className="text-slate-900">{metrics?.guided_completions ?? 0}</div>
             </div>
           </div>
           <div className="mt-4 text-xs text-slate-500">
