@@ -53,7 +53,7 @@ test('workflow detail and share pages should consume saved cursor overlay mode',
     )
     assertMatches(
       source,
-      /resolveGuideCursorOverlayMode\(\s*spec\?\.cursor_overlay_mode\s*\)/,
+      /const\s+cursorOverlayMode\s*=\s*resolveGuideCursorOverlayMode\(\s*spec\?\.cursor_overlay_mode\s*\)/,
       `${relativePath} should resolve cursor_overlay_mode from the loaded spec.`
     )
     assertMatches(
