@@ -29,6 +29,7 @@ import {
   buildSaveFingerprint,
   createDraftStep,
   normalizeSpecForPublish,
+  setStepWhy,
 } from '@/lib/guide-editor'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
@@ -372,6 +373,7 @@ const StepImageCard = ({
   onInsertAfter,
   onCopyStepLink,
   onStepTitleChange,
+  onStepWhyChange,
   onStepInstructionChange,
   redactionMasks,
   lockedMaskIds,
@@ -396,6 +398,7 @@ const StepImageCard = ({
   onInsertAfter: () => void
   onCopyStepLink: () => void
   onStepTitleChange: (value: string) => void
+  onStepWhyChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
   redactionMasks: GuideRedactionMask[]
   lockedMaskIds: string[]
@@ -564,6 +567,14 @@ const StepImageCard = ({
           )}
         </>
       )}
+
+      <Textarea
+        value={typeof step.why === 'string' ? step.why : whyText}
+        onChange={(event) => onStepWhyChange(event.target.value)}
+        className="mt-4 text-sm text-slate-700"
+        rows={2}
+        placeholder="Why this step matters (optional)."
+      />
 
       <Textarea
         value={step.instructions}
@@ -1505,6 +1516,9 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         ...current,
                         title: value,
                       }))
+                    }
+                    onStepWhyChange={(value) =>
+                      updateDraftStep(index, (current) => setStepWhy(current, value))
                     }
                     onStepInstructionChange={(value) =>
                       updateDraftStep(index, (current) => ({

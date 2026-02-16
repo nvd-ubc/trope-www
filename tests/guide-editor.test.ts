@@ -6,6 +6,7 @@ import {
   createDraftStep,
   getRadarPercent,
   normalizeSpecForPublish,
+  setStepWhy,
 } from '../src/lib/guide-editor'
 
 describe('guide editor helpers', () => {
@@ -145,6 +146,29 @@ describe('guide editor helpers', () => {
     assert.equal(step.callout_style, 'note')
     assert.deepEqual(step.video_ranges, [])
     assert.deepEqual(step.anchors?.layout, [{ position_hint: 'manual' }])
+  })
+
+  it('clears legacy why aliases when why is edited', () => {
+    const updated = setStepWhy(
+      {
+        id: 'step_1',
+        title: 'Open settings',
+        instructions: 'Click settings.',
+        rationale: 'Legacy rationale',
+        reason: 'Legacy reason',
+        why_this_matters: 'Legacy matters',
+        why_this_step: 'Legacy step',
+        justification: 'Legacy justification',
+      },
+      ''
+    )
+
+    assert.equal(updated.why, '')
+    assert.equal(updated.rationale, undefined)
+    assert.equal(updated.reason, undefined)
+    assert.equal(updated.why_this_matters, undefined)
+    assert.equal(updated.why_this_step, undefined)
+    assert.equal(updated.justification, undefined)
   })
 
   it('normalizes callout style only for manual steps', () => {

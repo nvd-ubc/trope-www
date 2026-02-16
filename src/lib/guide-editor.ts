@@ -7,6 +7,7 @@ export type GuideEditorRadar = {
 export type GuideEditorStep = {
   id: string
   title: string
+  why?: string
   instructions: string
   video_ranges?: unknown[]
   anchors?: {
@@ -43,6 +44,22 @@ export const createDraftStep = (): GuideEditorStep => ({
     layout: [{ position_hint: 'manual' }],
   },
 })
+
+const LEGACY_STEP_WHY_ALIASES = [
+  'rationale',
+  'reason',
+  'why_this_matters',
+  'why_this_step',
+  'justification',
+] as const
+
+export const setStepWhy = (step: GuideEditorStep, why: string): GuideEditorStep => {
+  const next: GuideEditorStep = { ...step, why }
+  for (const alias of LEGACY_STEP_WHY_ALIASES) {
+    delete next[alias]
+  }
+  return next
+}
 
 const ensureUniqueStepId = (candidate: string, used: Set<string>) => {
   const trimmed = candidate.trim()
