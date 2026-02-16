@@ -8,6 +8,7 @@ import Button from '@/components/ui/button'
 import Card from '@/components/ui/card'
 import Logo from '@/components/ui/logo'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
+import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import {
   formatCaptureTimestamp,
   type GuideMediaStepImage as StepImage,
@@ -190,15 +191,24 @@ export default function ShareClient({ shareId }: { shareId: string }) {
   }
 
   const stepImageMap = useMemo(() => {
+    const steps = Array.isArray(spec?.steps) ? spec.steps : []
+    const stepImages = version?.guide_media?.step_images ?? []
+    const derived = deriveGuideStepImagesWithFocus({
+      steps: steps as unknown as Array<{
+        id: string
+        kind?: string | null
+        expected_event?: unknown
+        [key: string]: unknown
+      }>,
+      stepImages,
+    })
+
     const map: Record<string, StepImage> = {}
-    const images = version?.guide_media?.step_images ?? []
-    for (const image of images) {
-      if (image?.step_id) {
-        map[image.step_id] = image
-      }
+    for (const [stepId, entry] of Object.entries(derived)) {
+      map[stepId] = entry.image
     }
     return map
-  }, [version?.guide_media?.step_images])
+  }, [spec?.steps, version?.guide_media?.step_images])
   const shareContentMode = share?.content_mode === 'text_only' ? 'text_only' : 'media'
   const shareAllowsMedia = shareContentMode === 'media'
 

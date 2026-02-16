@@ -75,8 +75,8 @@ export default function StepImageCard({
   )
 
   const radar = image?.radar ?? null
-  const width = image?.width ?? previewImage?.width ?? null
-  const height = image?.height ?? previewImage?.height ?? null
+  const width = image?.width ?? fullImage?.width ?? previewImage?.width ?? null
+  const height = image?.height ?? fullImage?.height ?? previewImage?.height ?? null
   const radarPercent = useMemo(
     () =>
       shouldRenderStepRadar({
