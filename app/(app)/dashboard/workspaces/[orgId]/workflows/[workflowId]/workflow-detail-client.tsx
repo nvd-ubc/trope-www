@@ -845,7 +845,7 @@ export default function WorkflowDetailClient({
     ? versions.findIndex((version) => version.version_id === selectedVersion.version_id)
     : -1
   const selectedVersionLabel = selectedVersion
-    ? `${selectedVersionIndex >= 0 ? `Release ${selectedVersionIndex + 1} · ` : ''}${formatDate(selectedVersion.created_at)}`
+    ? `${selectedVersionIndex >= 0 ? `Release ${versions.length - selectedVersionIndex} · ` : ''}${formatDate(selectedVersion.created_at)}`
     : null
 
   return (
@@ -1410,7 +1410,9 @@ export default function WorkflowDetailClient({
                   }`}
                 >
                   <div className="flex min-h-10 flex-wrap items-center justify-start gap-x-2 gap-y-1 leading-tight">
-                    <span className="font-semibold text-foreground">Release {index + 1}</span>
+                    <span className="font-semibold text-foreground">
+                      Release {versions.length - index}
+                    </span>
                     <span className="text-sm text-muted-foreground">{releaseMeta}</span>
                   </div>
                 </Button>

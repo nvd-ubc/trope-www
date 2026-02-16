@@ -59,10 +59,6 @@ type WorkflowDetailResponse = {
   }) | null
 }
 
-type VersionsResponse = {
-  versions: WorkflowVersionSummary[]
-}
-
 type GuideMedia = {
   step_images: StepImage[]
 }
@@ -140,6 +136,7 @@ type VersionsCreateResponse = {
 
 type GuideBootstrapResponse = {
   orgId?: string | null
+  orgName?: string | null
   workflow?: WorkflowDetailResponse | null
   versions?: WorkflowVersionSummary[] | null
   membershipRole?: string | null
@@ -149,13 +146,6 @@ type GuideBootstrapResponse = {
   guideRedactions?: GuideRedactionsDocument | null
   specError?: string | null
   error?: string
-}
-
-const formatDate = (value?: string | null) => {
-  if (!value) return 'Unknown'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 const formatKind = (kind?: string | null) => {
@@ -197,15 +187,6 @@ const calloutToneClass = (style: 'tip' | 'note' | 'alert') => {
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value)
-
-const sortVersionsByDate = (versions: WorkflowVersionSummary[]) =>
-  [...versions].sort((a, b) => {
-    const aTime = new Date(a.created_at).getTime()
-    const bTime = new Date(b.created_at).getTime()
-    return bTime - aTime
-  })
-
-const formatReleaseLabel = (index: number) => `Release ${index + 1}`
 
 const cloneSpec = (spec: GuideSpec): GuideSpec => JSON.parse(JSON.stringify(spec)) as GuideSpec
 
@@ -381,6 +362,7 @@ const StepImageCard = ({
   onStepTitleChange,
   onStepInstructionChange,
   redactionMasks,
+  lockedMaskIds,
   onRedactionMasksChange,
   showRedactionEditor,
   onToggleRedactionEditor,
@@ -404,6 +386,7 @@ const StepImageCard = ({
   onStepTitleChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
   redactionMasks: GuideRedactionMask[]
+  lockedMaskIds: string[]
   onRedactionMasksChange: (masks: GuideRedactionMask[]) => void
   showRedactionEditor: boolean
   onToggleRedactionEditor: () => void
@@ -573,6 +556,7 @@ const StepImageCard = ({
             <RedactionMaskEditor
               imageSrc={fullSrc}
               masks={redactionMasks}
+              lockedMaskIds={lockedMaskIds}
               onChange={onRedactionMasksChange}
             />
           )}
@@ -624,11 +608,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const versionIdParam = (searchParams.get('versionId') ?? '').trim()
 
   const [orgId, setOrgId] = useState<string | null>(null)
+  const [orgName, setOrgName] = useState<string | null>(null)
   const [resolveError, setResolveError] = useState<string | null>(null)
   const [requestId, setRequestId] = useState<string | null>(null)
 
   const [workflow, setWorkflow] = useState<WorkflowDefinition | null>(null)
-  const [versions, setVersions] = useState<WorkflowVersionSummary[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
   const [versionDetail, setVersionDetail] = useState<VersionDetailResponse['version'] | null>(null)
   const [membershipRole, setMembershipRole] = useState<string | null>(null)
@@ -656,7 +640,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const [isEditing, setIsEditing] = useState(false)
   const isEditingRef = useRef(false)
   const redactionDraftTouchedRef = useRef(false)
-  const [stepSearchQuery, setStepSearchQuery] = useState('')
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
   const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
   const [linkMessage, setLinkMessage] = useState<string | null>(null)
@@ -674,6 +657,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setLoading(true)
       setResolveError(null)
       setOrgId(null)
+      setOrgName(null)
       setRequestId(null)
       setSpecError(null)
       try {
@@ -701,8 +685,8 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         if (!active) return
         const orgIdentifier = payload.orgId
         setOrgId(orgIdentifier)
+        setOrgName(payload.orgName?.trim() || null)
         setWorkflow(payload.workflow.workflow)
-        setVersions(sortVersionsByDate(payload.versions ?? []))
         setMembershipRole(payload.membershipRole ?? null)
         setSelectedVersionId(payload.selectedVersionId ?? null)
 
@@ -934,10 +918,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }, [versionDetail?.guide_media?.step_images])
 
   const visibleSpec = isEditing ? draftSpec : spec
-  const selectedVersion = useMemo(
-    () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
-    [selectedVersionId, versions]
-  )
 
   const draftSpecIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
@@ -962,18 +942,11 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
   const draftIsDirty = draftSpecIsDirty || draftRedactionsAreDirty
 
-  const normalizedStepSearch = stepSearchQuery.trim().toLowerCase()
   const stepEntries = useMemo(
     () => (visibleSpec?.steps ?? []).map((step, index) => ({ step, index })),
     [visibleSpec?.steps]
   )
-  const filteredStepEntries = useMemo(() => {
-    if (isEditing || !normalizedStepSearch) return stepEntries
-    return stepEntries.filter(({ step }) => {
-      const haystack = [step.title, step.instructions, step.why ?? ''].join('\n').toLowerCase()
-      return haystack.includes(normalizedStepSearch)
-    })
-  }, [isEditing, normalizedStepSearch, stepEntries])
+  const filteredStepEntries = stepEntries
 
   useEffect(() => {
     if (!isEditing) {
@@ -1109,26 +1082,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     return () => observer.disconnect()
   }, [filteredStepEntries])
 
-  const onSelectVersion = (versionId: string) => {
-    if (isEditing && draftIsDirty) {
-      const proceed = window.confirm(
-        'You have unsaved edits. Switch releases and discard those edits?'
-      )
-      if (!proceed) return
-    }
-    setIsEditing(false)
-    setSaveError(null)
-    setSaveMessage(null)
-    setSaveRequestId(null)
-    setSaveVisibility('org')
-    setOpenRedactionEditorStepId(null)
-    redactionDraftTouchedRef.current = false
-    setSelectedVersionId(versionId)
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('versionId', versionId)
-    router.replace(`/dashboard/workflows/${encodeURIComponent(workflowId)}/guide?${params.toString()}`)
-  }
-
   const updateDraftStep = (index: number, updater: (step: GuideStep) => GuideStep) => {
     setDraftSpec((prev) => {
       if (!prev || !Array.isArray(prev.steps) || !prev.steps[index]) return prev
@@ -1225,21 +1178,14 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setIsEditing(false)
   }
 
-  const refreshVersions = async (): Promise<WorkflowVersionSummary[]> => {
-    if (!orgId) return []
-    const response = await fetch(
-      `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(workflowId)}/versions`,
-      { cache: 'no-store' }
-    )
-    if (!response.ok) {
-      throw new Error('Unable to refresh releases.')
-    }
-    const payload = (await response.json().catch(() => null)) as VersionsResponse | null
-    return sortVersionsByDate(payload?.versions ?? [])
-  }
-
   const handleSaveEdits = async () => {
     if (!csrfToken || !orgId || !selectedVersionId || !draftSpec) return
+    if (draftRedactionsAreDirty) {
+      const shouldProceed = window.confirm(
+        'Screenshot redactions are permanent, apply to all workflow versions, and cannot be undone. Continue?'
+      )
+      if (!shouldProceed) return
+    }
     setSaving(true)
     setSaveError(null)
     setSaveMessage(null)
@@ -1369,8 +1315,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       }
 
       const nextVersionId = publishPayload.version.version_id
-      const refreshedVersions = await refreshVersions()
-      setVersions(refreshedVersions)
       setSelectedVersionId(nextVersionId)
       const params = new URLSearchParams(searchParams.toString())
       params.set('versionId', nextVersionId)
@@ -1409,7 +1353,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       <PageHeader
         eyebrow={isEditing ? 'Workflow guide editor' : 'Workflow guide'}
         title={workflow?.title ?? workflowId}
-        description={`Workspace: ${orgId}`}
+        description={`Workspace: ${orgName || orgId}`}
         actions={
           <ButtonGroup>
             <Button
@@ -1462,32 +1406,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           ) : undefined
         }
       />
-
-      <Card className="p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm font-semibold text-slate-900">Release</div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Select value={selectedVersionId ?? undefined} onValueChange={onSelectVersion}>
-              <SelectTrigger className="h-9 min-w-[17rem] bg-white text-sm text-slate-800 shadow-sm">
-                <SelectValue placeholder="Select a release" />
-              </SelectTrigger>
-              <SelectContent>
-                {versions.map((version, index) => (
-                  <SelectItem key={version.version_id} value={version.version_id}>
-                    {formatReleaseLabel(index)} ({formatDate(version.created_at)})
-                    {version.status === 'private_draft' ? ' · Private draft' : ''}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {selectedVersion && (
-              <span className="text-xs text-slate-500">
-                {selectedVersion.steps_count ? `${selectedVersion.steps_count} steps` : ''}
-              </span>
-            )}
-          </div>
-        </div>
-      </Card>
 
       {isAdmin && isEditing && (
         <Card className="p-4 sm:p-5">
@@ -1563,25 +1481,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
               </Card>
             )}
 
-            <Card className="p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-slate-900">Find in guide</div>
-                <div className="text-xs text-slate-500">
-                  {isEditing
-                    ? 'Search disabled while editing.'
-                    : `${filteredStepEntries.length} of ${visibleSpec.steps.length} steps`}
-                </div>
-              </div>
-              <InputGroup className="mt-3">
-                <InputGroupInput
-                  value={stepSearchQuery}
-                  onChange={(event) => setStepSearchQuery(event.target.value)}
-                  placeholder="Search title, instructions, or why…"
-                  disabled={isEditing}
-                />
-              </InputGroup>
-            </Card>
-
             <div className="space-y-4">
               {isEditing && visibleSpec.steps.length === 0 && (
                 <div className="flex justify-center">
@@ -1593,7 +1492,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
               {!isEditing && filteredStepEntries.length === 0 && (
                 <Card className="p-5 text-sm text-slate-600">
-                  No steps match your search.
+                  No guide steps available.
                 </Card>
               )}
 
@@ -1655,6 +1554,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     redactionMasks={
                       (isEditing ? draftRedactionMasksByStepId : redactionMasksByStepId)[step.id] ?? []
                     }
+                    lockedMaskIds={(redactionMasksByStepId[step.id] ?? []).map((mask) => mask.id)}
                     onRedactionMasksChange={(masks) => {
                       if (!isEditing) return
                       redactionDraftTouchedRef.current = true
@@ -1662,9 +1562,17 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         const normalizedMasks = masks
                           .map((mask) => normalizeGuideRedactionMask(mask))
                           .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+                        const lockedMasks = (redactionMasksByStepId[step.id] ?? [])
+                          .map((mask) => normalizeGuideRedactionMask(mask))
+                          .filter((mask): mask is GuideRedactionMask => Boolean(mask))
+                        const lockedMaskIdSet = new Set(lockedMasks.map((mask) => mask.id))
+                        const mergedMasks = [
+                          ...lockedMasks,
+                          ...normalizedMasks.filter((mask) => !lockedMaskIdSet.has(mask.id)),
+                        ]
                         const next = cloneRedactionMaskMap(prev)
-                        if (normalizedMasks.length > 0) {
-                          next[step.id] = normalizedMasks
+                        if (mergedMasks.length > 0) {
+                          next[step.id] = mergedMasks
                         } else {
                           delete next[step.id]
                         }

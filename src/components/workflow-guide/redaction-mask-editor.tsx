@@ -23,6 +23,7 @@ type RedactionMaskEditorProps = {
   imageSrc: string
   masks: GuideRedactionMask[]
   onChange: (nextMasks: GuideRedactionMask[]) => void
+  lockedMaskIds?: string[]
   disabled?: boolean
 }
 
@@ -69,6 +70,7 @@ export default function RedactionMaskEditor({
   imageSrc,
   masks,
   onChange,
+  lockedMaskIds = [],
   disabled = false,
 }: RedactionMaskEditorProps) {
   const frameRef = useRef<HTMLDivElement | null>(null)
@@ -85,6 +87,11 @@ export default function RedactionMaskEditor({
         return rightArea - leftArea
       }),
     [masks]
+  )
+  const lockedMaskIdSet = useMemo(() => new Set(lockedMaskIds), [lockedMaskIds])
+  const removableMaskCount = useMemo(
+    () => masks.filter((mask) => !lockedMaskIdSet.has(mask.id)).length,
+    [lockedMaskIdSet, masks]
   )
 
   const pointerToUnitPoint = (clientX: number, clientY: number): { x: number; y: number } | null => {
@@ -148,12 +155,14 @@ export default function RedactionMaskEditor({
   }
 
   const updateMask = (maskId: string, updater: (mask: GuideRedactionMask) => GuideRedactionMask) => {
+    if (lockedMaskIdSet.has(maskId)) return
     onChange(
       masks.map((mask) => (mask.id === maskId ? updater(mask) : mask))
     )
   }
 
   const removeMask = (maskId: string) => {
+    if (lockedMaskIdSet.has(maskId)) return
     onChange(masks.filter((mask) => mask.id !== maskId))
   }
 
@@ -181,8 +190,8 @@ export default function RedactionMaskEditor({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => onChange([])}
-            disabled={disabled || masks.length === 0}
+            onClick={() => onChange(masks.filter((mask) => lockedMaskIdSet.has(mask.id)))}
+            disabled={disabled || removableMaskCount === 0}
           >
             Clear
           </Button>
@@ -191,6 +200,9 @@ export default function RedactionMaskEditor({
 
       <p className="mt-2 text-xs text-slate-500">
         Drag on the screenshot to add a redaction region.
+      </p>
+      <p className="mt-1 text-xs text-amber-700">
+        Saved redactions are permanent. Existing masks cannot be removed or edited.
       </p>
 
       <div
@@ -244,7 +256,14 @@ export default function RedactionMaskEditor({
             key={mask.id}
             className="grid gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:grid-cols-[8rem_1fr_auto]"
           >
-            <div className="text-xs font-medium text-slate-600">Mask {index + 1}</div>
+            <div className="text-xs font-medium text-slate-600">
+              Mask {index + 1}
+              {lockedMaskIdSet.has(mask.id) ? (
+                <span className="ml-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-slate-500">
+                  Locked
+                </span>
+              ) : null}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <Select
                 value={mask.kind}
@@ -258,7 +277,7 @@ export default function RedactionMaskEditor({
                         : undefined,
                   }))
                 }
-                disabled={disabled}
+                disabled={disabled || lockedMaskIdSet.has(mask.id)}
               >
                 <SelectTrigger className="h-7 w-[8.5rem] text-xs">
                   <SelectValue placeholder="Mask style" />
@@ -281,18 +300,22 @@ export default function RedactionMaskEditor({
                     }))
                   }
                   className="h-7 w-10 rounded border border-slate-200 bg-transparent p-0.5"
-                  disabled={disabled}
+                  disabled={disabled || lockedMaskIdSet.has(mask.id)}
                 />
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => removeMask(mask.id)}
-              disabled={disabled}
-            >
-              Remove
-            </Button>
+            {lockedMaskIdSet.has(mask.id) ? (
+              <div className="self-center text-xs font-medium text-slate-500">Locked</div>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeMask(mask.id)}
+                disabled={disabled}
+              >
+                Remove
+              </Button>
+            )}
           </div>
         ))}
       </div>
