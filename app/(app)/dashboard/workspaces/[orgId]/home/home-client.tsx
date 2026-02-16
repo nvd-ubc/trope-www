@@ -113,18 +113,16 @@ export default function HomeClient({ orgId }: { orgId: string }) {
   const [savingSettings, setSavingSettings] = useState(false)
 
   const load = useCallback(async () => {
-    const [response, settingsResponse] = await Promise.all([
-      fetch(
-        `/api/orgs/${encodeURIComponent(orgId)}/home/bootstrap`,
-        { cache: 'no-store' }
-      ),
-      fetch('/api/me/notification-settings', { cache: 'no-store' }),
-    ])
+    const response = await fetch(
+      `/api/orgs/${encodeURIComponent(orgId)}/home/bootstrap`,
+      { cache: 'no-store' }
+    )
 
-    if (response.status === 401 || settingsResponse.status === 401) {
+    if (response.status === 401) {
       router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/home`)
       return
     }
+
     const payload = (await response.json().catch(() => null)) as HomeBootstrapResponse | null
     if (!response.ok || !payload?.home) {
       throw new Error('Unable to load workspace home.')
@@ -133,13 +131,18 @@ export default function HomeClient({ orgId }: { orgId: string }) {
     setHome(payload.home)
     setNotifications(payload.notifications?.notifications ?? [])
 
-    if (settingsResponse.ok) {
-      const settingsPayload = (await settingsResponse.json().catch(() => null)) as
-        | { settings?: NotificationSettings }
-        | null
-      if (settingsPayload?.settings) {
-        setNotificationSettings(settingsPayload.settings)
+    try {
+      const settingsResponse = await fetch('/api/me/notification-settings', { cache: 'no-store' })
+      if (settingsResponse.ok) {
+        const settingsPayload = (await settingsResponse.json().catch(() => null)) as
+          | { settings?: NotificationSettings }
+          | null
+        if (settingsPayload?.settings) {
+          setNotificationSettings(settingsPayload.settings)
+        }
       }
+    } catch {
+      // Keep Home usable even if notification settings fail to load.
     }
   }, [orgId, router])
 
@@ -237,7 +240,6 @@ export default function HomeClient({ orgId }: { orgId: string }) {
         backLabel="Workspace overview"
         badges={
           <>
-            <Badge variant="info">Scribe parity</Badge>
             <Badge variant={unreadCount > 0 ? 'warning' : 'success'}>
               {unreadCount > 0 ? `${unreadCount} unread` : 'Inbox clear'}
             </Badge>

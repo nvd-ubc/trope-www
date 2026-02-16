@@ -34,7 +34,8 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
-import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, PageHeader } from '@/components/dashboard'
+import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, MetricCard, PageHeader } from '@/components/dashboard'
+import { aggregateRunLifecycle, computeDurationPercentileMs } from '@/lib/workflow-run-lifecycle'
 
 type WorkflowRun = {
   org_id: string
@@ -61,6 +62,16 @@ type RunListResponse = {
 type WorkflowDefinition = {
   workflow_id: string
   title: string
+  run_stats_7d?: {
+    total: number
+    success: number
+    failed: number
+    canceled: number
+  } | null
+  metrics_7d?: {
+    guided_starts: number
+    guided_completions: number
+  } | null
 }
 
 type WorkflowListResponse = {
@@ -95,6 +106,11 @@ const formatDuration = (ms?: number | null) => {
   return `${minutes}m ${remaining}s`
 }
 
+const formatPercent = (value?: number | null) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) return '-'
+  return `${Math.round(value * 100)}%`
+}
+
 const statusVariant = (status?: string | null) => {
   const normalized = (status ?? '').toLowerCase()
   if (normalized === 'success') return 'success'
@@ -113,6 +129,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
   const [runs, setRuns] = useState<WorkflowRun[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [workflowMap, setWorkflowMap] = useState<Record<string, string>>({})
+  const [workflowDefinitions, setWorkflowDefinitions] = useState<Record<string, WorkflowDefinition>>({})
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const workflowFromUrl = searchParams.get('workflow_id') ?? ''
@@ -188,11 +205,14 @@ export default function RunsClient({ orgId }: { orgId: string }) {
         }
 
         const workflowLookup: Record<string, string> = {}
+        const workflowDetails: Record<string, WorkflowDefinition> = {}
         for (const workflow of payload.workflows?.workflows ?? []) {
           workflowLookup[workflow.workflow_id] = workflow.title
+          workflowDetails[workflow.workflow_id] = workflow
         }
         if (!active) return
         setWorkflowMap(workflowLookup)
+        setWorkflowDefinitions(workflowDetails)
         setRuns(payload.runs.runs ?? [])
         setNextCursor(payload.runs.next_cursor ?? null)
         setLoading(false)
@@ -240,6 +260,22 @@ export default function RunsClient({ orgId }: { orgId: string }) {
 
     return sorted
   }, [runs, query, statusFilter, workflowMap, sortBy])
+
+  const lifecycleSummary = useMemo(() => {
+    if (workflowFilter) {
+      const selected = workflowDefinitions[workflowFilter]
+      if (!selected) {
+        return aggregateRunLifecycle([])
+      }
+      return aggregateRunLifecycle([selected])
+    }
+    return aggregateRunLifecycle(Object.values(workflowDefinitions))
+  }, [workflowDefinitions, workflowFilter])
+
+  const durationP95 = useMemo(
+    () => computeDurationPercentileMs(filtered, 0.95),
+    [filtered]
+  )
 
   const handleLoadMore = async () => {
     if (!nextCursor) return
@@ -407,6 +443,29 @@ export default function RunsClient({ orgId }: { orgId: string }) {
           </ButtonGroup>
         }
       />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          label="Run attempts (7d)"
+          value={lifecycleSummary.attempted}
+          helper={workflowFilter ? 'Selected workflow' : 'Workspace total'}
+        />
+        <MetricCard
+          label="Runs completed (7d)"
+          value={lifecycleSummary.completed}
+          helper={`${lifecycleSummary.success} success · ${lifecycleSummary.failed} failed · ${lifecycleSummary.canceled} canceled`}
+        />
+        <MetricCard
+          label="Attempt to complete"
+          value={formatPercent(lifecycleSummary.completionRate)}
+          helper="Completed / attempted"
+        />
+        <MetricCard
+          label="Duration p95 (loaded)"
+          value={formatDuration(durationP95)}
+          helper={`${filtered.length} runs in current view`}
+        />
+      </div>
 
       <Card className="overflow-hidden">
         {filtered.length === 0 ? (

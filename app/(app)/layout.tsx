@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Button from '@/components/ui/button'
 import Logo from '@/components/ui/logo'
 import { Separator } from '@/components/ui/separator'
+import { Toaster } from '@/components/ui/sonner'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import AppBreadcrumb from './app-breadcrumb'
 import AppSidebar from './app-sidebar'
@@ -19,6 +20,7 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-100 via-slate-50 to-slate-100 text-foreground">
       <CommandPalette />
+      <Toaster position="bottom-right" richColors />
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="bg-transparent">

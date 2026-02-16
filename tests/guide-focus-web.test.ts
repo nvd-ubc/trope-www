@@ -31,4 +31,25 @@ describe('guide-focus-web', () => {
     assert.equal(transform.positionX, -100)
     assert.equal(transform.positionY, -610)
   })
+
+  it('uses rendered image dimensions for focus offsets', () => {
+    const transform = computeGuideCanvasFocusTransform({
+      focusTransform: {
+        cropRect: { x: 0, y: 0, width: 900, height: 600 },
+        zoomScale: 2,
+        transformOriginPercent: { x: 75, y: 70 },
+        radarPercentInCrop: null,
+        hasFocusCrop: true,
+      },
+      viewportWidth: 900,
+      viewportHeight: 600,
+      imageWidth: 900,
+      imageHeight: 600,
+      minScale: 1,
+      maxScale: 4,
+    })
+
+    assert.equal(transform.positionX, -900)
+    assert.equal(transform.positionY, -540)
+  })
 })
