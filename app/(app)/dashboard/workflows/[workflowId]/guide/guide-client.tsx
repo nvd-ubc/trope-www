@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Link2 } from 'lucide-react'
+import { toast } from 'sonner'
 import Badge from '@/components/ui/badge'
 import Button from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
@@ -454,13 +456,24 @@ const StepImageCard = ({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6">
+    <div className="group/step rounded-2xl border border-slate-200 bg-white p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
-              {index + 1}
-            </div>
+            <button
+              type="button"
+              onClick={onCopyStepLink}
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)] transition-colors hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--trope-accent)]/35"
+              aria-label={`Copy link for step ${index + 1}`}
+              title="Copy step link"
+            >
+              <span className="transition-opacity duration-200 ease-out group-hover/step:opacity-0 group-focus-within/step:opacity-0">
+                {index + 1}
+              </span>
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 ease-out group-hover/step:opacity-100 group-focus-within/step:opacity-100">
+                <Link2 className="size-5" />
+              </span>
+            </button>
             <div className="min-w-0 flex-1">
               {isEditing ? (
                 <InputGroup>
@@ -476,19 +489,17 @@ const StepImageCard = ({
                   <p className="line-clamp-2 text-base font-medium leading-snug text-slate-900">
                     {instructionText}
                   </p>
-                  <p className="text-sm text-slate-600">
-                    <span className="font-semibold text-slate-700">Why:</span>{' '}
-                    {whyText || <span className="italic text-slate-500">Not provided in this guide step.</span>}
-                  </p>
+                  {whyText ? (
+                    <p className="text-sm text-slate-600">
+                      <span className="font-semibold text-slate-700">Why:</span> {whyText}
+                    </p>
+                  ) : null}
                 </div>
               )}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={onCopyStepLink}>
-            Copy step link
-          </Button>
           {isEditing ? (
             <ButtonGroup>
               <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
@@ -609,7 +620,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const redactionDraftTouchedRef = useRef(false)
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
   const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
-  const [linkMessage, setLinkMessage] = useState<string | null>(null)
   const stepCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
@@ -956,23 +966,19 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setStepHash(stepId)
   }
 
-  const copyStepLink = async (stepId: string) => {
+  const copyStepLink = async (stepId: string, stepTitle?: string) => {
     if (typeof window === 'undefined') return
+    const titleLabel =
+      typeof stepTitle === 'string' && stepTitle.trim().length > 0 ? stepTitle.trim() : stepId
     try {
       const url = new URL(window.location.href)
       url.hash = `step=${encodeURIComponent(stepId)}`
       await navigator.clipboard.writeText(url.toString())
-      setLinkMessage(`Copied link for ${stepId}.`)
+      toast.success(`Copied link for ${titleLabel}.`)
     } catch {
       // Ignore clipboard failures.
     }
   }
-
-  useEffect(() => {
-    if (linkMessage === null) return
-    const timeout = window.setTimeout(() => setLinkMessage(null), 1800)
-    return () => window.clearTimeout(timeout)
-  }, [linkMessage])
 
   useEffect(() => {
     if (filteredStepEntries.length === 0) {
@@ -1419,10 +1425,6 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         </Card>
       )}
 
-      {linkMessage && (
-        <Card className="border-sky-200 bg-sky-50 p-4 text-sm text-sky-700">{linkMessage}</Card>
-      )}
-
       {visibleSpec && selectedVersionId && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <div className="space-y-8">
@@ -1498,7 +1500,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     onMoveDown={() => moveDraftStep(index, 'down')}
                     onDelete={() => deleteDraftStep(index)}
                     onInsertAfter={() => insertDraftStep(index + 1)}
-                    onCopyStepLink={() => copyStepLink(step.id)}
+                    onCopyStepLink={() => copyStepLink(step.id, step.title)}
                     onStepTitleChange={(value) =>
                       updateDraftStep(index, (current) => ({
                         ...current,
