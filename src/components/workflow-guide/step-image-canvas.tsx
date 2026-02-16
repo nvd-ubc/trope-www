@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MutableRefObject, type PointerEvent } from 'react'
 import { TransformComponent, TransformWrapper } from 'react-zoom-pan-pinch'
 import StepImageControls from '@/components/workflow-guide/step-image-controls'
 import {
@@ -8,6 +8,14 @@ import {
   computeGuideCanvasFocusTransform,
 } from '@/lib/guide-focus-web'
 import type { GuideFocusTransformResult } from '@/lib/guide-focus'
+
+export type StepImageCanvasTransformSnapshot = {
+  scale: number
+  positionX: number
+  positionY: number
+  viewportSize: { width: number; height: number }
+  renderedImageSize: { width: number; height: number }
+}
 
 type StepImageCanvasProps = {
   src: string
@@ -22,6 +30,9 @@ type StepImageCanvasProps = {
   showFloatingZoomButtons?: boolean
   compact?: boolean
   imageClassName?: string
+  transformSnapshotRef?: MutableRefObject<StepImageCanvasTransformSnapshot | null>
+  captureClickPoint?: boolean
+  onCaptureClickPoint?: (pointUnit: { x: number; y: number }) => void
 }
 
 type TransformState = {
@@ -33,6 +44,8 @@ type TransformState = {
 const MIN_SCALE = 1
 const MAX_SCALE = 4
 const PAN_KEYBOARD_DELTA = 40
+
+const clampUnit = (value: number): number => Math.max(0, Math.min(1, value))
 
 export default function StepImageCanvas({
   src,
@@ -47,6 +60,9 @@ export default function StepImageCanvas({
   showFloatingZoomButtons = true,
   compact = false,
   imageClassName,
+  transformSnapshotRef,
+  captureClickPoint = false,
+  onCaptureClickPoint,
 }: StepImageCanvasProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -67,6 +83,15 @@ export default function StepImageCanvas({
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+
+  useEffect(() => {
+    if (!transformSnapshotRef) return
+    transformSnapshotRef.current = {
+      ...transformState,
+      viewportSize,
+      renderedImageSize,
+    }
+  }, [renderedImageSize, transformSnapshotRef, transformState, viewportSize])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -150,6 +175,39 @@ export default function StepImageCanvas({
     })
     setTransform(focused.positionX, focused.positionY, focused.scale)
   }, [focusTransform, renderedImageSize.height, renderedImageSize.width, resetToFit, setTransform, sourceImageSize.height, sourceImageSize.width, viewportSize.height, viewportSize.width])
+
+  const handleCaptureClickPoint = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!captureClickPoint || !onCaptureClickPoint) return
+    if (event.button !== 0) return
+    const container = containerRef.current
+    if (!container) return
+    const rect = container.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0) return
+
+    const scale = transformState.scale
+    if (!Number.isFinite(scale) || scale <= 0) return
+
+    const baseWidth = renderedImageSize.width > 0 ? renderedImageSize.width : sourceImageSize.width
+    const baseHeight = renderedImageSize.height > 0 ? renderedImageSize.height : sourceImageSize.height
+    if (!Number.isFinite(baseWidth) || !Number.isFinite(baseHeight) || baseWidth <= 0 || baseHeight <= 0) {
+      return
+    }
+
+    const viewportX = event.clientX - rect.left
+    const viewportY = event.clientY - rect.top
+
+    // react-zoom-pan-pinch applies translate+scale to the content; invert that to locate the clicked pixel.
+    const imageX = (viewportX - transformState.positionX) / scale
+    const imageY = (viewportY - transformState.positionY) / scale
+
+    onCaptureClickPoint({
+      x: clampUnit(imageX / baseWidth),
+      y: clampUnit(imageY / baseHeight),
+    })
+
+    event.preventDefault()
+    event.stopPropagation()
+  }, [captureClickPoint, onCaptureClickPoint, renderedImageSize.height, renderedImageSize.width, sourceImageSize.height, sourceImageSize.width, transformState.positionX, transformState.positionY, transformState.scale])
 
   useEffect(() => {
     if (!active) return
@@ -243,11 +301,12 @@ export default function StepImageCanvas({
       )}
       <div
         ref={containerRef}
-        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
+        className={`relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} ${captureClickPoint ? 'cursor-crosshair' : ''} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
         tabIndex={0}
         onKeyDown={handleKeyboard}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onPointerDownCapture={handleCaptureClickPoint}
         aria-label={`Step image zoom canvas at ${ariaZoom}`}
       >
         <TransformWrapper
@@ -260,7 +319,7 @@ export default function StepImageCanvas({
           pinch={{ step: 5 }}
           panning={{
             velocityDisabled: true,
-            allowLeftClickPan: true,
+            allowLeftClickPan: !captureClickPoint,
             allowMiddleClickPan: false,
             allowRightClickPan: false,
           }}
