@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import StepImageCanvas, { type StepImageCanvasTransformSnapshot } from '@/components/workflow-guide/step-image-canvas'
-import { computeFocusTransformV1 } from '@/lib/guide-focus'
+import { computeFocusTransformV1, GUIDE_FOCUS_CONTEXT_MARGIN_FACTOR } from '@/lib/guide-focus'
 import { type GuideStepScreenshotOverridesV1 } from '@/lib/guide-screenshot-focus'
 import { clampPercent } from '@/lib/guide-editor'
 import type { GuideMediaRenderHints } from '@/lib/guide-media'
@@ -32,6 +32,9 @@ type StepImageFocusEditorDialogProps = {
 }
 
 const clampUnit = (value: number): number => Math.max(0, Math.min(1, value))
+
+const MAX_SAVED_ZOOM_SCALE = 4
+const CONTEXT_MARGIN_COMPENSATION = 1 + GUIDE_FOCUS_CONTEXT_MARGIN_FACTOR * 2
 
 const percentFromUnitPoint = (point: UnitPoint) => ({
   left: clampPercent(point.x * 100),
@@ -65,7 +68,9 @@ const snapshotToFocusOverride = (snapshot: StepImageCanvasTransformSnapshot): { 
       x: clampUnit(focusX / imageWidth),
       y: clampUnit(focusY / imageHeight),
     },
-    zoom_scale: Math.max(1, scale),
+    // computeFocusTransformV1 applies a context margin to the crop, which reduces the effective zoom.
+    // Compensate so reopening + saving without edits doesn't "drift" outward on each save.
+    zoom_scale: Math.min(MAX_SAVED_ZOOM_SCALE, Math.max(1, scale) * CONTEXT_MARGIN_COMPENSATION),
   }
 }
 

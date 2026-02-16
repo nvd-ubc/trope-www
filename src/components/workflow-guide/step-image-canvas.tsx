@@ -184,6 +184,18 @@ export default function StepImageCanvas({
     const rect = container.getBoundingClientRect()
     if (rect.width <= 0 || rect.height <= 0) return
 
+    // Pointer events are relative to the padded/bordered container, but the transform state is
+    // relative to the inner viewport. Convert into inner-viewport coordinates to avoid offsets.
+    const style = window.getComputedStyle(container)
+    const paddingLeft = Number.parseFloat(style.paddingLeft || '0') || 0
+    const paddingTop = Number.parseFloat(style.paddingTop || '0') || 0
+    const paddingRight = Number.parseFloat(style.paddingRight || '0') || 0
+    const paddingBottom = Number.parseFloat(style.paddingBottom || '0') || 0
+
+    const viewportWidth = container.clientWidth - paddingLeft - paddingRight
+    const viewportHeight = container.clientHeight - paddingTop - paddingBottom
+    if (viewportWidth <= 0 || viewportHeight <= 0) return
+
     const scale = transformState.scale
     if (!Number.isFinite(scale) || scale <= 0) return
 
@@ -195,10 +207,15 @@ export default function StepImageCanvas({
 
     const viewportX = event.clientX - rect.left
     const viewportY = event.clientY - rect.top
+    const innerViewportX = viewportX - container.clientLeft - paddingLeft
+    const innerViewportY = viewportY - container.clientTop - paddingTop
+    if (innerViewportX < 0 || innerViewportY < 0 || innerViewportX > viewportWidth || innerViewportY > viewportHeight) {
+      return
+    }
 
     // react-zoom-pan-pinch applies translate+scale to the content; invert that to locate the clicked pixel.
-    const imageX = (viewportX - transformState.positionX) / scale
-    const imageY = (viewportY - transformState.positionY) / scale
+    const imageX = (innerViewportX - transformState.positionX) / scale
+    const imageY = (innerViewportY - transformState.positionY) / scale
 
     onCaptureClickPoint({
       x: clampUnit(imageX / baseWidth),

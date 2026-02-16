@@ -31,6 +31,10 @@ export type GuideFocusTransformResult = {
 const STEP_IMAGE_COORDINATE_SPACE = 'step_image_pixels_v1'
 const DEFAULT_CONTEXT_MARGIN_FACTOR = 0.04
 
+// Exported for editor tooling that needs stable round-tripping between a saved zoom and the
+// effective zoom after focus crop context margin is applied.
+export const GUIDE_FOCUS_CONTEXT_MARGIN_FACTOR = DEFAULT_CONTEXT_MARGIN_FACTOR
+
 const isFinitePositive = (value: unknown): value is number =>
   typeof value === 'number' && Number.isFinite(value) && value > 0
 
