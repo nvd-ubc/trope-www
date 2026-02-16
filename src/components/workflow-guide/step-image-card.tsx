@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import StepImageCanvas from '@/components/workflow-guide/step-image-canvas'
 import StepImageViewerDialog from '@/components/workflow-guide/step-image-viewer-dialog'
+import {
+  resolveGuideCursorOverlayMode,
+  type GuideCursorOverlayMode,
+} from '@/lib/guide-cursor'
 import { getRadarPercent } from '@/lib/guide-editor'
 import { computeFocusTransformV1 } from '@/lib/guide-focus'
 import {
+  resolveRenderableCursorTrack,
   resolveStepFocusFallbackReason,
   resolveStepImageVariant,
   shouldRenderStepRadar,
@@ -25,6 +30,7 @@ type StepImageCardProps = {
   previewSrc: string | null
   fullSrc: string | null
   maxHeightClass: string
+  cursorOverlayMode?: GuideCursorOverlayMode | string | null
   onTelemetryEvent?: (
     eventType:
       | 'workflow_doc_focus_applied'
@@ -54,10 +60,12 @@ export default function StepImageCard({
   previewSrc,
   fullSrc,
   maxHeightClass,
+  cursorOverlayMode,
   onTelemetryEvent,
 }: StepImageCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const focusTelemetryKeyRef = useRef<string | null>(null)
+  const resolvedCursorOverlayMode = resolveGuideCursorOverlayMode(cursorOverlayMode)
 
   const previewImage = useMemo(
     () =>
@@ -77,6 +85,15 @@ export default function StepImageCard({
   const radar = image?.radar ?? null
   const width = image?.width ?? fullImage?.width ?? previewImage?.width ?? null
   const height = image?.height ?? fullImage?.height ?? previewImage?.height ?? null
+  const cursorTrack = useMemo(
+    () =>
+      resolveRenderableCursorTrack({
+        cursorTrack: image?.cursor_track ?? null,
+        width,
+        height,
+      }),
+    [height, image?.cursor_track, width]
+  )
   const radarPercent = useMemo(
     () =>
       shouldRenderStepRadar({
@@ -113,9 +130,11 @@ export default function StepImageCard({
     zoomScale: focusTransform.zoomScale,
   })
   const shouldApplyFocus = fallbackReason === null
-  const showRadar = Boolean(
-    radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null)
-  )
+  const showCapturedCursor = resolvedCursorOverlayMode === 'captured_cursor' && Boolean(cursorTrack)
+  const showRadar =
+    (resolvedCursorOverlayMode === 'radar_dot' ||
+      (resolvedCursorOverlayMode === 'captured_cursor' && !showCapturedCursor)) &&
+    Boolean(radarPercent && (!shouldApplyFocus || focusTransform.radarPercentInCrop !== null))
 
   const hasImage = Boolean(
     previewSrc && fullSrc && (previewImage?.downloadUrl || fullImage?.downloadUrl || image?.download_url)
@@ -183,6 +202,8 @@ export default function StepImageCard({
           sourceImageSize={{ width: imageWidth, height: imageHeight }}
           radarPercent={radarPercent}
           showRadar={showRadar}
+          cursorTrack={cursorTrack}
+          showCapturedCursor={showCapturedCursor}
           active
           autoFocusOnActive={shouldApplyFocus}
           compact
@@ -208,6 +229,7 @@ export default function StepImageCard({
         step={step}
         fullSrc={fullSrc}
         image={image}
+        cursorOverlayMode={resolvedCursorOverlayMode}
       />
     </>
   )

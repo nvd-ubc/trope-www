@@ -27,6 +27,10 @@ import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, GuidePageSkeleton, PageHeader } from '@/components/dashboard'
 import {
+  resolveGuideCursorOverlayMode,
+  type GuideCursorOverlayMode,
+} from '@/lib/guide-cursor'
+import {
   buildSaveFingerprint,
   createDraftStep,
   normalizeSpecForPublish,
@@ -121,6 +125,7 @@ type GuideSpec = {
   workflow_title: string
   app: string
   version: string
+  cursor_overlay_mode?: GuideCursorOverlayMode | string | null
   variables?: GuideVariable[]
   steps: GuideStep[]
   [key: string]: unknown
@@ -337,6 +342,11 @@ const cloneRedactionMaskMap = (
   JSON.parse(JSON.stringify(masksByStepId)) as Record<string, GuideRedactionMask[]>
 
 type SaveVisibility = 'org' | 'private'
+const CURSOR_OVERLAY_LABELS: Record<GuideCursorOverlayMode, string> = {
+  radar_dot: 'Radar dot overlay',
+  captured_cursor: 'Captured cursor replay',
+  none: 'No cursor overlay',
+}
 
 const EMPTY_REDACTION_FINGERPRINT = stableRedactionFingerprint({})
 
@@ -384,6 +394,7 @@ const StepImageCard = ({
   onStepTitleChange,
   onStepWhyChange,
   onStepInstructionChange,
+  cursorOverlayMode,
   showFocusEditor,
   onToggleFocusEditor,
   onScreenshotOverridesSave,
@@ -415,6 +426,7 @@ const StepImageCard = ({
   onStepTitleChange: (value: string) => void
   onStepWhyChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
+  cursorOverlayMode: GuideCursorOverlayMode
   showFocusEditor: boolean
   onToggleFocusEditor: () => void
   onScreenshotOverridesSave: (overrides: GuideStepScreenshotOverridesV1) => void
@@ -516,6 +528,7 @@ const StepImageCard = ({
         image={image}
         previewSrc={previewSrc}
         fullSrc={fullSrc}
+        cursorOverlayMode={cursorOverlayMode}
         imageMaxHeightClass="max-h-[27rem]"
         onTelemetryEvent={sendGuideEvent}
         onCopyStepLink={onCopyStepLink}
@@ -589,6 +602,7 @@ const StepImageCard = ({
             image={image}
             previewSrc={previewSrc}
             fullSrc={fullSrc}
+            cursorOverlayMode={cursorOverlayMode}
             maxHeightClass="max-h-[27rem]"
             onTelemetryEvent={sendGuideEvent}
           />
@@ -1003,6 +1017,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   }, [orgId, selectedVersionId, workflow?.title, workflowId])
 
   const visibleSpec = isEditing ? draftSpec : spec
+  const visibleCursorOverlayMode = resolveGuideCursorOverlayMode(visibleSpec?.cursor_overlay_mode)
 
   const derivedStepImages = useMemo(() => {
     const steps = Array.isArray(visibleSpec?.steps) ? visibleSpec.steps : []
@@ -1206,6 +1221,14 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       const steps = [...prev.steps]
       steps[index] = updater(steps[index] as GuideStep)
       return { ...prev, steps }
+    })
+  }
+
+  const setDraftCursorOverlayMode = (mode: GuideCursorOverlayMode) => {
+    setDraftSpec((prev) => {
+      if (!prev) return prev
+      if (resolveGuideCursorOverlayMode(prev.cursor_overlay_mode) === mode) return prev
+      return { ...prev, cursor_overlay_mode: mode }
     })
   }
 
@@ -1530,26 +1553,50 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
 
       {isAdmin && isEditing && (
         <Card className="p-4 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="space-y-1.5">
               <div className="text-sm font-semibold text-slate-900">Save target</div>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="text-xs text-slate-500">
                 Private drafts are visible only to you until published to the org.
               </p>
+              <Select
+                value={saveVisibility}
+                onValueChange={(value: SaveVisibility) => setSaveVisibility(value)}
+                disabled={saving}
+              >
+                <SelectTrigger className="h-9 min-w-[15rem] bg-white text-sm text-slate-800 shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="org">Org release</SelectItem>
+                  <SelectItem value="private">Private draft (only me)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={saveVisibility}
-              onValueChange={(value: SaveVisibility) => setSaveVisibility(value)}
-              disabled={saving}
-            >
-              <SelectTrigger className="h-9 min-w-[15rem] bg-white text-sm text-slate-800 shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="org">Org release</SelectItem>
-                <SelectItem value="private">Private draft (only me)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5">
+              <div className="text-sm font-semibold text-slate-900">Cursor overlay</div>
+              <p className="text-xs text-slate-500">
+                Saved per workflow version and shown to everyone who opens this guide.
+              </p>
+              <Select
+                value={visibleCursorOverlayMode}
+                onValueChange={(value) =>
+                  setDraftCursorOverlayMode(resolveGuideCursorOverlayMode(value))
+                }
+                disabled={saving}
+              >
+                <SelectTrigger className="h-9 min-w-[15rem] bg-white text-sm text-slate-800 shadow-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="radar_dot">{CURSOR_OVERLAY_LABELS.radar_dot}</SelectItem>
+                  <SelectItem value="captured_cursor">
+                    {CURSOR_OVERLAY_LABELS.captured_cursor}
+                  </SelectItem>
+                  <SelectItem value="none">{CURSOR_OVERLAY_LABELS.none}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </Card>
       )}
@@ -1670,6 +1717,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                         instructions: value,
                       }))
                     }
+                    cursorOverlayMode={visibleCursorOverlayMode}
                     showFocusEditor={openFocusEditorStepId === step.id}
                     onToggleFocusEditor={() => {
                       if (!isEditing) return

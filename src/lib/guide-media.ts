@@ -30,6 +30,35 @@ export type GuideMediaRenderHints = {
   recommended_focus_radius_px?: number | null
 }
 
+type GuideMediaCursorTrackKind = 'move' | 'mouse_down' | 'mouse_up'
+
+export type GuideMediaCursorTrackPoint = {
+  t_ms: number
+  x: number
+  y: number
+  kind?: GuideMediaCursorTrackKind | string | null
+}
+
+export type GuideMediaCursorTrack = {
+  coordinate_space: 'step_image_pixels_v1' | string
+  duration_ms?: number | null
+  sample_rate_hz?: number | null
+  points: GuideMediaCursorTrackPoint[]
+}
+
+export type GuideMediaRenderableCursorTrackPoint = {
+  tMs: number
+  leftPercent: number
+  topPercent: number
+  kind: GuideMediaCursorTrackKind
+}
+
+export type GuideMediaRenderableCursorTrack = {
+  durationMs: number
+  sampleRateHz: number | null
+  points: GuideMediaRenderableCursorTrackPoint[]
+}
+
 type GuideStepLike = {
   kind?: string | null
   expected_event?: unknown
@@ -53,6 +82,7 @@ export type GuideMediaStepImage = {
   capture_t_s?: number | null
   capture_t_source?: string | null
   radar?: GuideMediaRadar | null
+  cursor_track?: GuideMediaCursorTrack | null
   render_hints?: GuideMediaRenderHints | null
   variants?: {
     preview?: GuideMediaVariantDescriptor | null
@@ -80,6 +110,127 @@ const toPositiveFiniteNumber = (value: unknown): number | null => {
     return null
   }
   return value
+}
+
+const clampPercent = (value: number) => Math.max(0, Math.min(100, value))
+
+const normalizeCursorTrackKind = (value: unknown): GuideMediaCursorTrackKind => {
+  const normalized = isNonEmptyString(value) ? value.trim().toLowerCase() : ''
+  if (normalized === 'mouse_down') return 'mouse_down'
+  if (normalized === 'mouse_up') return 'mouse_up'
+  return 'move'
+}
+
+export const resolveRenderableCursorTrack = (params: {
+  cursorTrack: GuideMediaCursorTrack | null | undefined
+  width: number | null
+  height: number | null
+}): GuideMediaRenderableCursorTrack | null => {
+  const cursorTrack = params.cursorTrack
+  if (!cursorTrack) return null
+  if (cursorTrack.coordinate_space !== 'step_image_pixels_v1') return null
+
+  const width = toPositiveFiniteNumber(params.width)
+  const height = toPositiveFiniteNumber(params.height)
+  if (width === null || height === null) return null
+
+  const rawPoints = Array.isArray(cursorTrack.points) ? cursorTrack.points : []
+  const points = rawPoints
+    .map((point): GuideMediaRenderableCursorTrackPoint | null => {
+      const tMs = typeof point?.t_ms === 'number' && Number.isFinite(point.t_ms) ? point.t_ms : null
+      const x = typeof point?.x === 'number' && Number.isFinite(point.x) ? point.x : null
+      const y = typeof point?.y === 'number' && Number.isFinite(point.y) ? point.y : null
+      if (tMs === null || tMs < 0 || x === null || y === null) return null
+      if (x < 0 || x > width || y < 0 || y > height) return null
+      return {
+        tMs,
+        leftPercent: clampPercent((x / width) * 100),
+        topPercent: clampPercent((y / height) * 100),
+        kind: normalizeCursorTrackKind(point.kind),
+      }
+    })
+    .filter((point): point is GuideMediaRenderableCursorTrackPoint => Boolean(point))
+    .sort((lhs, rhs) => lhs.tMs - rhs.tMs)
+
+  if (points.length === 0) return null
+
+  const deduped: GuideMediaRenderableCursorTrackPoint[] = []
+  for (const point of points) {
+    const previous = deduped.at(-1)
+    if (
+      previous &&
+      previous.tMs === point.tMs &&
+      previous.leftPercent === point.leftPercent &&
+      previous.topPercent === point.topPercent &&
+      previous.kind === point.kind
+    ) {
+      continue
+    }
+    deduped.push(point)
+  }
+
+  const lastPointTime = deduped.at(-1)?.tMs ?? 0
+  const durationMs = Math.max(
+    1,
+    toPositiveFiniteNumber(cursorTrack.duration_ms) ?? lastPointTime
+  )
+  const sampleRateHz = toPositiveFiniteNumber(cursorTrack.sample_rate_hz)
+
+  return {
+    durationMs: Math.max(durationMs, lastPointTime),
+    sampleRateHz,
+    points: deduped,
+  }
+}
+
+export const sampleRenderableCursorTrackPoint = (
+  track: GuideMediaRenderableCursorTrack,
+  elapsedMs: number
+): GuideMediaRenderableCursorTrackPoint | null => {
+  const points = track.points
+  if (points.length === 0) return null
+  if (points.length === 1) return points[0]
+
+  const elapsed = Number.isFinite(elapsedMs) ? elapsedMs : 0
+  if (elapsed <= points[0]!.tMs) return points[0]
+
+  const lastPoint = points[points.length - 1]!
+  if (elapsed >= lastPoint.tMs) return lastPoint
+
+  for (let index = 1; index < points.length; index += 1) {
+    const next = points[index]!
+    if (elapsed > next.tMs) continue
+    const previous = points[index - 1]!
+    const span = next.tMs - previous.tMs
+    if (span <= 0) return next
+    const ratio = (elapsed - previous.tMs) / span
+    return {
+      tMs: elapsed,
+      leftPercent: previous.leftPercent + (next.leftPercent - previous.leftPercent) * ratio,
+      topPercent: previous.topPercent + (next.topPercent - previous.topPercent) * ratio,
+      kind: ratio >= 0.9 ? next.kind : previous.kind,
+    }
+  }
+
+  return lastPoint
+}
+
+export const resolveCursorTrackPulseKind = (
+  track: GuideMediaRenderableCursorTrack,
+  elapsedMs: number,
+  pulseWindowMs = 120
+): 'mouse_down' | 'mouse_up' | null => {
+  if (!Number.isFinite(elapsedMs)) return null
+  const lowerBound = elapsedMs - Math.max(0, pulseWindowMs)
+  for (let index = track.points.length - 1; index >= 0; index -= 1) {
+    const point = track.points[index]!
+    if (point.tMs > elapsedMs) continue
+    if (point.tMs < lowerBound) break
+    if (point.kind === 'mouse_down' || point.kind === 'mouse_up') {
+      return point.kind
+    }
+  }
+  return null
 }
 
 const getVariantOrder = (
