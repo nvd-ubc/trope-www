@@ -1,3 +1,8 @@
+import {
+  resolveGuideCursorOverlayMode,
+  type GuideCursorOverlayMode,
+} from './guide-cursor'
+
 export type GuideEditorRadar = {
   x: number
   y: number
@@ -23,6 +28,7 @@ export type GuideEditorSpec = {
   workflow_title: string
   app: string
   version: string
+  cursor_overlay_mode?: GuideCursorOverlayMode | string | null
   steps: GuideEditorStep[]
   [key: string]: unknown
 }
@@ -164,6 +170,7 @@ export const normalizeSpecForPublish = (
       typeof spec.version === 'string' && spec.version.trim()
         ? spec.version.trim()
         : fallbackVersion,
+    cursor_overlay_mode: resolveGuideCursorOverlayMode(spec.cursor_overlay_mode),
     steps,
   }
 }
