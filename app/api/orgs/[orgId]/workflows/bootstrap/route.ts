@@ -30,6 +30,7 @@ const emptyResult = (): InternalJsonFetchResult<{ members: unknown[] }> => ({
   data: { members: [] },
   requestId: null,
   serverTiming: null,
+  setCookies: [],
 })
 
 export const runtime = 'nodejs'
