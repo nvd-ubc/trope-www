@@ -405,6 +405,10 @@ const StepImageCard = ({
   const calloutStyle = resolveCalloutStyle(step)
   const calloutTone = calloutToneClass(calloutStyle)
   const whyText = resolveStepWhyText(step)
+  const instructionText =
+    typeof step.instructions === 'string' && step.instructions.trim().length > 0
+      ? step.instructions.trim()
+      : step.title
 
   const previewSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
@@ -468,8 +472,14 @@ const StepImageCard = ({
                   />
                 </InputGroup>
               ) : (
-                <div className="truncate text-[clamp(1.15rem,1.7vw,1.5rem)] font-semibold leading-tight text-slate-900">
-                  {step.title}
+                <div className="space-y-1">
+                  <p className="line-clamp-2 text-base font-medium leading-snug text-slate-900">
+                    {instructionText}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    <span className="font-semibold text-slate-700">Why:</span>{' '}
+                    {whyText || <span className="italic text-slate-500">Not provided in this guide step.</span>}
+                  </p>
                 </div>
               )}
             </div>
@@ -551,14 +561,6 @@ const StepImageCard = ({
           rows={3}
           placeholder="Describe the action clearly."
         />
-      ) : !isManual ? (
-        <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
-      ) : null}
-      {!isEditing ? (
-        <p className="mt-2 text-sm text-slate-600">
-          <span className="font-semibold text-slate-700">Why:</span>{' '}
-          {whyText || <span className="italic text-slate-500">Not provided in this guide step.</span>}
-        </p>
       ) : null}
     </div>
   )
