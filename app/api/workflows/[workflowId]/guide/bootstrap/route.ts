@@ -23,6 +23,9 @@ type VersionsPayload = {
 }
 
 type OrgPayload = {
+  org?: {
+    name?: string | null
+  } | null
   membership?: {
     role?: string | null
   } | null
@@ -150,6 +153,7 @@ export async function GET(
 
   const response = NextResponse.json({
     orgId,
+    orgName: orgResult.ok ? orgResult.data?.org?.name?.trim() || null : null,
     workflow: workflowResult.data,
     versions: sortedVersions,
     membershipRole: orgResult.ok ? orgResult.data?.membership?.role ?? null : null,
