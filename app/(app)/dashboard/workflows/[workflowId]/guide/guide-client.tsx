@@ -29,6 +29,7 @@ import {
   buildSaveFingerprint,
   createDraftStep,
   normalizeSpecForPublish,
+  setStepWhy,
 } from '@/lib/guide-editor'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
@@ -1517,10 +1518,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                       }))
                     }
                     onStepWhyChange={(value) =>
-                      updateDraftStep(index, (current) => ({
-                        ...current,
-                        why: value,
-                      }))
+                      updateDraftStep(index, (current) => setStepWhy(current, value))
                     }
                     onStepInstructionChange={(value) =>
                       updateDraftStep(index, (current) => ({
