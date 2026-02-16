@@ -31,6 +31,7 @@ import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
 import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
+import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 import { computeDurationPercentileMs, summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
 
@@ -422,15 +423,23 @@ export default function WorkflowDetailClient({
     [versions, selectedVersionId]
   )
   const stepImageMap = useMemo(() => {
+    const steps = Array.isArray(spec?.steps) ? spec.steps : []
     const map: Record<string, StepImage> = {}
     const images = versionDetail?.guide_media?.step_images ?? []
-    for (const image of images) {
-      if (image?.step_id) {
-        map[image.step_id] = image
-      }
+    const derived = deriveGuideStepImagesWithFocus({
+      steps: steps as unknown as Array<{
+        id: string
+        kind?: string | null
+        expected_event?: unknown
+        [key: string]: unknown
+      }>,
+      stepImages: images,
+    })
+    for (const [stepId, entry] of Object.entries(derived)) {
+      map[stepId] = entry.image
     }
     return map
-  }, [versionDetail?.guide_media?.step_images])
+  }, [spec?.steps, versionDetail?.guide_media?.step_images])
   const cursorOverlayMode = resolveGuideCursorOverlayMode(spec?.cursor_overlay_mode)
   const guidePageHref = useMemo(() => {
     const base = `/dashboard/workflows/${encodeURIComponent(workflowId)}/guide`

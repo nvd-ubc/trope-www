@@ -21,6 +21,7 @@ import RedactionMaskEditor, {
   type GuideRedactionMask,
   type GuideRedactionMaskKind,
 } from '@/components/workflow-guide/redaction-mask-editor'
+import StepImageFocusEditorDialog from '@/components/workflow-guide/step-image-focus-editor-dialog'
 import GuideStepImageCard from '@/components/workflow-guide/step-image-card'
 import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
@@ -35,6 +36,12 @@ import {
   normalizeSpecForPublish,
   setStepWhy,
 } from '@/lib/guide-editor'
+import {
+  deriveGuideStepImagesWithFocus,
+  readStepScreenshotOverridesV1,
+  type DerivedGuideStepImage,
+  type GuideStepScreenshotOverridesV1,
+} from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
 type WorkflowDefinition = {
@@ -373,6 +380,8 @@ const StepImageCard = ({
   step,
   index,
   image,
+  derivedFocusSource,
+  clampedFromStepNumber,
   isEditing,
   canMoveUp,
   canMoveDown,
@@ -386,6 +395,10 @@ const StepImageCard = ({
   onStepWhyChange,
   onStepInstructionChange,
   cursorOverlayMode,
+  showFocusEditor,
+  onToggleFocusEditor,
+  onScreenshotOverridesSave,
+  onScreenshotOverridesReset,
   redactionMasks,
   lockedMaskIds,
   onRedactionMasksChange,
@@ -399,6 +412,8 @@ const StepImageCard = ({
   step: GuideStep
   index: number
   image: StepImage | null
+  derivedFocusSource: DerivedGuideStepImage['focusSource'] | null
+  clampedFromStepNumber: number | null
   isEditing: boolean
   canMoveUp: boolean
   canMoveDown: boolean
@@ -412,6 +427,10 @@ const StepImageCard = ({
   onStepWhyChange: (value: string) => void
   onStepInstructionChange: (value: string) => void
   cursorOverlayMode: GuideCursorOverlayMode
+  showFocusEditor: boolean
+  onToggleFocusEditor: () => void
+  onScreenshotOverridesSave: (overrides: GuideStepScreenshotOverridesV1) => void
+  onScreenshotOverridesReset: () => void
   redactionMasks: GuideRedactionMask[]
   lockedMaskIds: string[]
   onRedactionMasksChange: (masks: GuideRedactionMask[]) => void
@@ -426,6 +445,24 @@ const StepImageCard = ({
     typeof step.instructions === 'string' && step.instructions.trim().length > 0
       ? step.instructions.trim()
       : step.title
+
+  const screenshotOverrides = readStepScreenshotOverridesV1(step)
+
+  const toPositiveFinite = (value: unknown): number | null =>
+    typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
+
+  const resolvedImageWidth =
+    toPositiveFinite(image?.width) ??
+    toPositiveFinite(image?.variants?.full?.width) ??
+    toPositiveFinite(image?.variants?.preview?.width) ??
+    null
+  const resolvedImageHeight =
+    toPositiveFinite(image?.height) ??
+    toPositiveFinite(image?.variants?.full?.height) ??
+    toPositiveFinite(image?.variants?.preview?.height) ??
+    null
+  const imageWidth = resolvedImageWidth ?? 1
+  const imageHeight = resolvedImageHeight ?? 1
 
   const previewSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
@@ -443,6 +480,19 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
+  const initialCursorAuto =
+    radar &&
+    radar.coordinate_space === 'step_image_pixels_v1' &&
+    isFiniteNumber(radar.x) &&
+    isFiniteNumber(radar.y) &&
+    resolvedImageWidth &&
+    resolvedImageHeight
+      ? {
+          x: Math.max(0, Math.min(1, radar.x / resolvedImageWidth)),
+          y: Math.max(0, Math.min(1, radar.y / resolvedImageHeight)),
+        }
+      : null
+
   const sendGuideEvent = (
     eventType:
       | 'workflow_doc_focus_applied'
@@ -564,12 +614,47 @@ const StepImageCard = ({
           )}
 
           {fullSrc && (
-            <div className="mt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={onToggleFocusEditor}>
+                {showFocusEditor ? 'Hide focus editor' : 'Edit focus'}
+              </Button>
               <Button variant="outline" size="sm" onClick={onToggleRedactionEditor}>
                 {showRedactionEditor ? 'Hide redaction editor' : 'Edit redactions'}
               </Button>
             </div>
           )}
+
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge
+              variant={
+                derivedFocusSource === 'manual_override'
+                  ? 'info'
+                  : derivedFocusSource === 'clamped_click'
+                    ? 'warning'
+                    : derivedFocusSource === 'center_fallback'
+                      ? 'outline'
+                      : 'neutral'
+              }
+              className="text-[11px]"
+            >
+              Focus:{' '}
+              {derivedFocusSource === 'manual_override'
+                ? 'manual'
+                : derivedFocusSource === 'clamped_click'
+                  ? 'clamped'
+                  : derivedFocusSource === 'center_fallback'
+                    ? 'fallback'
+                    : 'auto'}
+              {derivedFocusSource === 'clamped_click' && clampedFromStepNumber
+                ? ` (from step ${clampedFromStepNumber})`
+                : ''}
+            </Badge>
+            {screenshotOverrides?.cursor?.point_unit && (
+              <Badge variant="outline" className="text-[11px]">
+                Cursor override
+              </Badge>
+            )}
+          </div>
 
           {fullSrc && showRedactionEditor && (
             <RedactionMaskEditor
@@ -577,6 +662,24 @@ const StepImageCard = ({
               masks={redactionMasks}
               lockedMaskIds={lockedMaskIds}
               onChange={onRedactionMasksChange}
+            />
+          )}
+
+          {fullSrc && showFocusEditor && (
+            <StepImageFocusEditorDialog
+              open={showFocusEditor}
+              onOpenChange={(next) => {
+                if (!next) onToggleFocusEditor()
+              }}
+              stepTitle={step.title}
+              imageSrc={fullSrc}
+              imageWidth={imageWidth}
+              imageHeight={imageHeight}
+              initialRenderHints={image?.render_hints ?? null}
+              initialCursorAuto={initialCursorAuto}
+              initialOverrides={screenshotOverrides}
+              onSave={onScreenshotOverridesSave}
+              onReset={onScreenshotOverridesReset}
             />
           )}
         </>
@@ -644,6 +747,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
   const redactionDraftTouchedRef = useRef(false)
   const [activeStepId, setActiveStepId] = useState<string | null>(null)
   const [openRedactionEditorStepId, setOpenRedactionEditorStepId] = useState<string | null>(null)
+  const [openFocusEditorStepId, setOpenFocusEditorStepId] = useState<string | null>(null)
   const stepCardRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
@@ -725,6 +829,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
           setSaveVisibility('org')
           setOpenRedactionEditorStepId(null)
+          setOpenFocusEditorStepId(null)
           redactionDraftTouchedRef.current = false
           setIsEditing(false)
           setSpecError(null)
@@ -738,6 +843,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
           setDraftRedactionMasksByStepId({})
           setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
           setOpenRedactionEditorStepId(null)
+          setOpenFocusEditorStepId(null)
           redactionDraftTouchedRef.current = false
           setSpecError(payload.specError ?? null)
         }
@@ -787,6 +893,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
       setSaveVisibility('org')
       setOpenRedactionEditorStepId(null)
+      setOpenFocusEditorStepId(null)
       redactionDraftTouchedRef.current = false
       return
     }
@@ -853,6 +960,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
         setOpenRedactionEditorStepId(null)
+        setOpenFocusEditorStepId(null)
         redactionDraftTouchedRef.current = false
         setIsEditing(false)
 
@@ -894,6 +1002,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         setBaselineRedactionFingerprint(EMPTY_REDACTION_FINGERPRINT)
         setSaveVisibility('org')
         setOpenRedactionEditorStepId(null)
+        setOpenFocusEditorStepId(null)
         redactionDraftTouchedRef.current = false
         setSpecError(err instanceof Error ? err.message : 'Unable to load guide spec.')
       } finally {
@@ -907,19 +1016,22 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     }
   }, [orgId, selectedVersionId, workflow?.title, workflowId])
 
-  const stepImageMap = useMemo(() => {
-    const map: Record<string, StepImage> = {}
-    const images = versionDetail?.guide_media?.step_images ?? []
-    for (const image of images) {
-      if (image?.step_id) {
-        map[image.step_id] = image
-      }
-    }
-    return map
-  }, [versionDetail?.guide_media?.step_images])
-
   const visibleSpec = isEditing ? draftSpec : spec
   const visibleCursorOverlayMode = resolveGuideCursorOverlayMode(visibleSpec?.cursor_overlay_mode)
+
+  const derivedStepImages = useMemo(() => {
+    const steps = Array.isArray(visibleSpec?.steps) ? visibleSpec.steps : []
+    const stepImages = versionDetail?.guide_media?.step_images ?? []
+    return deriveGuideStepImagesWithFocus({
+      steps: steps as unknown as Array<{
+        id: string
+        kind?: string | null
+        expected_event?: unknown
+        [key: string]: unknown
+      }>,
+      stepImages,
+    })
+  }, [versionDetail?.guide_media?.step_images, visibleSpec?.steps])
 
   const draftSpecIsDirty = useMemo(() => {
     if (!isEditing || !draftSpec || !baselineFingerprint) return false
@@ -949,6 +1061,17 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     [visibleSpec?.steps]
   )
   const filteredStepEntries = stepEntries
+  const stepNumberById = useMemo(() => {
+    const map: Record<string, number> = {}
+    const steps = visibleSpec?.steps ?? []
+    for (let index = 0; index < steps.length; index += 1) {
+      const step = steps[index]
+      const stepId = typeof step?.id === 'string' ? step.id : null
+      if (!stepId) continue
+      map[stepId] = index + 1
+    }
+    return map
+  }, [visibleSpec?.steps])
 
   useEffect(() => {
     if (!isEditing) {
@@ -961,6 +1084,18 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
       setOpenRedactionEditorStepId(null)
     }
   }, [draftSpec?.steps, isEditing, openRedactionEditorStepId])
+
+  useEffect(() => {
+    if (!isEditing) {
+      setOpenFocusEditorStepId(null)
+      return
+    }
+    if (!openFocusEditorStepId) return
+    const steps = Array.isArray(draftSpec?.steps) ? draftSpec.steps : []
+    if (!steps.some((step) => step.id === openFocusEditorStepId)) {
+      setOpenFocusEditorStepId(null)
+    }
+  }, [draftSpec?.steps, isEditing, openFocusEditorStepId])
 
   const setStepHash = (stepId: string) => {
     if (typeof window === 'undefined') return
@@ -1124,6 +1259,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
         return next
       })
       setOpenRedactionEditorStepId((current) => (current === deletedStepId ? null : current))
+      setOpenFocusEditorStepId((current) => (current === deletedStepId ? null : current))
     }
   }
 
@@ -1148,6 +1284,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     setBaselineRedactionFingerprint(stableRedactionFingerprint(normalizedRedactionMasksByStepId))
     setSaveVisibility('org')
     setOpenRedactionEditorStepId(null)
+    setOpenFocusEditorStepId(null)
     redactionDraftTouchedRef.current = false
     setSaveError(null)
     setSaveMessage(null)
@@ -1177,6 +1314,7 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
     }
     setSaveVisibility('org')
     setOpenRedactionEditorStepId(null)
+    setOpenFocusEditorStepId(null)
     redactionDraftTouchedRef.current = false
     setSaveError(null)
     setSaveMessage(null)
@@ -1548,7 +1686,13 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                     versionId={selectedVersionId}
                     step={step}
                     index={index}
-                    image={stepImageMap[step.id] ?? null}
+                    image={derivedStepImages[step.id]?.image ?? null}
+                    derivedFocusSource={derivedStepImages[step.id]?.focusSource ?? null}
+                    clampedFromStepNumber={
+                      derivedStepImages[step.id]?.clampedFromStepId
+                        ? stepNumberById[derivedStepImages[step.id]?.clampedFromStepId ?? ''] ?? null
+                        : null
+                    }
                     isEditing={isEditing}
                     canMoveUp={index > 0}
                     canMoveDown={index < visibleSpec.steps.length - 1}
@@ -1574,9 +1718,31 @@ export default function WorkflowGuideClient({ workflowId }: { workflowId: string
                       }))
                     }
                     cursorOverlayMode={visibleCursorOverlayMode}
+                    showFocusEditor={openFocusEditorStepId === step.id}
+                    onToggleFocusEditor={() => {
+                      if (!isEditing) return
+                      setOpenRedactionEditorStepId(null)
+                      setOpenFocusEditorStepId((current) => (current === step.id ? null : step.id))
+                    }}
+                    onScreenshotOverridesSave={(overrides) => {
+                      if (!isEditing) return
+                      updateDraftStep(index, (current) => ({
+                        ...current,
+                        screenshot_overrides: overrides,
+                      }))
+                    }}
+                    onScreenshotOverridesReset={() => {
+                      if (!isEditing) return
+                      updateDraftStep(index, (current) => {
+                        const next = { ...current } as GuideStep
+                        delete (next as Record<string, unknown>).screenshot_overrides
+                        return next
+                      })
+                    }}
                     showRedactionEditor={openRedactionEditorStepId === step.id}
                     onToggleRedactionEditor={() => {
                       if (!isEditing) return
+                      setOpenFocusEditorStepId(null)
                       setOpenRedactionEditorStepId((current) =>
                         current === step.id ? null : step.id
                       )
