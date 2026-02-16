@@ -58,6 +58,20 @@ const toUnitPoint = (value: unknown): GuideScreenshotUnitPoint | null => {
 const toPositiveFiniteNumber = (value: unknown): number | null =>
   typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
 
+const getStepImageDimensions = (image: GuideMediaStepImage): { width: number | null; height: number | null } => {
+  const width =
+    toPositiveFiniteNumber(image.width) ??
+    toPositiveFiniteNumber(image.variants?.full?.width) ??
+    toPositiveFiniteNumber(image.variants?.preview?.width) ??
+    null
+  const height =
+    toPositiveFiniteNumber(image.height) ??
+    toPositiveFiniteNumber(image.variants?.full?.height) ??
+    toPositiveFiniteNumber(image.variants?.preview?.height) ??
+    null
+  return { width, height }
+}
+
 export const readStepScreenshotOverridesV1 = (step: unknown): GuideStepScreenshotOverridesV1 | null => {
   if (!step || typeof step !== 'object' || Array.isArray(step)) return null
   const record = step as Record<string, unknown>
@@ -255,8 +269,7 @@ export const deriveGuideStepImagesWithFocus = (params: {
 
     const image = imageMap[stepId]
     if (!image) continue
-    const width = toPositiveFiniteNumber(image.width)
-    const height = toPositiveFiniteNumber(image.height)
+    const { width, height } = getStepImageDimensions(image)
     if (width === null || height === null) continue
 
     const overrides = readStepScreenshotOverridesV1(step)
@@ -287,8 +300,7 @@ export const deriveGuideStepImagesWithFocus = (params: {
     const image = imageMap[stepId]
     if (!image) continue
 
-    const width = toPositiveFiniteNumber(image.width)
-    const height = toPositiveFiniteNumber(image.height)
+    const { width, height } = getStepImageDimensions(image)
     if (width === null || height === null) {
       derived[stepId] = {
         image,
