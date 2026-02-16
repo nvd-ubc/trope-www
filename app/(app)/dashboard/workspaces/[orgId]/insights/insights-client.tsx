@@ -303,9 +303,10 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
             </div>
           )}
           {docInsights && (
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <MetricCard label="Views" value={docInsights.summary?.views ?? 0} />
-              <MetricCard label="Guided completions" value={docInsights.summary?.guided_completions ?? 0} />
+              <MetricCard label="Run attempts" value={docInsights.summary?.guided_starts ?? 0} />
+              <MetricCard label="Runs completed" value={docInsights.summary?.guided_completions ?? 0} />
               <MetricCard label="Run success rate" value={asPercent(docInsights.summary?.run_success_rate)} />
             </div>
           )}
@@ -391,4 +392,3 @@ export default function InsightsClient({ orgId }: { orgId: string }) {
     </div>
   )
 }
-
