@@ -190,8 +190,7 @@ export default function StepImageCard({
           imageClassName={maxHeightClass}
         />
       </div>
-      <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
-        <span>Scroll to zoom, drag to pan, or use bottom-right +/-.</span>
+      <div className="mt-2 flex justify-end">
         <button
           type="button"
           className="rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"

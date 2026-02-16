@@ -28,10 +28,7 @@ import {
   createDraftStep,
   normalizeSpecForPublish,
 } from '@/lib/guide-editor'
-import {
-  formatCaptureTimestamp,
-  type GuideMediaStepImage as StepImage,
-} from '@/lib/guide-media'
+import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
 
 type WorkflowDefinition = {
   org_id: string
@@ -119,6 +116,24 @@ type GuideSpec = {
   [key: string]: unknown
 }
 
+const resolveStepWhyText = (step: GuideStep): string => {
+  const candidates = [
+    step.why,
+    step.rationale,
+    step.reason,
+    step.why_this_matters,
+    step.why_this_step,
+    step.justification,
+  ]
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim()
+      if (trimmed) return trimmed
+    }
+  }
+  return ''
+}
+
 type ArtifactsPresignResponse = {
   artifacts?: Array<{
     name?: string
@@ -146,11 +161,6 @@ type GuideBootstrapResponse = {
   guideRedactions?: GuideRedactionsDocument | null
   specError?: string | null
   error?: string
-}
-
-const formatKind = (kind?: string | null) => {
-  if (!kind) return null
-  return kind.replace(/_/g, ' ')
 }
 
 const resolveCalloutStyle = (step: GuideStep): 'tip' | 'note' | 'alert' => {
@@ -391,37 +401,10 @@ const StepImageCard = ({
   showRedactionEditor: boolean
   onToggleRedactionEditor: () => void
 }) => {
-  const kindLabel = formatKind(step.kind)
   const isManual = (step.kind ?? '').trim().toLowerCase() === 'manual'
   const calloutStyle = resolveCalloutStyle(step)
   const calloutTone = calloutToneClass(calloutStyle)
-  const anchorText = (step.anchors?.text ?? [])
-    .map((anchor) => {
-      if (anchor && typeof anchor === 'object' && !Array.isArray(anchor)) {
-        const record = anchor as { string?: string }
-        return record.string
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
-  const iconText = (step.anchors?.icons ?? [])
-    .map((icon) => {
-      if (icon && typeof icon === 'object' && !Array.isArray(icon)) {
-        const record = icon as { description?: string }
-        return record.description
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
-  const layoutText = (step.anchors?.layout ?? [])
-    .map((layout) => {
-      if (layout && typeof layout === 'object' && !Array.isArray(layout)) {
-        const record = layout as { region?: string; relative_to?: string; position_hint?: string }
-        return record.region || record.relative_to || record.position_hint
-      }
-      return undefined
-    })
-    .filter((value): value is string => Boolean(value))
+  const whyText = resolveStepWhyText(step)
 
   const previewSrc = image
     ? `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
@@ -439,7 +422,6 @@ const StepImageCard = ({
     : null
 
   const radar = image?.radar ?? null
-  const captureTimestamp = formatCaptureTimestamp(image?.capture_t_s)
   const sendGuideEvent = (
     eventType:
       | 'workflow_doc_focus_applied'
@@ -469,37 +451,35 @@ const StepImageCard = ({
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <div className="text-xs uppercase tracking-wide text-slate-400">Step {index + 1}</div>
-          {isEditing ? (
-            <InputGroup className="mt-1">
-              <InputGroupInput
-                value={step.title}
-                onChange={(event) => onStepTitleChange(event.target.value)}
-                className="text-base font-semibold text-slate-900"
-                placeholder={`Step ${index + 1}`}
-              />
-            </InputGroup>
-          ) : (
-            <div className="text-base font-semibold text-slate-900">{step.title}</div>
-          )}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xl font-semibold text-[color:var(--trope-accent)]">
+              {index + 1}
+            </div>
+            <div className="min-w-0 flex-1">
+              {isEditing ? (
+                <InputGroup>
+                  <InputGroupInput
+                    value={step.title}
+                    onChange={(event) => onStepTitleChange(event.target.value)}
+                    className="h-10 text-base font-semibold text-slate-900 sm:text-lg"
+                    placeholder={`Step ${index + 1}`}
+                  />
+                </InputGroup>
+              ) : (
+                <div className="truncate text-[clamp(1.15rem,1.7vw,1.5rem)] font-semibold leading-tight text-slate-900">
+                  {step.title}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onCopyStepLink}>
             Copy step link
           </Button>
-          {kindLabel && (
-            <Badge variant="info" className="text-[10px]">
-              {kindLabel}
-            </Badge>
-          )}
-          {captureTimestamp && (
-            <Badge variant="neutral" className="text-[10px]">
-              t={captureTimestamp}
-            </Badge>
-          )}
-          {isEditing && (
+          {isEditing ? (
             <ButtonGroup>
               <Button variant="outline" size="sm" onClick={onMoveUp} disabled={!canMoveUp}>
                 Up
@@ -514,7 +494,7 @@ const StepImageCard = ({
                 Delete
               </Button>
             </ButtonGroup>
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -574,27 +554,12 @@ const StepImageCard = ({
       ) : !isManual ? (
         <p className="mt-4 text-sm text-slate-700">{step.instructions}</p>
       ) : null}
-      {step.why && <p className="mt-2 text-xs text-slate-500">{step.why}</p>}
-
-      {!isEditing && (anchorText.length > 0 || iconText.length > 0 || layoutText.length > 0) && (
-        <div className="mt-4 space-y-2 text-xs text-slate-500">
-          {anchorText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Text anchors:</span> {anchorText.join(', ')}
-            </div>
-          )}
-          {iconText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Icon anchors:</span> {iconText.join(', ')}
-            </div>
-          )}
-          {layoutText.length > 0 && (
-            <div>
-              <span className="font-semibold text-slate-600">Layout anchors:</span> {layoutText.join(', ')}
-            </div>
-          )}
-        </div>
-      )}
+      {!isEditing ? (
+        <p className="mt-2 text-sm text-slate-600">
+          <span className="font-semibold text-slate-700">Why:</span>{' '}
+          {whyText || <span className="italic text-slate-500">Not provided in this guide step.</span>}
+        </p>
+      ) : null}
     </div>
   )
 }

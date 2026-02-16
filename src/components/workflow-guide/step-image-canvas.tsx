@@ -66,6 +66,7 @@ export default function StepImageCanvas({
   const [renderedImageSize, setRenderedImageSize] = useState({ width: 0, height: 0 })
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false)
   const [isPanning, setIsPanning] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -245,6 +246,8 @@ export default function StepImageCanvas({
         className={`relative overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${compact ? 'p-1.5' : 'p-2'} focus:outline-none focus:ring-2 focus:ring-[color:var(--trope-accent)]`}
         tabIndex={0}
         onKeyDown={handleKeyboard}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         aria-label={`Step image zoom canvas at ${ariaZoom}`}
       >
         <TransformWrapper
@@ -345,7 +348,7 @@ export default function StepImageCanvas({
             </div>
           </div>
         )}
-        {transformState.scale > 1.02 && (
+        {transformState.scale > 1.02 && isHovered && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
             <div className="rounded-full bg-slate-900/80 px-3 py-1 text-xs font-medium text-white shadow-sm">
               {isPanning ? 'Panning...' : 'Drag to pan'}
