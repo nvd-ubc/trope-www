@@ -29,16 +29,12 @@ import {
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
 import WorkflowRunStepDetails from '@/components/workflow-run-step-details'
 import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
+import { useRunStepDetails } from '@/lib/client/use-run-step-details'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
 import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
 import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
-import {
-  normalizeStepMetricsPayload,
-  type RunStepMetricsResponse,
-  type WorkflowRunStepMetricsPayload,
-} from '@/lib/workflow-run-step-metrics'
 import { computeDurationPercentileMs, summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
 
 type WorkflowDefinition = {
@@ -320,13 +316,25 @@ export default function WorkflowDetailClient({
   const [runsError, setRunsError] = useState<string | null>(null)
   const [runsRequestId, setRunsRequestId] = useState<string | null>(null)
   const [runsLoading, setRunsLoading] = useState(false)
-  const [expandedRunIds, setExpandedRunIds] = useState<string[]>([])
-  const [runStepDetails, setRunStepDetails] = useState<Record<string, WorkflowRunStepMetricsPayload>>(
-    {}
-  )
-  const [runStepLoading, setRunStepLoading] = useState<Record<string, boolean>>({})
-  const [runStepErrors, setRunStepErrors] = useState<Record<string, string | null>>({})
-  const [runStepRequestIds, setRunStepRequestIds] = useState<Record<string, string | null>>({})
+  const {
+    expandedRunIdSet,
+    runStepDetails,
+    runStepLoading,
+    runStepErrors,
+    runStepRequestIds,
+    setVisibleRunIds,
+    loadRunStepDetails,
+    toggleRunDetails,
+  } = useRunStepDetails({
+    orgId,
+    onUnauthorized: () => {
+      router.replace(
+        `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}`
+      )
+    },
+  })
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
   const [settingsError, setSettingsError] = useState<string | null>(null)
@@ -418,9 +426,8 @@ export default function WorkflowDetailClient({
   }, [orgId, workflowId, router])
 
   useEffect(() => {
-    const runIds = new Set(runs.map((run) => run.run_id))
-    setExpandedRunIds((prev) => prev.filter((runId) => runIds.has(runId)))
-  }, [runs])
+    setVisibleRunIds(runs.map((run) => run.run_id))
+  }, [runs, setVisibleRunIds])
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
 
@@ -800,63 +807,6 @@ export default function WorkflowDetailClient({
     }
   }
 
-  const loadRunStepDetails = async (runId: string) => {
-    setRunStepLoading((prev) => ({ ...prev, [runId]: true }))
-    setRunStepErrors((prev) => ({ ...prev, [runId]: null }))
-    setRunStepRequestIds((prev) => ({ ...prev, [runId]: null }))
-
-    try {
-      const response = await fetch(
-        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-          workflowId
-        )}/runs/${encodeURIComponent(runId)}/steps`,
-        { cache: 'no-store' }
-      )
-
-      if (response.status === 401) {
-        router.replace(
-          `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
-            workflowId
-          )}`
-        )
-        return
-      }
-
-      const payload = (await response.json().catch(() => null)) as RunStepMetricsResponse | null
-      if (!response.ok || !payload) {
-        setRunStepRequestIds((prev) => ({
-          ...prev,
-          [runId]: response.headers.get('x-trope-request-id'),
-        }))
-        throw new Error(payload?.message || payload?.error || 'Unable to load run step detail.')
-      }
-
-      setRunStepDetails((prev) => ({
-        ...prev,
-        [runId]: normalizeStepMetricsPayload(payload.step_metrics),
-      }))
-    } catch (err) {
-      setRunStepErrors((prev) => ({
-        ...prev,
-        [runId]: err instanceof Error ? err.message : 'Unable to load run step detail.',
-      }))
-    } finally {
-      setRunStepLoading((prev) => ({ ...prev, [runId]: false }))
-    }
-  }
-
-  const toggleRunDetails = async (runId: string) => {
-    const isExpanded = expandedRunIds.includes(runId)
-    if (isExpanded) {
-      setExpandedRunIds((prev) => prev.filter((value) => value !== runId))
-      return
-    }
-
-    setExpandedRunIds((prev) => (prev.includes(runId) ? prev : [...prev, runId]))
-    if (runStepDetails[runId] || runStepLoading[runId]) return
-    await loadRunStepDetails(runId)
-  }
-
   const failedRuns = useMemo(
     () => runs.filter((run) => run.status.toLowerCase() === 'failed'),
     [runs]
@@ -943,7 +893,6 @@ export default function WorkflowDetailClient({
   const selectedVersionLabel = selectedVersion
     ? `${selectedVersionIndex >= 0 ? `Release ${versions.length - selectedVersionIndex} · ` : ''}${formatDate(selectedVersion.created_at)}`
     : null
-  const expandedRunIdSet = new Set(expandedRunIds)
 
   return (
     <div className="space-y-6">
@@ -1484,7 +1433,9 @@ export default function WorkflowDetailClient({
                               type="button"
                               variant="ghost"
                               size="xs"
-                              onClick={() => void toggleRunDetails(run.run_id)}
+                              onClick={() =>
+                                void toggleRunDetails({ runId: run.run_id, workflowId })
+                              }
                             >
                               {isExpanded ? 'Hide details' : 'View details'}
                             </Button>
@@ -1499,7 +1450,9 @@ export default function WorkflowDetailClient({
                                 error={stepError}
                                 requestId={stepRequestId}
                                 stepMetrics={stepMetrics}
-                                onRetry={() => void loadRunStepDetails(run.run_id)}
+                                onRetry={() =>
+                                  void loadRunStepDetails({ runId: run.run_id, workflowId })
+                                }
                                 onCopyRequestId={(value) => void copyText(value)}
                                 formatDateTime={formatDateTime}
                                 formatDuration={formatDuration}
