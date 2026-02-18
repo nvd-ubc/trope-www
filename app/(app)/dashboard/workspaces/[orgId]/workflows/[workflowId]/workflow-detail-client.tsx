@@ -33,6 +33,14 @@ import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/da
 import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
 import { deriveGuideStepImagesWithFocus } from '@/lib/guide-screenshot-focus'
 import { type GuideMediaStepImage as StepImage } from '@/lib/guide-media'
+import {
+  formatMetricMap,
+  formatTokenSummary,
+  normalizeStepMetricsPayload,
+  summarizeStepInsights,
+  type RunStepMetricsResponse,
+  type WorkflowRunStepMetricsPayload,
+} from '@/lib/workflow-run-step-metrics'
 import { computeDurationPercentileMs, summarizeRunLifecycle } from '@/lib/workflow-run-lifecycle'
 
 type WorkflowDefinition = {
@@ -136,61 +144,6 @@ type WorkflowRun = {
 type RunListResponse = {
   runs: WorkflowRun[]
   next_cursor?: string | null
-}
-
-type WorkflowRunStepTokenTotals = {
-  prompt_tokens?: number
-  completion_tokens?: number
-  credits?: number
-}
-
-type WorkflowRunStepGuidanceMetrics = {
-  requests?: number
-  results?: number
-  no_result?: number
-  latency_ms_buckets?: Record<string, number>
-  reason_counts?: Record<string, number>
-}
-
-type WorkflowRunStepAlignmentMetrics = {
-  requests?: number
-  results?: number
-  latency_ms_buckets?: Record<string, number>
-  reason_counts?: Record<string, number>
-}
-
-type WorkflowRunStepHighlightMetrics = {
-  shown?: number
-  click_hit?: number
-  click_miss?: number
-  distance_buckets?: Record<string, number>
-}
-
-type WorkflowRunStepMetrics = {
-  step_id: string
-  step_index: number
-  started_at: string
-  completed_at?: string
-  duration_ms?: number
-  completion_method?: 'auto' | 'manual'
-  completion_reason_code?: string
-  guidance?: WorkflowRunStepGuidanceMetrics
-  alignment?: WorkflowRunStepAlignmentMetrics
-  highlight?: WorkflowRunStepHighlightMetrics
-  tokens?: WorkflowRunStepTokenTotals
-}
-
-type WorkflowRunStepMetricsPayload = {
-  version: string
-  steps: WorkflowRunStepMetrics[]
-  totals?: WorkflowRunStepTokenTotals
-}
-
-type RunStepMetricsResponse = {
-  run_id: string
-  step_metrics?: WorkflowRunStepMetricsPayload | null
-  error?: string
-  message?: string
 }
 
 type WorkflowDetailBootstrapResponse = {
@@ -334,62 +287,6 @@ const formatMemberLabel = (member: MemberRecord) => {
   if (member.display_name) return member.display_name
   if (member.email) return member.email
   return member.user_id
-}
-
-const formatMetricMap = (value?: Record<string, number>) => {
-  const entries = Object.entries(value ?? {})
-    .filter(([, count]) => Number.isFinite(count) && count > 0)
-    .sort((left, right) => right[1] - left[1])
-  if (entries.length === 0) return '-'
-  return entries.map(([key, count]) => `${key}:${count}`).join(', ')
-}
-
-const formatTokenSummary = (tokens?: WorkflowRunStepTokenTotals) => {
-  const prompt = tokens?.prompt_tokens ?? 0
-  const completion = tokens?.completion_tokens ?? 0
-  const credits = tokens?.credits ?? 0
-  if (prompt <= 0 && completion <= 0 && credits <= 0) return '-'
-  return `P ${prompt} · C ${completion} · Cr ${credits}`
-}
-
-const normalizeStepMetricsPayload = (
-  value?: WorkflowRunStepMetricsPayload | null
-): WorkflowRunStepMetricsPayload => ({
-  version: value?.version?.trim() || 'v2',
-  steps: Array.isArray(value?.steps) ? value.steps : [],
-  totals: value?.totals,
-})
-
-const summarizeStepInsights = (steps: WorkflowRunStepMetrics[]) => {
-  const insights: string[] = []
-  const slowest = [...steps]
-    .filter((step) => (step.duration_ms ?? 0) > 0)
-    .sort((left, right) => (right.duration_ms ?? 0) - (left.duration_ms ?? 0))[0]
-  if (slowest) {
-    insights.push(`Slowest: #${slowest.step_index + 1} (${formatDuration(slowest.duration_ms)})`)
-  }
-
-  const noResultHotspot = [...steps]
-    .filter((step) => (step.guidance?.no_result ?? 0) > 0)
-    .sort((left, right) => (right.guidance?.no_result ?? 0) - (left.guidance?.no_result ?? 0))[0]
-  if (noResultHotspot) {
-    insights.push(
-      `No-result hotspot: #${noResultHotspot.step_index + 1} (${noResultHotspot.guidance?.no_result ?? 0})`
-    )
-  }
-
-  const tokenHeavy = [...steps]
-    .filter((step) => (step.tokens?.prompt_tokens ?? 0) + (step.tokens?.completion_tokens ?? 0) > 0)
-    .sort((left, right) => {
-      const leftTotal = (left.tokens?.prompt_tokens ?? 0) + (left.tokens?.completion_tokens ?? 0)
-      const rightTotal = (right.tokens?.prompt_tokens ?? 0) + (right.tokens?.completion_tokens ?? 0)
-      return rightTotal - leftTotal
-    })[0]
-  if (tokenHeavy) {
-    insights.push(`Token-heavy: #${tokenHeavy.step_index + 1} (${formatTokenSummary(tokenHeavy.tokens)})`)
-  }
-
-  return insights
 }
 
 export default function WorkflowDetailClient({
@@ -1560,7 +1457,7 @@ export default function WorkflowDetailClient({
                       }
                       return left.step_id.localeCompare(right.step_id)
                     })
-                    const stepInsights = summarizeStepInsights(sortedSteps)
+                    const stepInsights = summarizeStepInsights(sortedSteps, formatDuration)
 
                     return (
                       <Fragment key={run.run_id}>
