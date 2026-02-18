@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -27,7 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Table, TableCell, TableHead, TableHeaderCell, TableRow } from '@/components/ui/table'
+import WorkflowRunStepDetails from '@/components/workflow-run-step-details'
 import ReadonlyStepCard from '@/components/workflow-guide/readonly-step-card'
+import { useRunStepDetails } from '@/lib/client/use-run-step-details'
 import { useCsrfToken } from '@/lib/client/use-csrf-token'
 import { ErrorNotice, PageHeader, WorkflowDetailSkeleton } from '@/components/dashboard'
 import { resolveGuideCursorOverlayMode } from '@/lib/guide-cursor'
@@ -314,6 +316,25 @@ export default function WorkflowDetailClient({
   const [runsError, setRunsError] = useState<string | null>(null)
   const [runsRequestId, setRunsRequestId] = useState<string | null>(null)
   const [runsLoading, setRunsLoading] = useState(false)
+  const {
+    expandedRunIdSet,
+    runStepDetails,
+    runStepLoading,
+    runStepErrors,
+    runStepRequestIds,
+    setVisibleRunIds,
+    loadRunStepDetails,
+    toggleRunDetails,
+  } = useRunStepDetails({
+    orgId,
+    onUnauthorized: () => {
+      router.replace(
+        `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}`
+      )
+    },
+  })
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
   const [settingsError, setSettingsError] = useState<string | null>(null)
@@ -404,6 +425,10 @@ export default function WorkflowDetailClient({
     }
   }, [orgId, workflowId, router])
 
+  useEffect(() => {
+    setVisibleRunIds(runs.map((run) => run.run_id))
+  }, [runs, setVisibleRunIds])
+
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
 
   const memberMap = useMemo(() => {
@@ -422,6 +447,18 @@ export default function WorkflowDetailClient({
     () => versions.find((version) => version.version_id === selectedVersionId) ?? null,
     [versions, selectedVersionId]
   )
+  const stepTitleMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    const steps = Array.isArray(spec?.steps) ? spec.steps : []
+    for (const step of steps) {
+      if (!step?.id) continue
+      const title =
+        typeof step.title === 'string' && step.title.trim().length > 0 ? step.title.trim() : ''
+      if (!title) continue
+      map[step.id] = title
+    }
+    return map
+  }, [spec?.steps])
   const stepImageMap = useMemo(() => {
     const steps = Array.isArray(spec?.steps) ? spec.steps : []
     const map: Record<string, StepImage> = {}
@@ -1363,27 +1400,70 @@ export default function WorkflowDetailClient({
                     <TableHeaderCell>Actor</TableHeaderCell>
                     <TableHeaderCell>Steps</TableHeaderCell>
                     <TableHeaderCell>Error</TableHeaderCell>
+                    <TableHeaderCell>Details</TableHeaderCell>
                   </TableRow>
                 </TableHead>
                 <tbody>
-                  {runs.map((run) => (
-                    <TableRow key={run.run_id}>
-                      <TableCell>
-                        <Badge variant={runStatusVariant(run.status)}>{formatStatus(run.status)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
-                      </TableCell>
-                      <TableCell>{formatDuration(run.duration_ms)}</TableCell>
-                      <TableCell>{run.actor_email ?? (run.actor_user_id ? 'Team member' : '-')}</TableCell>
-                      <TableCell>
-                        {run.steps_total
-                          ? `${run.steps_completed ?? 0}/${run.steps_total}`
-                          : '-'}
-                      </TableCell>
-                      <TableCell>{run.error_summary ?? '-'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {runs.map((run) => {
+                    const isExpanded = expandedRunIdSet.has(run.run_id)
+                    const loadingStepDetail = runStepLoading[run.run_id] === true
+                    const stepError = runStepErrors[run.run_id]
+                    const stepRequestId = runStepRequestIds[run.run_id]
+                    const stepMetrics = runStepDetails[run.run_id]
+
+                    return (
+                      <Fragment key={run.run_id}>
+                        <TableRow>
+                          <TableCell>
+                            <Badge variant={runStatusVariant(run.status)}>{formatStatus(run.status)}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
+                          </TableCell>
+                          <TableCell>{formatDuration(run.duration_ms)}</TableCell>
+                          <TableCell>{run.actor_email ?? (run.actor_user_id ? 'Team member' : '-')}</TableCell>
+                          <TableCell>
+                            {run.steps_total
+                              ? `${run.steps_completed ?? 0}/${run.steps_total}`
+                              : '-'}
+                          </TableCell>
+                          <TableCell>{run.error_summary ?? '-'}</TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              onClick={() =>
+                                void toggleRunDetails({ runId: run.run_id, workflowId })
+                              }
+                            >
+                              {isExpanded ? 'Hide details' : 'View details'}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={7} className="bg-muted/20 px-3 py-3 align-top whitespace-normal">
+                              <WorkflowRunStepDetails
+                                runId={run.run_id}
+                                loading={loadingStepDetail}
+                                error={stepError}
+                                requestId={stepRequestId}
+                                stepMetrics={stepMetrics}
+                                onRetry={() =>
+                                  void loadRunStepDetails({ runId: run.run_id, workflowId })
+                                }
+                                onCopyRequestId={(value) => void copyText(value)}
+                                formatDateTime={formatDateTime}
+                                formatDuration={formatDuration}
+                                resolveStepTitle={(stepId) => stepTitleMap[stepId] ?? null}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    )
+                  })}
                 </tbody>
               </Table>
             </div>

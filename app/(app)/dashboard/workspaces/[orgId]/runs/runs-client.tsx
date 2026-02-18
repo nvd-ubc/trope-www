@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Copy, Filter, MoreHorizontal, Search, Workflow } from 'lucide-react'
 import Badge from '@/components/ui/badge'
@@ -34,6 +34,8 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
+import WorkflowRunStepDetails from '@/components/workflow-run-step-details'
+import { useRunStepDetails } from '@/lib/client/use-run-step-details'
 import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, MetricCard, PageHeader } from '@/components/dashboard'
 import { aggregateRunLifecycle, computeDurationPercentileMs } from '@/lib/workflow-run-lifecycle'
 
@@ -130,6 +132,21 @@ export default function RunsClient({ orgId }: { orgId: string }) {
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [workflowMap, setWorkflowMap] = useState<Record<string, string>>({})
   const [workflowDefinitions, setWorkflowDefinitions] = useState<Record<string, WorkflowDefinition>>({})
+  const {
+    expandedRunIdSet,
+    runStepDetails,
+    runStepLoading,
+    runStepErrors,
+    runStepRequestIds,
+    setVisibleRunIds,
+    loadRunStepDetails,
+    toggleRunDetails,
+  } = useRunStepDetails({
+    orgId,
+    onUnauthorized: () => {
+      router.replace(`/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/runs`)
+    },
+  })
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const workflowFromUrl = searchParams.get('workflow_id') ?? ''
@@ -227,6 +244,10 @@ export default function RunsClient({ orgId }: { orgId: string }) {
       active = false
     }
   }, [orgId, router, workflowFilter])
+
+  useEffect(() => {
+    setVisibleRunIds(runs.map((run) => run.run_id))
+  }, [runs, setVisibleRunIds])
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -488,90 +509,133 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                   <TableHeaderCell>Actor</TableHeaderCell>
                   <TableHeaderCell>Client</TableHeaderCell>
                   <TableHeaderCell>Error</TableHeaderCell>
+                  <TableHeaderCell>Details</TableHeaderCell>
                   <TableHeaderCell className="w-[3rem] text-right">Actions</TableHeaderCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filtered.map((run) => (
-                  <TableRow key={run.run_id}>
-                    <TableCell>
-                      <div className="text-sm font-semibold text-foreground">
-                        {workflowMap[run.workflow_id] ?? run.workflow_id}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{run.workflow_id}</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(run.status)}>
-                        {run.status || 'unknown'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-foreground">{formatDateTime(run.started_at)}</div>
-                      <div className="text-xs text-muted-foreground">{run.run_id}</div>
-                    </TableCell>
-                    <TableCell>{formatDuration(run.duration_ms)}</TableCell>
-                    <TableCell>
-                      {run.actor_email ?? run.actor_user_id}
-                    </TableCell>
-                    <TableCell>{run.client ?? '-'}</TableCell>
-                    <TableCell>{run.error_summary ?? '-'}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" aria-label="Run actions">
-                            <MoreHorizontal />
+                {filtered.map((run) => {
+                  const isExpanded = expandedRunIdSet.has(run.run_id)
+                  const loadingStepDetail = runStepLoading[run.run_id] === true
+                  const stepError = runStepErrors[run.run_id]
+                  const stepRequestId = runStepRequestIds[run.run_id]
+                  const stepMetrics = runStepDetails[run.run_id]
+
+                  return (
+                    <Fragment key={run.run_id}>
+                      <TableRow>
+                        <TableCell>
+                          <div className="text-sm font-semibold text-foreground">
+                            {workflowMap[run.workflow_id] ?? run.workflow_id}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{run.workflow_id}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={statusVariant(run.status)}>
+                            {run.status || 'unknown'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-foreground">{formatDateTime(run.started_at)}</div>
+                          <div className="text-xs text-muted-foreground">{run.run_id}</div>
+                        </TableCell>
+                        <TableCell>{formatDuration(run.duration_ms)}</TableCell>
+                        <TableCell>{run.actor_email ?? run.actor_user_id}</TableCell>
+                        <TableCell>{run.client ?? '-'}</TableCell>
+                        <TableCell>{run.error_summary ?? '-'}</TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="xs"
+                            onClick={() =>
+                              void toggleRunDetails({ runId: run.run_id, workflowId: run.workflow_id })
+                            }
+                          >
+                            {isExpanded ? 'Hide details' : 'View details'}
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onSelect={(event) => {
-                              event.preventDefault()
-                              void copyToClipboard(run.run_id)
-                            }}
-                          >
-                            <Copy />
-                            Copy run ID
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={(event) => {
-                              event.preventDefault()
-                              void copyToClipboard(run.workflow_id)
-                            }}
-                          >
-                            <Copy />
-                            Copy workflow ID
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={(event) => {
-                              event.preventDefault()
-                              router.push(
-                                `/dashboard/workspaces/${encodeURIComponent(
-                                  orgId
-                                )}/runs?workflow_id=${encodeURIComponent(run.workflow_id)}`
-                              )
-                            }}
-                          >
-                            <Filter />
-                            Filter to this workflow
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onSelect={(event) => {
-                              event.preventDefault()
-                              router.push(
-                                `/dashboard/workspaces/${encodeURIComponent(
-                                  orgId
-                                )}/workflows/${encodeURIComponent(run.workflow_id)}`
-                              )
-                            }}
-                          >
-                            <Workflow />
-                            Open workflow
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon-sm" aria-label="Run actions">
+                                <MoreHorizontal />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  void copyToClipboard(run.run_id)
+                                }}
+                              >
+                                <Copy />
+                                Copy run ID
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  void copyToClipboard(run.workflow_id)
+                                }}
+                              >
+                                <Copy />
+                                Copy workflow ID
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  router.push(
+                                    `/dashboard/workspaces/${encodeURIComponent(
+                                      orgId
+                                    )}/runs?workflow_id=${encodeURIComponent(run.workflow_id)}`
+                                  )
+                                }}
+                              >
+                                <Filter />
+                                Filter to this workflow
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onSelect={(event) => {
+                                  event.preventDefault()
+                                  router.push(
+                                    `/dashboard/workspaces/${encodeURIComponent(
+                                      orgId
+                                    )}/workflows/${encodeURIComponent(run.workflow_id)}`
+                                  )
+                                }}
+                              >
+                                <Workflow />
+                                Open workflow
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={9} className="bg-muted/20 px-3 py-3 align-top whitespace-normal">
+                            <WorkflowRunStepDetails
+                              runId={run.run_id}
+                              loading={loadingStepDetail}
+                              error={stepError}
+                              requestId={stepRequestId}
+                              stepMetrics={stepMetrics}
+                              onRetry={() =>
+                                void loadRunStepDetails({
+                                  runId: run.run_id,
+                                  workflowId: run.workflow_id,
+                                })
+                              }
+                              onCopyRequestId={(value) => void copyToClipboard(value)}
+                              formatDateTime={formatDateTime}
+                              formatDuration={formatDuration}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </Fragment>
+                  )
+                })}
               </TableBody>
             </Table>
           </div>
