@@ -34,12 +34,10 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/components/ui/table'
+import WorkflowRunStepDetails from '@/components/workflow-run-step-details'
 import { DataTableSkeleton, DataToolbar, EmptyState, ErrorNotice, MetricCard, PageHeader } from '@/components/dashboard'
 import {
-  formatMetricMap,
-  formatTokenSummary,
   normalizeStepMetricsPayload,
-  summarizeStepInsights,
   type RunStepMetricsResponse,
   type WorkflowRunStepMetricsPayload,
 } from '@/lib/workflow-run-step-metrics'
@@ -572,11 +570,6 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                   const stepError = runStepErrors[run.run_id]
                   const stepRequestId = runStepRequestIds[run.run_id]
                   const stepMetrics = runStepDetails[run.run_id]
-                  const sortedSteps = [...(stepMetrics?.steps ?? [])].sort((left, right) => {
-                    if (left.step_index !== right.step_index) return left.step_index - right.step_index
-                    return left.step_id.localeCompare(right.step_id)
-                  })
-                  const stepInsights = summarizeStepInsights(sortedSteps, formatDuration)
 
                   return (
                     <Fragment key={run.run_id}>
@@ -669,128 +662,17 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                       {isExpanded && (
                         <TableRow>
                           <TableCell colSpan={9} className="bg-muted/20 px-3 py-3 align-top whitespace-normal">
-                            {loadingStepDetail && (
-                              <div className="text-xs text-muted-foreground">Loading step metrics…</div>
-                            )}
-                            {!loadingStepDetail && stepError && (
-                              <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-3 text-xs text-destructive">
-                                <div>{stepError}</div>
-                                <div className="mt-2 flex flex-wrap items-center gap-2">
-                                  {stepRequestId && (
-                                    <>
-                                      <span className="text-destructive/80">Request ID: {stepRequestId}</span>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="xs"
-                                        onClick={() => void copyToClipboard(stepRequestId)}
-                                      >
-                                        Copy
-                                      </Button>
-                                    </>
-                                  )}
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="xs"
-                                    onClick={() => void loadRunStepDetails(run)}
-                                  >
-                                    Retry
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                            {!loadingStepDetail && !stepError && stepMetrics && (
-                              <div className="space-y-3">
-                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                  <Badge variant="neutral">Step metrics {stepMetrics.version || 'v2'}</Badge>
-                                  <span>Run tokens: {formatTokenSummary(stepMetrics.totals)}</span>
-                                  <span>Steps captured: {sortedSteps.length}</span>
-                                </div>
-                                {stepInsights.length > 0 && (
-                                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                                    {stepInsights.map((insight) => (
-                                      <Badge key={`${run.run_id}:${insight}`} variant="outline">
-                                        {insight}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                )}
-                                {sortedSteps.length === 0 ? (
-                                  <div className="text-xs text-muted-foreground">
-                                    No step-level metrics captured for this run.
-                                  </div>
-                                ) : (
-                                  <div className="overflow-x-auto">
-                                    <Table className="min-w-[1080px]">
-                                      <TableHead>
-                                        <TableRow>
-                                          <TableHeaderCell>Step</TableHeaderCell>
-                                          <TableHeaderCell>Timing</TableHeaderCell>
-                                          <TableHeaderCell>Completion</TableHeaderCell>
-                                          <TableHeaderCell>Guidance</TableHeaderCell>
-                                          <TableHeaderCell>Alignment</TableHeaderCell>
-                                          <TableHeaderCell>Highlight</TableHeaderCell>
-                                          <TableHeaderCell>Tokens</TableHeaderCell>
-                                        </TableRow>
-                                      </TableHead>
-                                      <TableBody>
-                                        {sortedSteps.map((step) => (
-                                          <TableRow key={`${run.run_id}:${step.step_index}:${step.step_id}`}>
-                                            <TableCell className="whitespace-normal">
-                                              <div className="font-medium text-foreground">#{step.step_index + 1}</div>
-                                              <div className="font-mono text-xs text-muted-foreground">
-                                                {step.step_id}
-                                              </div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              <div>Started: {formatDateTime(step.started_at)}</div>
-                                              <div>Completed: {formatDateTime(step.completed_at ?? null)}</div>
-                                              <div>Duration: {formatDuration(step.duration_ms)}</div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              <div>Method: {step.completion_method ?? '-'}</div>
-                                              <div>Reason: {step.completion_reason_code ?? '-'}</div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              <div>
-                                                Req/Res/No: {step.guidance?.requests ?? 0}/
-                                                {step.guidance?.results ?? 0}/{step.guidance?.no_result ?? 0}
-                                              </div>
-                                              <div>Latency: {formatMetricMap(step.guidance?.latency_ms_buckets)}</div>
-                                              <div>Reasons: {formatMetricMap(step.guidance?.reason_counts)}</div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              <div>
-                                                Req/Res: {step.alignment?.requests ?? 0}/
-                                                {step.alignment?.results ?? 0}
-                                              </div>
-                                              <div>Latency: {formatMetricMap(step.alignment?.latency_ms_buckets)}</div>
-                                              <div>Reasons: {formatMetricMap(step.alignment?.reason_counts)}</div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              <div>
-                                                Shown/Hit/Miss: {step.highlight?.shown ?? 0}/
-                                                {step.highlight?.click_hit ?? 0}/{step.highlight?.click_miss ?? 0}
-                                              </div>
-                                              <div>Distance: {formatMetricMap(step.highlight?.distance_buckets)}</div>
-                                            </TableCell>
-                                            <TableCell className="text-xs text-muted-foreground whitespace-normal">
-                                              {formatTokenSummary(step.tokens)}
-                                            </TableCell>
-                                          </TableRow>
-                                        ))}
-                                      </TableBody>
-                                    </Table>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                            {!loadingStepDetail && !stepError && !stepMetrics && (
-                              <div className="text-xs text-muted-foreground">
-                                Step detail unavailable for this run.
-                              </div>
-                            )}
+                            <WorkflowRunStepDetails
+                              runId={run.run_id}
+                              loading={loadingStepDetail}
+                              error={stepError}
+                              requestId={stepRequestId}
+                              stepMetrics={stepMetrics}
+                              onRetry={() => void loadRunStepDetails(run)}
+                              onCopyRequestId={(value) => void copyToClipboard(value)}
+                              formatDateTime={formatDateTime}
+                              formatDuration={formatDuration}
+                            />
                           </TableCell>
                         </TableRow>
                       )}
