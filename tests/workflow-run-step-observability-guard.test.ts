@@ -21,6 +21,11 @@ test('workflow detail client keeps lazy step detail fetch wiring', async () => {
     /View details/,
     'workflow detail client should expose run detail expansion affordance'
   )
+  assert.match(
+    source,
+    /from ['"]@\/components\/workflow-run-step-details['"]/,
+    'workflow detail client should use the shared run step details renderer'
+  )
 })
 
 test('runs client keeps lazy cross-workflow step detail fetch wiring', async () => {
@@ -38,6 +43,11 @@ test('runs client keeps lazy cross-workflow step detail fetch wiring', async () 
     source,
     /View details/,
     'runs client should expose run detail expansion affordance'
+  )
+  assert.match(
+    source,
+    /from ['"]@\/components\/workflow-run-step-details['"]/,
+    'runs client should use the shared run step details renderer'
   )
 })
 
