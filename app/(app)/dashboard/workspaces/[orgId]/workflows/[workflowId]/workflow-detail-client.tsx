@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -136,6 +136,61 @@ type WorkflowRun = {
 type RunListResponse = {
   runs: WorkflowRun[]
   next_cursor?: string | null
+}
+
+type WorkflowRunStepTokenTotals = {
+  prompt_tokens?: number
+  completion_tokens?: number
+  credits?: number
+}
+
+type WorkflowRunStepGuidanceMetrics = {
+  requests?: number
+  results?: number
+  no_result?: number
+  latency_ms_buckets?: Record<string, number>
+  reason_counts?: Record<string, number>
+}
+
+type WorkflowRunStepAlignmentMetrics = {
+  requests?: number
+  results?: number
+  latency_ms_buckets?: Record<string, number>
+  reason_counts?: Record<string, number>
+}
+
+type WorkflowRunStepHighlightMetrics = {
+  shown?: number
+  click_hit?: number
+  click_miss?: number
+  distance_buckets?: Record<string, number>
+}
+
+type WorkflowRunStepMetrics = {
+  step_id: string
+  step_index: number
+  started_at: string
+  completed_at?: string
+  duration_ms?: number
+  completion_method?: 'auto' | 'manual'
+  completion_reason_code?: string
+  guidance?: WorkflowRunStepGuidanceMetrics
+  alignment?: WorkflowRunStepAlignmentMetrics
+  highlight?: WorkflowRunStepHighlightMetrics
+  tokens?: WorkflowRunStepTokenTotals
+}
+
+type WorkflowRunStepMetricsPayload = {
+  version: string
+  steps: WorkflowRunStepMetrics[]
+  totals?: WorkflowRunStepTokenTotals
+}
+
+type RunStepMetricsResponse = {
+  run_id: string
+  step_metrics?: WorkflowRunStepMetricsPayload | null
+  error?: string
+  message?: string
 }
 
 type WorkflowDetailBootstrapResponse = {
@@ -281,6 +336,30 @@ const formatMemberLabel = (member: MemberRecord) => {
   return member.user_id
 }
 
+const formatMetricMap = (value?: Record<string, number>) => {
+  const entries = Object.entries(value ?? {})
+    .filter(([, count]) => Number.isFinite(count) && count > 0)
+    .sort((left, right) => right[1] - left[1])
+  if (entries.length === 0) return '-'
+  return entries.map(([key, count]) => `${key}:${count}`).join(', ')
+}
+
+const formatTokenSummary = (tokens?: WorkflowRunStepTokenTotals) => {
+  const prompt = tokens?.prompt_tokens ?? 0
+  const completion = tokens?.completion_tokens ?? 0
+  const credits = tokens?.credits ?? 0
+  if (prompt <= 0 && completion <= 0 && credits <= 0) return '-'
+  return `P ${prompt} · C ${completion} · Cr ${credits}`
+}
+
+const normalizeStepMetricsPayload = (
+  value?: WorkflowRunStepMetricsPayload | null
+): WorkflowRunStepMetricsPayload => ({
+  version: value?.version?.trim() || 'v2',
+  steps: Array.isArray(value?.steps) ? value.steps : [],
+  totals: value?.totals,
+})
+
 export default function WorkflowDetailClient({
   orgId,
   workflowId,
@@ -314,6 +393,13 @@ export default function WorkflowDetailClient({
   const [runsError, setRunsError] = useState<string | null>(null)
   const [runsRequestId, setRunsRequestId] = useState<string | null>(null)
   const [runsLoading, setRunsLoading] = useState(false)
+  const [expandedRunIds, setExpandedRunIds] = useState<string[]>([])
+  const [runStepDetails, setRunStepDetails] = useState<Record<string, WorkflowRunStepMetricsPayload>>(
+    {}
+  )
+  const [runStepLoading, setRunStepLoading] = useState<Record<string, boolean>>({})
+  const [runStepErrors, setRunStepErrors] = useState<Record<string, string | null>>({})
+  const [runStepRequestIds, setRunStepRequestIds] = useState<Record<string, string | null>>({})
   const [settingsSaving, setSettingsSaving] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null)
   const [settingsError, setSettingsError] = useState<string | null>(null)
@@ -403,6 +489,11 @@ export default function WorkflowDetailClient({
       active = false
     }
   }, [orgId, workflowId, router])
+
+  useEffect(() => {
+    const runIds = new Set(runs.map((run) => run.run_id))
+    setExpandedRunIds((prev) => prev.filter((runId) => runIds.has(runId)))
+  }, [runs])
 
   const isAdmin = membershipRole === 'org_owner' || membershipRole === 'org_admin'
 
@@ -770,6 +861,63 @@ export default function WorkflowDetailClient({
     }
   }
 
+  const loadRunStepDetails = async (runId: string) => {
+    setRunStepLoading((prev) => ({ ...prev, [runId]: true }))
+    setRunStepErrors((prev) => ({ ...prev, [runId]: null }))
+    setRunStepRequestIds((prev) => ({ ...prev, [runId]: null }))
+
+    try {
+      const response = await fetch(
+        `/api/orgs/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+          workflowId
+        )}/runs/${encodeURIComponent(runId)}/steps`,
+        { cache: 'no-store' }
+      )
+
+      if (response.status === 401) {
+        router.replace(
+          `/signin?next=/dashboard/workspaces/${encodeURIComponent(orgId)}/workflows/${encodeURIComponent(
+            workflowId
+          )}`
+        )
+        return
+      }
+
+      const payload = (await response.json().catch(() => null)) as RunStepMetricsResponse | null
+      if (!response.ok || !payload) {
+        setRunStepRequestIds((prev) => ({
+          ...prev,
+          [runId]: response.headers.get('x-trope-request-id'),
+        }))
+        throw new Error(payload?.message || payload?.error || 'Unable to load run step detail.')
+      }
+
+      setRunStepDetails((prev) => ({
+        ...prev,
+        [runId]: normalizeStepMetricsPayload(payload.step_metrics),
+      }))
+    } catch (err) {
+      setRunStepErrors((prev) => ({
+        ...prev,
+        [runId]: err instanceof Error ? err.message : 'Unable to load run step detail.',
+      }))
+    } finally {
+      setRunStepLoading((prev) => ({ ...prev, [runId]: false }))
+    }
+  }
+
+  const toggleRunDetails = async (runId: string) => {
+    const isExpanded = expandedRunIds.includes(runId)
+    if (isExpanded) {
+      setExpandedRunIds((prev) => prev.filter((value) => value !== runId))
+      return
+    }
+
+    setExpandedRunIds((prev) => (prev.includes(runId) ? prev : [...prev, runId]))
+    if (runStepDetails[runId] || runStepLoading[runId]) return
+    await loadRunStepDetails(runId)
+  }
+
   const failedRuns = useMemo(
     () => runs.filter((run) => run.status.toLowerCase() === 'failed'),
     [runs]
@@ -856,6 +1004,7 @@ export default function WorkflowDetailClient({
   const selectedVersionLabel = selectedVersion
     ? `${selectedVersionIndex >= 0 ? `Release ${versions.length - selectedVersionIndex} · ` : ''}${formatDate(selectedVersion.created_at)}`
     : null
+  const expandedRunIdSet = new Set(expandedRunIds)
 
   return (
     <div className="space-y-6">
@@ -1363,27 +1512,201 @@ export default function WorkflowDetailClient({
                     <TableHeaderCell>Actor</TableHeaderCell>
                     <TableHeaderCell>Steps</TableHeaderCell>
                     <TableHeaderCell>Error</TableHeaderCell>
+                    <TableHeaderCell>Details</TableHeaderCell>
                   </TableRow>
                 </TableHead>
                 <tbody>
-                  {runs.map((run) => (
-                    <TableRow key={run.run_id}>
-                      <TableCell>
-                        <Badge variant={runStatusVariant(run.status)}>{formatStatus(run.status)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
-                      </TableCell>
-                      <TableCell>{formatDuration(run.duration_ms)}</TableCell>
-                      <TableCell>{run.actor_email ?? (run.actor_user_id ? 'Team member' : '-')}</TableCell>
-                      <TableCell>
-                        {run.steps_total
-                          ? `${run.steps_completed ?? 0}/${run.steps_total}`
-                          : '-'}
-                      </TableCell>
-                      <TableCell>{run.error_summary ?? '-'}</TableCell>
-                    </TableRow>
-                  ))}
+                  {runs.map((run) => {
+                    const isExpanded = expandedRunIdSet.has(run.run_id)
+                    const loadingStepDetail = runStepLoading[run.run_id] === true
+                    const stepError = runStepErrors[run.run_id]
+                    const stepRequestId = runStepRequestIds[run.run_id]
+                    const stepMetrics = runStepDetails[run.run_id]
+                    const sortedSteps = [...(stepMetrics?.steps ?? [])].sort((left, right) => {
+                      if (left.step_index !== right.step_index) {
+                        return left.step_index - right.step_index
+                      }
+                      return left.step_id.localeCompare(right.step_id)
+                    })
+
+                    return (
+                      <Fragment key={run.run_id}>
+                        <TableRow>
+                          <TableCell>
+                            <Badge variant={runStatusVariant(run.status)}>{formatStatus(run.status)}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-slate-700">{formatDateTime(run.started_at)}</div>
+                          </TableCell>
+                          <TableCell>{formatDuration(run.duration_ms)}</TableCell>
+                          <TableCell>{run.actor_email ?? (run.actor_user_id ? 'Team member' : '-')}</TableCell>
+                          <TableCell>
+                            {run.steps_total
+                              ? `${run.steps_completed ?? 0}/${run.steps_total}`
+                              : '-'}
+                          </TableCell>
+                          <TableCell>{run.error_summary ?? '-'}</TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="xs"
+                              onClick={() => void toggleRunDetails(run.run_id)}
+                            >
+                              {isExpanded ? 'Hide details' : 'View details'}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                        {isExpanded && (
+                          <TableRow>
+                            <TableCell colSpan={7} className="bg-muted/20 px-3 py-3 align-top whitespace-normal">
+                              {loadingStepDetail && (
+                                <div className="text-xs text-muted-foreground">Loading step metrics…</div>
+                              )}
+                              {!loadingStepDetail && stepError && (
+                                <div className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-3 text-xs text-destructive">
+                                  <div>{stepError}</div>
+                                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                                    {stepRequestId && (
+                                      <>
+                                        <span className="text-destructive/80">Request ID: {stepRequestId}</span>
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="xs"
+                                          onClick={() => copyText(stepRequestId)}
+                                        >
+                                          Copy
+                                        </Button>
+                                      </>
+                                    )}
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="xs"
+                                      onClick={() => void loadRunStepDetails(run.run_id)}
+                                    >
+                                      Retry
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                              {!loadingStepDetail && !stepError && stepMetrics && (
+                                <div className="space-y-3">
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                    <Badge variant="neutral">
+                                      Step metrics {stepMetrics.version || 'v2'}
+                                    </Badge>
+                                    <span>Run tokens: {formatTokenSummary(stepMetrics.totals)}</span>
+                                    <span>Steps captured: {sortedSteps.length}</span>
+                                  </div>
+                                  {sortedSteps.length === 0 ? (
+                                    <div className="text-xs text-muted-foreground">
+                                      No step-level metrics captured for this run.
+                                    </div>
+                                  ) : (
+                                    <div className="overflow-x-auto">
+                                      <Table className="min-w-[1080px]">
+                                        <TableHead>
+                                          <TableRow>
+                                            <TableHeaderCell>Step</TableHeaderCell>
+                                            <TableHeaderCell>Timing</TableHeaderCell>
+                                            <TableHeaderCell>Completion</TableHeaderCell>
+                                            <TableHeaderCell>Guidance</TableHeaderCell>
+                                            <TableHeaderCell>Alignment</TableHeaderCell>
+                                            <TableHeaderCell>Highlight</TableHeaderCell>
+                                            <TableHeaderCell>Tokens</TableHeaderCell>
+                                          </TableRow>
+                                        </TableHead>
+                                        <tbody>
+                                          {sortedSteps.map((step) => (
+                                            <TableRow
+                                              key={`${run.run_id}:${step.step_index}:${step.step_id}`}
+                                            >
+                                              <TableCell className="whitespace-normal">
+                                                <div className="font-medium text-foreground">
+                                                  #{step.step_index + 1}
+                                                </div>
+                                                <div className="font-mono text-xs text-muted-foreground">
+                                                  {step.step_id}
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                <div>Started: {formatDateTime(step.started_at)}</div>
+                                                <div>
+                                                  Completed: {formatDateTime(step.completed_at ?? null)}
+                                                </div>
+                                                <div>Duration: {formatDuration(step.duration_ms)}</div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                <div>
+                                                  Method:{' '}
+                                                  {step.completion_method
+                                                    ? formatStatus(step.completion_method)
+                                                    : '-'}
+                                                </div>
+                                                <div>Reason: {step.completion_reason_code ?? '-'}</div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                <div>
+                                                  Req/Res/No: {step.guidance?.requests ?? 0}/
+                                                  {step.guidance?.results ?? 0}/
+                                                  {step.guidance?.no_result ?? 0}
+                                                </div>
+                                                <div>
+                                                  Latency:{' '}
+                                                  {formatMetricMap(step.guidance?.latency_ms_buckets)}
+                                                </div>
+                                                <div>
+                                                  Reasons: {formatMetricMap(step.guidance?.reason_counts)}
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                <div>
+                                                  Req/Res: {step.alignment?.requests ?? 0}/
+                                                  {step.alignment?.results ?? 0}
+                                                </div>
+                                                <div>
+                                                  Latency:{' '}
+                                                  {formatMetricMap(step.alignment?.latency_ms_buckets)}
+                                                </div>
+                                                <div>
+                                                  Reasons: {formatMetricMap(step.alignment?.reason_counts)}
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                <div>
+                                                  Shown/Hit/Miss: {step.highlight?.shown ?? 0}/
+                                                  {step.highlight?.click_hit ?? 0}/
+                                                  {step.highlight?.click_miss ?? 0}
+                                                </div>
+                                                <div>
+                                                  Distance:{' '}
+                                                  {formatMetricMap(step.highlight?.distance_buckets)}
+                                                </div>
+                                              </TableCell>
+                                              <TableCell className="text-xs text-muted-foreground whitespace-normal">
+                                                {formatTokenSummary(step.tokens)}
+                                              </TableCell>
+                                            </TableRow>
+                                          ))}
+                                        </tbody>
+                                      </Table>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {!loadingStepDetail && !stepError && !stepMetrics && (
+                                <div className="text-xs text-muted-foreground">
+                                  Step detail unavailable for this run.
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </Fragment>
+                    )
+                  })}
                 </tbody>
               </Table>
             </div>
