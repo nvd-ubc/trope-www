@@ -49,6 +49,11 @@ test('workflow detail client keeps lazy step detail UI wiring', async () => {
     /from ['"]@\/lib\/client\/use-run-step-details['"]/,
     'workflow detail client should use shared run step details hook'
   )
+  assert.match(
+    source,
+    /run\.version_id === selectedVersionId/,
+    'workflow detail client should only resolve step titles when run version matches selected version'
+  )
 })
 
 test('runs client keeps lazy cross-workflow step detail UI wiring', async () => {
