@@ -122,6 +122,7 @@ type MembersResponse = {
 
 type WorkflowRun = {
   run_id: string
+  version_id?: string | null
   status: string
   started_at: string
   finished_at?: string | null
@@ -1410,6 +1411,10 @@ export default function WorkflowDetailClient({
                     const stepError = runStepErrors[run.run_id]
                     const stepRequestId = runStepRequestIds[run.run_id]
                     const stepMetrics = runStepDetails[run.run_id]
+                    const canResolveStepTitle =
+                      typeof run.version_id === 'string' &&
+                      run.version_id.length > 0 &&
+                      run.version_id === selectedVersionId
 
                     return (
                       <Fragment key={run.run_id}>
@@ -1456,7 +1461,9 @@ export default function WorkflowDetailClient({
                                 onCopyRequestId={(value) => void copyText(value)}
                                 formatDateTime={formatDateTime}
                                 formatDuration={formatDuration}
-                                resolveStepTitle={(stepId) => stepTitleMap[stepId] ?? null}
+                                resolveStepTitle={(stepId) =>
+                                  canResolveStepTitle ? stepTitleMap[stepId] ?? null : null
+                                }
                               />
                             </TableCell>
                           </TableRow>
