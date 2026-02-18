@@ -198,6 +198,38 @@ const normalizeStepMetricsPayload = (
   totals: value?.totals,
 })
 
+const summarizeStepInsights = (steps: WorkflowRunStepMetrics[]) => {
+  const insights: string[] = []
+  const slowest = [...steps]
+    .filter((step) => (step.duration_ms ?? 0) > 0)
+    .sort((left, right) => (right.duration_ms ?? 0) - (left.duration_ms ?? 0))[0]
+  if (slowest) {
+    insights.push(`Slowest: #${slowest.step_index + 1} (${formatDuration(slowest.duration_ms)})`)
+  }
+
+  const noResultHotspot = [...steps]
+    .filter((step) => (step.guidance?.no_result ?? 0) > 0)
+    .sort((left, right) => (right.guidance?.no_result ?? 0) - (left.guidance?.no_result ?? 0))[0]
+  if (noResultHotspot) {
+    insights.push(
+      `No-result hotspot: #${noResultHotspot.step_index + 1} (${noResultHotspot.guidance?.no_result ?? 0})`
+    )
+  }
+
+  const tokenHeavy = [...steps]
+    .filter((step) => (step.tokens?.prompt_tokens ?? 0) + (step.tokens?.completion_tokens ?? 0) > 0)
+    .sort((left, right) => {
+      const leftTotal = (left.tokens?.prompt_tokens ?? 0) + (left.tokens?.completion_tokens ?? 0)
+      const rightTotal = (right.tokens?.prompt_tokens ?? 0) + (right.tokens?.completion_tokens ?? 0)
+      return rightTotal - leftTotal
+    })[0]
+  if (tokenHeavy) {
+    insights.push(`Token-heavy: #${tokenHeavy.step_index + 1} (${formatTokenSummary(tokenHeavy.tokens)})`)
+  }
+
+  return insights
+}
+
 export default function RunsClient({ orgId }: { orgId: string }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -647,6 +679,7 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                     if (left.step_index !== right.step_index) return left.step_index - right.step_index
                     return left.step_id.localeCompare(right.step_id)
                   })
+                  const stepInsights = summarizeStepInsights(sortedSteps)
 
                   return (
                     <Fragment key={run.run_id}>
@@ -777,6 +810,15 @@ export default function RunsClient({ orgId }: { orgId: string }) {
                                   <span>Run tokens: {formatTokenSummary(stepMetrics.totals)}</span>
                                   <span>Steps captured: {sortedSteps.length}</span>
                                 </div>
+                                {stepInsights.length > 0 && (
+                                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                    {stepInsights.map((insight) => (
+                                      <Badge key={`${run.run_id}:${insight}`} variant="outline">
+                                        {insight}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                                 {sortedSteps.length === 0 ? (
                                   <div className="text-xs text-muted-foreground">
                                     No step-level metrics captured for this run.
